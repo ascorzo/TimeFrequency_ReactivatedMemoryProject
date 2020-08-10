@@ -1,6 +1,7 @@
 %Load time-frequency transforms
 m_Gabor.CueNight = load('m_Gabor_CueNight_AllChans_dtrend.mat');
 m_Gabor.PlaceboNight = load('m_Gabor_PlaceboNight_AllChans_dtrend.mat');
+load('Channels.mat')
 
 subjectsCue = fieldnames(m_Gabor.CueNight.m_GaborCue_total);
 subjectsPlac = fieldnames(m_Gabor.PlaceboNight.m_GaborPlacebo_total);
@@ -8,6 +9,9 @@ baselineTime = 30;
 s_TimeStep = 0.5;
 v_time = -15:0.5:15;
 v_FreqAxis = m_Gabor.CueNight.v_FreqAxis;
+
+v_GoodLearners = [1 3 9 10 14 15 18 19 22];
+v_BadLearners = [2 4 5 6 7 8 11 12 13 16 17 20 21 23];
 
 %-------------------------------------------------------------------------
 % create complete arrays for each condition
@@ -301,18 +305,18 @@ eeglab nogui
 for subj = 1:size(m_Delta_MeanChannels_Cue,1)
     %----- For Cue Night----
     f_WilcTest(strcat('Delta Cue Night Subj',num2str(subj)),...
-        'Time',' ','Cue','Sham',...
+        'Time(sec)',' ','Cue','Sham',...
         squeeze(m_Delta_MeanChannels_Cue(subj,:,:)),...
         squeeze(m_Delta_MeanChannels_Sham_CN(subj,:,:)),...
-        v_time)
+        v_time,'-r')
     saveas(gcf,strcat('Cue_Night_Wilcoxon_Subj',num2str(subj),'.png'))
     
     %----- For Placebo Night----
     f_WilcTest(strcat('Delta Placebo Night Subj',num2str(subj)),...
-        'Time',' ','Placebo','Sham',...
+        'Time(sec)',' ','Placebo','Sham',...
         squeeze(m_Delta_MeanChannels_Placebo(subj,:,:)),...
         squeeze(m_Delta_MeanChannels_Sham_PN(subj,:,:)),...
-        v_time)
+        v_time,'-b')
     saveas(gcf,strcat('Placebo_Night_Wilcoxon_Subj',num2str(subj),'.png'))
     close all
 end
@@ -320,23 +324,23 @@ end
 % Across subjects (mean channels, mean epochs)
 %---------------------------------------------------------------------
 %----- For Cue Night----
-f_WilcTest('Delta Cue Night','Time',' ','Cue','Sham',...
-    m_Delta_MeanAll_Cue,m_Delta_MeanAll_Sham_CN,v_time)
-saveas(gcf,strcat('Cue_Night_Wilcoxon.png'))
+f_WilcTest('Delta Band (0.5 - 4Hz) for Cue Night','Time(sec)',' ','Cue','Sham',...
+    m_Delta_MeanAll_Cue(v_GoodLearners,:),m_Delta_MeanAll_Sham_CN(v_GoodLearners,:),v_time,'-r')
+saveas(gcf,strcat('Cue_Night_Wilcoxon_GoodLearners.png'))
 
 %----- For Placebo Night----
-f_WilcTest('Delta Placebo Night','Time',' ','Placebo','Sham',...
-    m_Delta_MeanAll_Placebo,m_Delta_MeanAll_Sham_PN,v_time)
-saveas(gcf,strcat('Placebo_Night_Wilcoxon.png'))
+f_WilcTest('Delta Band (0.5 - 4Hz) for Placebo Night','Time(sec)',' ','Placebo','Sham',...
+    m_Delta_MeanAll_Placebo(v_GoodLearners,:),m_Delta_MeanAll_Sham_PN(v_GoodLearners,:),v_time,'-b')
+saveas(gcf,strcat('Placebo_Night_Wilcoxon_GoodLearners.png'))
 close all
 
-%% ---------------------------------------------------------------------
+%---------------------------------------------------------------------
 % For each channel Across subjects (mean epochs)
 %---------------------------------------------------------------------
 
 for chan = [27,28,29,30,33,34,35,38,43,44,49,50,51,56,67,87] %1:size(m_Delta_MeanEpochs_Cue,1)
     %----- For Cue Night----
-    f_WilcTest(strcat('Delta Band (0.5 - 4Hz) for Cue Night Channel ',num2str(chan)),...
+    f_WilcTest(strcat('Delta Band (0.5 - 4Hz) for Cue Night Channel ',channels(chan)),...
         'Time(sec)',' ','Cue','Sham',...
         squeeze(m_Delta_MeanEpochs_Cue(chan,:,:)),...
         squeeze(m_Delta_MeanEpochs_Sham_CN(chan,:,:)),...
@@ -344,13 +348,13 @@ for chan = [27,28,29,30,33,34,35,38,43,44,49,50,51,56,67,87] %1:size(m_Delta_Mea
     saveas(gcf,strcat('Cue_Night_Wilcoxon_Chan',num2str(chan),'.png'))
     
     %----- For Placebo Night----
-    f_WilcTest(strcat('Delta Band (0.5 - 4Hz) for Placebo Night Channel ',num2str(chan)),...
+    f_WilcTest(strcat('Delta Band (0.5 - 4Hz) for Placebo Night Channel ',channels(chan)),...
         'Time(sec)',' ','Placebo','Sham',...
         squeeze(m_Delta_MeanEpochs_Placebo(chan,:,:)),...
         squeeze(m_Delta_MeanEpochs_Sham_PN(chan,:,:)),...
         v_time,'-b')
     saveas(gcf,strcat('Placebo_Night_Wilcoxon_Chan',num2str(chan),'.png'))
-    close all
+    %close all
 end
 
 %% Plot
