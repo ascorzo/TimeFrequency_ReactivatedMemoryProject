@@ -297,7 +297,14 @@ for chan = 1:size(Mean_Ep_Cue,4)
         DeltaBandCalculation(Cond2,v_FreqAxis);
 end
 
+%% Plot
+PlotTimeFrequency()
+PlotStatistics()
+plotDeltaBandCalculation()
+PerformWilcoxon()
+
 %% Wilcoxon test for Delta Band analyses
+function PerformWilcoxon()
 eeglab nogui
 %---------------------------------------------------------------------
 % For each subject across epochs (mean channels)
@@ -345,7 +352,7 @@ for chan = [27,28,29,30,33,34,35,38,43,44,49,50,51,56,67,87] %1:size(m_Delta_Mea
         squeeze(m_Delta_MeanEpochs_Cue(chan,:,:)),...
         squeeze(m_Delta_MeanEpochs_Sham_CN(chan,:,:)),...
         v_time,'-r')
-    saveas(gcf,strcat('Cue_Night_Wilcoxon_Chan',num2str(chan),'.png'))
+    saveas(gcf,strcat('Cue_Night_Wilcoxon_Chan',channels(chan),'.png'))
     
     %----- For Placebo Night----
     f_WilcTest(strcat('Delta Band (0.5 - 4Hz) for Placebo Night Channel ',channels(chan)),...
@@ -353,15 +360,13 @@ for chan = [27,28,29,30,33,34,35,38,43,44,49,50,51,56,67,87] %1:size(m_Delta_Mea
         squeeze(m_Delta_MeanEpochs_Placebo(chan,:,:)),...
         squeeze(m_Delta_MeanEpochs_Sham_PN(chan,:,:)),...
         v_time,'-b')
-    saveas(gcf,strcat('Placebo_Night_Wilcoxon_Chan',num2str(chan),'.png'))
+    saveas(gcf,strcat('Placebo_Night_Wilcoxon_Chan',channels(chan),'.png'))
     %close all
 end
-
-%% Plot
-PlotAll()
+end
 
 %% PLOTS!!!! Time-Frequency
-function PlotAll()
+function PlotTimeFrequency()
 %--------------------------------------------------------------------------
 % Plot Mean of epochs and channels for each subject
 %--------------------------------------------------------------------------
@@ -422,8 +427,8 @@ for chan = 1:size(Mean_Ep_Subj_Cue,3)
         v_time,v_FreqAxis, vlims, [], [], 0);
     title('Sham Epochs')
     colorbar
-    suptitle(strcat('AllSubj Cue Night Channel',num2str(chan)))
-    saveas(gcf,strcat('AllSubj_Cue_Night_Chan',num2str(chan),'.png'))
+    suptitle(strcat('AllSubj Cue Night Channel',channels(chan)))
+    saveas(gcf,strcat('AllSubj_Cue_Night_Chan',channels(chan),'.png'))
    
     %----- For Placebo Night----
     figure
@@ -437,8 +442,8 @@ for chan = 1:size(Mean_Ep_Subj_Cue,3)
         v_time,v_FreqAxis, vlims, [], [], 0);
     title('Sham Epochs')
     colorbar
-    suptitle(strcat('AllSubj Placebo Night Channel',num2str(chan)))
-    saveas(gcf,strcat('AllSubj_Placebo_Night_Chan',num2str(chan),'.png'))
+    suptitle(strcat('AllSubj Placebo Night Channel',channels(chan)))
+    saveas(gcf,strcat('AllSubj_Placebo_Night_Chan',channels(chan),'.png'))
     
     close all
 end
@@ -482,7 +487,8 @@ suptitle('Mean All Placebo Night')
 saveas(gcf,'All_Placebo_Night.png')
 
 close all
-
+end
+function PlotStatistics()
 %% Plot Statistics
 vlims = [0.95 1];
 %--------------------------------------------------------------------------
@@ -544,11 +550,12 @@ for chan = 1:size(Mean_Ep_Subj_Cue,3)
         v_time,v_FreqAxis, vlims, [], [], 0);
     title('Placebo Night p-values')
     colorbar
-    suptitle(strcat('p-values chan',num2str(chan)))
-    saveas(gcf,strcat('p-values_chan',num2str(chan),'.png'))
+    suptitle(strcat('p-values chan',channels(chan)))
+    saveas(gcf,strcat('p-values_chan',channels(chan),'.png'))
 end
 close all
-
+end
+function plotDeltaBandCalculation()
 %% Plot Delta band Calculation
 % --------------------------------------------------------------------------
 % Plot Delta band Calculation for each subject across epochs (mean channels)
@@ -651,9 +658,9 @@ for chan = 1:size(Mean_Ep_Cue,4)
     b2 = plot(v_time,mean(Cond2,1),'k','linewidth',3,...
         'DisplayName','Sham Mean');
     legend ([b1,b2])
-    title(strcat('Channel',num2str(chan),'Cue Night'))
+    title(strcat('Channel',channels(chan),'Cue Night'))
     hold off
-    saveas(gcf,strcat('Chan',num2str(chan),'_Cue_Night_Delta.png'))
+    saveas(gcf,strcat('Chan',channels(chan),'_Cue_Night_Delta.png'))
     
     %----- For Placebo Night ----
     Cond1 = squeeze(m_Delta_MeanEpochs_Placebo(chan,:,:));
@@ -670,14 +677,13 @@ for chan = 1:size(Mean_Ep_Cue,4)
     b2 = plot(v_time,mean(Cond2,1),'k','linewidth',3,...
         'DisplayName','Sham Mean');
     legend ([b1,b2])
-    title(strcat('Channel',num2str(chan),'Placebo Night'))
+    title(strcat('Channel',channels(chan),'Placebo Night'))
     hold off
-    saveas(gcf,strcat('Chan',num2str(chan),'_Placebo_Night_Delta.png'))
+    saveas(gcf,strcat('Chan',channels(chan),'_Placebo_Night_Delta.png'))
 end
 close all
 end
 %% 
-
 function m_TFFreqBands = DeltaBandCalculation(TimeFrequencyMatrix,v_FreqAxis)
 
 %TimeFrequencyMatrix shape shoudl be (var x freq x time)
@@ -693,13 +699,11 @@ s_FirstInd = find(v_FreqAxis <= MaxFreq, 1);
 m_TFFreqBands = ...
     squeeze(mean(TimeFrequencyMatrix(:,s_FirstInd:s_LastInd, :),2));
 end
-
 %%
 function Baseline_Corr = baselinecorrection(Data,baselineTime,s_TimeStep)
 baseline = mean(Data(:,:,1:(baselineTime/s_TimeStep),:,:),3);
 Baseline_Corr = Data-baseline;
 end
-
 %%
 % Condition1 and Condition2 should be given in a shape of freq x Time x
 % Variation
