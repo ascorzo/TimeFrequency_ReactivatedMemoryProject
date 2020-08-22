@@ -1,11 +1,11 @@
 %Load time-frequency transforms
-m_Gabor.CueNight = load('m_Gabor_CueNight_AllChans_dtrend.mat');
-m_Gabor.PlaceboNight = load('m_Gabor_PlaceboNight_AllChans_dtrend.mat');
+m_Gabor.CueNight = load('m_GaborCuetotal_JensData.mat');
+m_Gabor.PlaceboNight = load('m_GaborPlacebototal_JensData.mat');
 load('Channels.mat')
 
 subjectsCue = fieldnames(m_Gabor.CueNight.m_GaborCue_total);
 subjectsPlac = fieldnames(m_Gabor.PlaceboNight.m_GaborPlacebo_total);
-baselineTime = 30;
+baselineTime = 15;
 s_TimeStep = 0.5;
 v_time = -15:0.5:15;
 v_FreqAxis = m_Gabor.CueNight.v_FreqAxis;
@@ -42,7 +42,7 @@ end
 s_MinEpochsOdor = NaN;
 s_MinEpochsSham = NaN;
 %--- Get min number of epochs to create equal arrays for Placebo Night ---
-for subj = 1:numel(subjectsCue)
+for subj = 1:numel(subjectsPlac)
     s_MinEpochsOdor = min(s_MinEpochsOdor,...
         size(m_Gabor.PlaceboNight.m_GaborPlacebo_total.(string(subjectsPlac(subj))),4));
     s_MinEpochsSham = min(s_MinEpochsSham,...
@@ -87,11 +87,11 @@ m_GaborSham_PN_BasCorr = ...
 %--------------------------------------------------------------------------
 s_MinSize = NaN;
 %Cue Night Cue Odor
-MeanChannels_Cue = squeeze(mean(m_GaborCue_BasCorr,4));
+MeanChannels_Cue = squeeze(nanmean(m_GaborCue_BasCorr,4));
 s_MinSize = min(s_MinSize,size(MeanChannels_Cue,4));
 
 %Cue Night Sham Odor
-MeanChannels_Sham_CN = squeeze(mean(m_GaborSham_CN_BasCorr,4));
+MeanChannels_Sham_CN = squeeze(nanmean(m_GaborSham_CN_BasCorr,4));
 s_MinSize = min(s_MinSize,size(MeanChannels_Sham_CN,4));
 
 %Equal number of Epochs
@@ -100,11 +100,11 @@ MeanChannels_Sham_CN = MeanChannels_Sham_CN(:,:,:,1:s_MinSize);
 
 s_MinSize = NaN;
 %Placebo Night Placebo Odor
-MeanChannels_Placebo = squeeze(mean(m_GaborPlacebo_BasCorr,4));
+MeanChannels_Placebo = squeeze(nanmean(m_GaborPlacebo_BasCorr,4));
 s_MinSize = min(s_MinSize,size(MeanChannels_Placebo,4));
 
 %Placebo Night Sham Odor
-MeanChannels_Sham_PN= squeeze(mean(m_GaborSham_PN_BasCorr,4));
+MeanChannels_Sham_PN= squeeze(nanmean(m_GaborSham_PN_BasCorr,4));
 s_MinSize = min(s_MinSize,size(MeanChannels_Sham_PN,4));
 
 %Equal number of Epochs
@@ -115,60 +115,60 @@ MeanChannels_Sham_PN = MeanChannels_Sham_PN(:,:,:,1:s_MinSize);
 % Mean of epochs and channels for each subject
 %--------------------------------------------------------------------------
 %Cue Night Cue Odor
-Mean_Ep_Ch_Cue = squeeze(mean(MeanChannels_Cue,4));
+Mean_Ep_Ch_Cue = squeeze(nanmean(MeanChannels_Cue,4));
 
 %Cue Night Sham Odor
-Mean_Ep_Ch_Sham_CN = squeeze(mean(MeanChannels_Sham_CN,4));
+Mean_Ep_Ch_Sham_CN = squeeze(nanmean(MeanChannels_Sham_CN,4));
 
 %Placebo Night Placebo Odor
-Mean_Ep_Ch_Placebo = squeeze(mean(MeanChannels_Placebo,4));
+Mean_Ep_Ch_Placebo = squeeze(nanmean(MeanChannels_Placebo,4));
 
 %Placebo Night Sham Odor
-Mean_Ep_Ch_Sham_PN = squeeze(mean(MeanChannels_Sham_PN,4));
+Mean_Ep_Ch_Sham_PN = squeeze(nanmean(MeanChannels_Sham_PN,4));
 
 %--------------------------------------------------------------------------
 % Mean of epochs only
 %--------------------------------------------------------------------------
 %Cue Night Cue Odor
-Mean_Ep_Cue = squeeze(mean(m_GaborCue_BasCorr,5));
+Mean_Ep_Cue = squeeze(nanmean(m_GaborCue_BasCorr,5));
 
 %Cue Night Sham Odor
-Mean_Ep_Sham_CN = squeeze(mean(m_GaborSham_CN_BasCorr,5));
+Mean_Ep_Sham_CN = squeeze(nanmean(m_GaborSham_CN_BasCorr,5));
 
 %Placebo Night Placebo Odor
-Mean_Ep_Placebo = squeeze(mean(m_GaborPlacebo_BasCorr,5));
+Mean_Ep_Placebo = squeeze(nanmean(m_GaborPlacebo_BasCorr,5));
 
 %Placebo Night Sham Odor
-Mean_Ep_Sham_PN = squeeze(mean(m_GaborSham_PN_BasCorr,5));
+Mean_Ep_Sham_PN = squeeze(nanmean(m_GaborSham_PN_BasCorr,5));
 %--------------------------------------------------------------------------
 % Mean of epochs and subjects for each channel
 %--------------------------------------------------------------------------
 %Cue Night Cue Odor
-Mean_Ep_Subj_Cue = squeeze(mean(Mean_Ep_Cue,1));
+Mean_Ep_Subj_Cue = squeeze(nanmean(Mean_Ep_Cue,1));
 
 %Cue Night Sham Odor
-Mean_Ep_Subj_Sham_CN = squeeze(mean(Mean_Ep_Sham_CN,1));
+Mean_Ep_Subj_Sham_CN = squeeze(nanmean(Mean_Ep_Sham_CN,1));
 
 %Placebo Night Placebo Odor
-Mean_Ep_Subj_Placebo = squeeze(mean(Mean_Ep_Placebo,1));
+Mean_Ep_Subj_Placebo = squeeze(nanmean(Mean_Ep_Placebo,1));
 
 %Placebo Night Sham Odor
-Mean_Ep_Subj_Sham_PN = squeeze(mean(Mean_Ep_Sham_PN,1));
+Mean_Ep_Subj_Sham_PN = squeeze(nanmean(Mean_Ep_Sham_PN,1));
 
 %--------------------------------------------------------------------------
 % Mean All (All Subjects,epochs and Channels)
 %--------------------------------------------------------------------------
 %Cue Night Cue Odor
-Mean_All_Cue = squeeze(mean(Mean_Ep_Ch_Cue,1));
+Mean_All_Cue = squeeze(nanmean(Mean_Ep_Ch_Cue,1));
 
 %Cue Night Sham Odor
-Mean_All_Sham_CN = squeeze(mean(Mean_Ep_Ch_Sham_CN,1));
+Mean_All_Sham_CN = squeeze(nanmean(Mean_Ep_Ch_Sham_CN,1));
 
 %Placebo Night Placebo Odor
-Mean_All_Placebo = squeeze(mean(Mean_Ep_Ch_Placebo,1));
+Mean_All_Placebo = squeeze(nanmean(Mean_Ep_Ch_Placebo,1));
 
 %Placebo Night Sham Odor
-Mean_All_Sham_PN = squeeze(mean(Mean_Ep_Ch_Sham_PN,1));
+Mean_All_Sham_PN = squeeze(nanmean(Mean_Ep_Ch_Sham_PN,1));
 
 %% Statistical analysis for each subject across epochs (mean channels)
 % Condition1 and Condition2 should be in a shape of freq x Time x Epochs
@@ -259,7 +259,7 @@ end
 %---------------------------------------------------------------------
 % Across subjects (mean channels, mean epochs)
 %---------------------------------------------------------------------
-%----- For Cue Night ----
+%% ----- For Cue Night ----
 m_Delta_MeanAll_Cue = ...
     DeltaBandCalculation(Mean_Ep_Ch_Cue,v_FreqAxis);
 m_Delta_MeanAll_Sham_CN = ...
@@ -270,7 +270,7 @@ m_Delta_MeanAll_Placebo = ...
     DeltaBandCalculation(Mean_Ep_Ch_Placebo,v_FreqAxis);
 m_Delta_MeanAll_Sham_PN = ...
     DeltaBandCalculation(Mean_Ep_Ch_Sham_PN,v_FreqAxis);
-
+%%
 %---------------------------------------------------------------------
 % For each channel Across subjects (mean epochs)
 %---------------------------------------------------------------------
@@ -305,6 +305,8 @@ PerformWilcoxon()
 
 %% Wilcoxon test for Delta Band analyses
 function PerformWilcoxon()
+%%
+v_time2 = -15:2.5:15-2.5;
 eeglab nogui
 %---------------------------------------------------------------------
 % For each subject across epochs (mean channels)
@@ -330,38 +332,60 @@ end
 %---------------------------------------------------------------------
 % Across subjects (mean channels, mean epochs)
 %---------------------------------------------------------------------
+
 %----- For Cue Night----
-f_WilcTest('Delta Band (0.5 - 4Hz) for Cue Night','Time(sec)',' ','Cue','Sham',...
-    m_Delta_MeanAll_Cue(v_GoodLearners,:),m_Delta_MeanAll_Sham_CN(v_GoodLearners,:),v_time,'-r')
-saveas(gcf,strcat('Cue_Night_Wilcoxon_GoodLearners.png'))
+stats_m_Delta_MeanAll_cue = ...
+    f_WilcTest('Delta Band (0.5 - 4Hz) for Cue Night','Time(sec)',' ','Cue','Sham',...
+    m_Delta_MeanAll_Cue,m_Delta_MeanAll_Sham_CN,v_time,'-r');
+ylim([-30 30])
+%saveas(gcf,strcat('Cue_Night_Wilcoxon.png'))
 
 %----- For Placebo Night----
-f_WilcTest('Delta Band (0.5 - 4Hz) for Placebo Night','Time(sec)',' ','Placebo','Sham',...
-    m_Delta_MeanAll_Placebo(v_GoodLearners,:),m_Delta_MeanAll_Sham_PN(v_GoodLearners,:),v_time,'-b')
-saveas(gcf,strcat('Placebo_Night_Wilcoxon_GoodLearners.png'))
+stats_m_Delta_MeanAll_placebo = ...
+    f_WilcTest('Delta Band (0.5 - 4Hz) for Placebo Night','Time(sec)',' ','Placebo','Sham',...
+    m_Delta_MeanAll_Placebo,m_Delta_MeanAll_Sham_PN,v_time,'-b');
+ylim([-30 30])
+%saveas(gcf,strcat('Placebo_Night_Wilcoxon.png'))
 close all
 
-%---------------------------------------------------------------------
+%% ---------------------------------------------------------------------
 % For each channel Across subjects (mean epochs)
 %---------------------------------------------------------------------
 
-for chan = [27,28,29,30,33,34,35,38,43,44,49,50,51,56,67,87] %1:size(m_Delta_MeanEpochs_Cue,1)
+for chan = 1:129%size(m_Delta_MeanEpochs_Cue,1)%
+    
+    try 
     %----- For Cue Night----
-    f_WilcTest(strcat('Delta Band (0.5 - 4Hz) for Cue Night Channel ',channels(chan)),...
+    stats_Delta_MeanEpochs_Cue = ...
+        f_WilcTest(strcat('Delta Band (0.5 - 4Hz) for Cue Night Channel ',channels(chan)),...
         'Time(sec)',' ','Cue','Sham',...
         squeeze(m_Delta_MeanEpochs_Cue(chan,:,:)),...
         squeeze(m_Delta_MeanEpochs_Sham_CN(chan,:,:)),...
-        v_time,'-r')
-    saveas(gcf,strcat('Cue_Night_Wilcoxon_Chan',channels(chan),'.png'))
+        v_time,'-r');
+    ylim([-30 30])
+    %hold on
+    %yyaxis right
+    %plot(v_time2,[stats_Delta_MeanEpochs_Cue.pval],'-g','DisplayName','p-value')
+    %ylim([0 1])
+    saveas(gcf,strcat('Cue_Night_Wilcoxon_Chan',num2str(chan),'.png'))
     
     %----- For Placebo Night----
-    f_WilcTest(strcat('Delta Band (0.5 - 4Hz) for Placebo Night Channel ',channels(chan)),...
+    stats_Delta_MeanEpochs_Placebo = ...
+        f_WilcTest(strcat('Delta Band (0.5 - 4Hz) for Placebo Night Channel ',channels(chan)),...
         'Time(sec)',' ','Placebo','Sham',...
         squeeze(m_Delta_MeanEpochs_Placebo(chan,:,:)),...
         squeeze(m_Delta_MeanEpochs_Sham_PN(chan,:,:)),...
-        v_time,'-b')
-    saveas(gcf,strcat('Placebo_Night_Wilcoxon_Chan',channels(chan),'.png'))
-    %close all
+        v_time,'-b');
+    ylim([-30 30])
+    %hold on
+    %yyaxis right
+    %plot(v_time2,[stats_Delta_MeanEpochs_Placebo.pval],'-g','DisplayName','p-value')
+    %ylim([0 1])
+    saveas(gcf,strcat('Placebo_Night_Wilcoxon_Chan',num2str(chan),'.png'))
+    close all
+    catch
+        continue
+    end
 end
 end
 
@@ -567,13 +591,13 @@ for subj = 1:size(m_Delta_MeanChannels_Cue,1)
     
     plot(v_time,Cond1,'r','linewidth',0.5)
     hold on
-    CuePlot = mean(Cond1,1);
+    CuePlot = nanmean(Cond1,1);
     
     plot(v_time,Cond2,'k','linewidth',0.5)
     hold on
     b1 = plot(v_time,CuePlot,'r','linewidth',3,...
         'DisplayName','Cue Mean');
-    b2 = plot(v_time,mean(Cond2,1),'k','linewidth',3,...
+    b2 = plot(v_time,nanmean(Cond2,1),'k','linewidth',3,...
         'DisplayName','Sham Mean');
     legend ([b1,b2])
     title(strcat('Subj',num2str(subj),'Cue Night'))
@@ -586,13 +610,13 @@ for subj = 1:size(m_Delta_MeanChannels_Cue,1)
     
     plot(v_time,Cond1,'b','linewidth',0.5)
     hold on
-    PlaceboPlot = mean(Cond1,1);
+    PlaceboPlot = nanmean(Cond1,1);
     
     plot(v_time,Cond2,'k','linewidth',0.5)
     hold on
     b1 = plot(v_time,PlaceboPlot,'b','linewidth',3,...
         'DisplayName','Placebo Mean');
-    b2 = plot(v_time,mean(Cond2,1),'k','linewidth',3,...
+    b2 = plot(v_time,nanmean(Cond2,1),'k','linewidth',3,...
         'DisplayName','Sham Mean');
     legend ([b1,b2])
     title(strcat('Subj',num2str(subj),'Placebo Night'))
@@ -607,13 +631,13 @@ close all
 %----- For Cue Night ----
 plot(v_time,m_Delta_MeanAll_Cue,'r','linewidth',0.5)
 hold on
-CuePlot = mean(m_Delta_MeanAll_Cue,1);
+CuePlot = nanmean(m_Delta_MeanAll_Cue,1);
 
 plot(v_time,m_Delta_MeanAll_Sham_CN,'k','linewidth',0.5)
 hold on
 b1 = plot(v_time,CuePlot,'r','linewidth',3,...
     'DisplayName','Cue Mean');
-b2 = plot(v_time,mean(m_Delta_MeanAll_Sham_CN,1),'k','linewidth',3,...
+b2 = plot(v_time,nanmean(m_Delta_MeanAll_Sham_CN,1),'k','linewidth',3,...
     'DisplayName','Sham Mean');
 legend ([b1,b2])
 title('Cue Night')
@@ -624,13 +648,13 @@ saveas(gcf,'Cue_Night_Delta.png')
 %----- For Placebo Night ----
 plot(v_time,m_Delta_MeanAll_Placebo,'b','linewidth',0.5)
 hold on
-PlaceboPlot = mean(m_Delta_MeanAll_Placebo,1);
+PlaceboPlot = nanmean(m_Delta_MeanAll_Placebo,1);
 
 plot(v_time,m_Delta_MeanAll_Sham_PN,'k','linewidth',0.5)
 hold on
 b1 = plot(v_time,PlaceboPlot,'b','linewidth',3,...
     'DisplayName','Placebo Mean');
-b2 = plot(v_time,mean(m_Delta_MeanAll_Sham_PN,1),'k','linewidth',3,...
+b2 = plot(v_time,nanmean(m_Delta_MeanAll_Sham_PN,1),'k','linewidth',3,...
     'DisplayName','Sham Mean');
 legend ([b1,b2])
 title('Placebo Night')
@@ -649,13 +673,13 @@ for chan = 1:size(Mean_Ep_Cue,4)
     
     plot(v_time,Cond1,'r','linewidth',0.5)
     hold on
-    CuePlot = mean(Cond1,1);
+    CuePlot = nanmean(Cond1,1);
     
     plot(v_time,Cond2,'k','linewidth',0.5)
     hold on
     b1 = plot(v_time,CuePlot,'r','linewidth',3,...
         'DisplayName','Cue Mean');
-    b2 = plot(v_time,mean(Cond2,1),'k','linewidth',3,...
+    b2 = plot(v_time,nanmean(Cond2,1),'k','linewidth',3,...
         'DisplayName','Sham Mean');
     legend ([b1,b2])
     title(strcat('Channel',channels(chan),'Cue Night'))
@@ -668,13 +692,13 @@ for chan = 1:size(Mean_Ep_Cue,4)
     
     plot(v_time,Cond1,'b','linewidth',0.5)
     hold on
-    PlaceboPlot = mean(Cond1,1);
+    PlaceboPlot = nanmean(Cond1,1);
     
     plot(v_time,Cond2,'k','linewidth',0.5)
     hold on
     b1 = plot(v_time,PlaceboPlot,'b','linewidth',3,...
         'DisplayName','Placebo Mean');
-    b2 = plot(v_time,mean(Cond2,1),'k','linewidth',3,...
+    b2 = plot(v_time,nanmean(Cond2,1),'k','linewidth',3,...
         'DisplayName','Sham Mean');
     legend ([b1,b2])
     title(strcat('Channel',channels(chan),'Placebo Night'))
@@ -697,11 +721,11 @@ s_FirstInd = find(v_FreqAxis <= MaxFreq, 1);
 
 %Calculate the mean of power in that band of frequency
 m_TFFreqBands = ...
-    squeeze(mean(TimeFrequencyMatrix(:,s_FirstInd:s_LastInd, :),2));
+    squeeze(nanmean(TimeFrequencyMatrix(:,s_FirstInd:s_LastInd, :),2));
 end
 %%
 function Baseline_Corr = baselinecorrection(Data,baselineTime,s_TimeStep)
-baseline = mean(Data(:,:,1:(baselineTime/s_TimeStep),:,:),3);
+baseline = nanmean(Data(:,:,1:(baselineTime/s_TimeStep),:,:),3);
 Baseline_Corr = Data-baseline;
 end
 %%
@@ -729,4 +753,34 @@ m_sigpvalue = m_sigp.*(1-m_Statistics);
 end
 
 
-
+%%
+% v_time2 = -15+1:2.5:15;
+% for freq = 1:size(Mean_Ep_Ch_Cue,2)
+%     name = strcat('Band',num2str(freq));
+%     For cue Night
+%     c1 = squeeze(Mean_Ep_Ch_Cue(:,freq,:));
+%     c2 = squeeze(Mean_Ep_Ch_Sham_CN(:,freq,:));
+%     statsCue = test_wilcoxon_cvar(c1, c2,'Cue','sham','signrank',1,1);
+%     pvalCue(freq,:) = statsCue.pval;
+%     
+%     For Placebo Night
+%     For cue Night
+%     c1 = squeeze(Mean_Ep_Ch_Placebo(:,freq,:));
+%     c2 = squeeze(Mean_Ep_Ch_Sham_PN(:,freq,:));
+%     statsPlacebo = test_wilcoxon_cvar(c1, c2,'Placebo','sham','signrank',1,1);
+%     pvalPlacebo(freq,:) = statsPlacebo.pval;
+% end
+% figure
+% subplot(2,1,1)
+% f_ImageMatrix((pvalCue<=0.05).*(0.1-pvalCue),...
+%     v_time2,v_FreqAxis,[], [], [], 0);
+% xlabel('Time(sec)')
+% title('Cue Night')
+% colorbar
+% subplot(2,1,2)
+% f_ImageMatrix((pvalPlacebo<=0.05).*(0.1-pvalPlacebo),...
+%     v_time2,v_FreqAxis,[], [], [], 0);
+% xlabel('Time(sec)')
+% title('Placebo Night')
+% colorbar
+% suptitle(strcat('p-values Wilcoxon test All'))
