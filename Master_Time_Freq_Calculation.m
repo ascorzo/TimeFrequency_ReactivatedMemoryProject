@@ -60,7 +60,7 @@ for subj = 1:numel(filesOdor)
     
  
     %-----------Selection of data Channels--------------------------------- 
-    dataOdor = ft_selectdata(cfg_Sel,dataOdor);
+    %dataOdor = ft_selectdata(cfg_Sel,dataOdor);
     
     %-----------Time-Frequency Calculation---------------------------------
     Time_Freq_Cue{subj}   = ft_freqanalysis(cfg_Tf, dataOdor);
@@ -97,13 +97,13 @@ for subj = 1:numel(filesOdor)
      
 
     %-----------Selection of data Channels--------------------------------- 
-    dataSham = ft_selectdata(cfg_Sel,dataSham);
+    %dataSham = ft_selectdata(cfg_Sel,dataSham);
     
     %-----------Time-Frequency Calculation---------------------------------
     Time_Freq_Sham_CN{subj}   = ft_freqanalysis(cfg_Tf, dataSham);
     
     %-----------Baseline Correction ---------------------------------------
-    Time_Freq_Sham_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq_Sham{subj});
+    Time_Freq_Sham_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq_Sham_CN{subj});
     
     %-----------Mean of all trials, each channel --------------------------
     Time_Freq_Sham_Mean = Time_Freq_Sham_Baseline;
@@ -151,7 +151,7 @@ for subj = 1:numel(filesOdor)
     
  
     %-----------Selection of data Channels--------------------------------- 
-    dataOdor = ft_selectdata(cfg_Sel,dataOdor);
+    %dataOdor = ft_selectdata(cfg_Sel,dataOdor);
     
     %-----------Time-Frequency Calculation---------------------------------
     Time_Freq_Placebo{subj}   = ft_freqanalysis(cfg_Tf, dataOdor);
@@ -188,13 +188,13 @@ for subj = 1:numel(filesOdor)
     
 
     %-----------Selection of data Channels--------------------------------- 
-    dataSham = ft_selectdata(cfg_Sel,dataSham);
+    %dataSham = ft_selectdata(cfg_Sel,dataSham);
     
     %-----------Time-Frequency Calculation---------------------------------
     Time_Freq_Sham_PN{subj}   = ft_freqanalysis(cfg_Tf, dataSham);
     
     %-----------Baseline Correction ---------------------------------------
-    Time_Freq_Sham_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq_Sham{subj});
+    Time_Freq_Sham_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq_Sham_PN{subj});
     
     %-----------Mean of all trials, each channel --------------------------
     Time_Freq_Sham_Mean = Time_Freq_Sham_Baseline;
