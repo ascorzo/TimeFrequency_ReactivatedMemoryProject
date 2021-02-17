@@ -1,7 +1,7 @@
-addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/')
+addpath('C:\Users\lanan\Documents\MATLAB\fieldtrip-20190828\')
 
 ft_defaults
-addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/qsub')
+addpath('C:\Users\lanan\Documents\MATLAB\fieldtrip-20190828\qsub')
 
 ft_warning off
 %--------------------------------------------------------------------------
@@ -73,7 +73,7 @@ Clust.occipital = {...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-filepath = '/mnt/disk1/andrea/German_Study/Data/PreProcessed/Epoched_90SecTrial_MastoidRef-Interp/OdorD_Night/';
+filepath = 'D:\GermanData\DATA\RawData\preProcessing\Epoched_90SecTrial_MastoidRef_Interp\OdorD_Night\';
 
 files = dir(strcat(filepath,'*.set'));
 
@@ -89,61 +89,57 @@ for subj = 1:numel(files)
     disp(strcat('Cue'))
     
     %--------- Load Data --------------------------------------------------
-    addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
+    addpath(genpath('C:\Users\lanan\Documents\MATLAB\eeglab2019_1\'))
     EEGOdor = pop_loadset(strcat(filepath,files(subj).name));
     dataOdor = eeglab2fieldtrip(EEGOdor,'raw');
-    rmpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
-    
- 
-    -----------Selection of data Channels--------------------------------- 
-    dataOdor = ft_selectdata(cfg_Sel,dataOdor);
+    rmpath(genpath('C:\Users\lanan\Documents\MATLAB\eeglab2019_1\'))
     
     
-    -----------Time-Frequency Calculation---------------------------------
+    %-----------Time-Frequency Calculation---------------------------------
     Time_Freq_DA_Temp  = ft_freqanalysis(cfg_Tf, dataOdor);
     
-    --------------Select time of interest---------------------------------
+    %--------------Select time of interest---------------------------------
     cfg = [];
     cfg.latency = [-15 45];
     Time_Freq_DA{subj}  = ft_selectdata(cfg, Time_Freq_DA_Temp);
     
-    %-----------baseline Correction ---------------------------------------
-    
-    Time_Freq_DA_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq_DA{subj} );
-    
-    %-----------Mean of all trials, each channel --------------------------
-    cfg = [];
-    cfg.avgoverrpt = 'yes';
-    Time_Freq_Cue_baseline2 = rmfield(Time_Freq_DA_Baseline,  'trialinfo');
-    Time_Freq_DA_Mean = ft_selectdata(cfg, Time_Freq_Cue_baseline2);
-    
-    %-----------Separate conditions -----------------------  
-    cfg = [];
-    cfg.latency = [-15 15];
-    Time_Freq_Cue = ft_selectdata(cfg, Time_Freq_DA_Mean);
-    
-    cfg = [];
-    cfg.latency = [15 45];
-    Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_DA_Mean);
-    Time_Freq_Vehicle.time = Time_Freq_DA_Mean.time;
-    
-    %-----------Combine Mean of all frontal channels-----------------------
-    [~,~,ind2] = intersect(Clust.frontal,Time_Freq_Cue.label);
-    Time_Freq_Cue_Frontal(subj,:,:) = ...
-        squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
-    
-    [~,~,ind2] = intersect(Clust.frontal,Time_Freq_Vehicle.label);
-    Time_Freq_Vehicle_Frontal(subj,:,:) = ...
-        squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
-    
-    %-----------Combine Mean of all central channels-----------------------
-    [~,~,ind2] = intersect(Clust.central,Time_Freq_Cue.label);
-    Time_Freq_Cue_Central(subj,:,:) = ...
-        squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
-    
-    [~,~,ind2] = intersect(Clust.central,Time_Freq_Vehicle.label);
-    Time_Freq_Vehicle_Central(subj,:,:) = ...
-        squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
+%     %-----------baseline Correction ---------------------------------------
+%     
+%     Time_Freq_DA_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq_DA{subj} );
+%     
+%     %-----------Mean of all trials, each channel --------------------------
+%     cfg = [];
+%     cfg.avgoverrpt = 'yes';
+%     Time_Freq_Cue_baseline2 = rmfield(Time_Freq_DA_Baseline,  'trialinfo');
+%     Time_Freq_DA_Mean = ft_selectdata(cfg, Time_Freq_Cue_baseline2);
+%     
+%     %-----------Separate conditions -----------------------  
+%     cfg = [];
+%     cfg.latency = [-15 15];
+%     Time_Freq_Cue = ft_selectdata(cfg, Time_Freq_DA_Mean);
+%     
+%     cfg = [];
+%     cfg.latency = [15 45];
+%     Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_DA_Mean);
+%     Time_Freq_Vehicle.time = Time_Freq_DA_Mean.time;
+%     
+%     %-----------Combine Mean of all frontal channels-----------------------
+%     [~,~,ind2] = intersect(Clust.frontal,Time_Freq_Cue.label);
+%     Time_Freq_Cue_Frontal(subj,:,:) = ...
+%         squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
+%     
+%     [~,~,ind2] = intersect(Clust.frontal,Time_Freq_Vehicle.label);
+%     Time_Freq_Vehicle_Frontal(subj,:,:) = ...
+%         squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
+%     
+%     %-----------Combine Mean of all central channels-----------------------
+%     [~,~,ind2] = intersect(Clust.central,Time_Freq_Cue.label);
+%     Time_Freq_Cue_Central(subj,:,:) = ...
+%         squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
+%     
+%     [~,~,ind2] = intersect(Clust.central,Time_Freq_Vehicle.label);
+%     Time_Freq_Vehicle_Central(subj,:,:) = ...
+%         squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
 
 end
 
