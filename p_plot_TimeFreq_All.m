@@ -9,7 +9,7 @@ z_lims = [min(Time_Freq_Cue_Frontal(:)),max(Time_Freq_Cue_Frontal(:))];
 figure
 total_subplots = 3;
 count = 1;
-frequencies = Time_Freq_DA{1}.freq;
+frequencies = Time_Freq.freq;
  
 subplot(total_subplots,1,count)
 f_ImageMatrix(squeeze(mean(Time_Freq_Cue_Central,1)),time_parcial,frequencies,y_lims)
@@ -38,7 +38,7 @@ end_sample = floor(ValidTime(end)-v_time(1)/s_tstep);
 
 count = count+1;
 subplot(total_subplots,1,count)
- f_WilcTest('Delta Central',...
+f_WilcTest('Delta Central',...
      'Time(sec)',' ','Odor D','Vehicle',...
      v_Delta_Cue_Central,...
      v_Delta_Vehicle_Central,...

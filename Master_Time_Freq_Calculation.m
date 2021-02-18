@@ -1,7 +1,7 @@
-addpath('C:\Users\lanan\Documents\MATLAB\fieldtrip-20190828\')
+addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/')
 
 ft_defaults
-addpath('C:\Users\lanan\Documents\MATLAB\fieldtrip-20190828\qsub')
+addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/qsub')
 
 ft_warning off
 %--------------------------------------------------------------------------
@@ -26,56 +26,18 @@ cfg_Bas                     = [];
 cfg_Bas.baseline            = [-15 45];
 cfg_Bas.baselinetype        = 'zscore';
 
-%--------------------------------------------------------------------------
-% Define clusters of channels 
-%--------------------------------------------------------------------------
-Clust.left_frontal = {...
-    'E15', 'E16', 'E11', 'E18', 'E19', 'E22', 'E23', 'E24', 'E26', ...
-    'E27', 'E33', 'E38'};
-Clust.right_frontal = {...
-    'E15', 'E16', 'E11', 'E10', 'E4', 'E9', 'E3', 'E124', 'E2', ...
-    'E123', 'E122', 'E121'};
-Clust.frontal = {...
-    'E3', 'E4', 'E9', 'E10', 'E11', 'E15', 'E16', 'E18', 'E19', ...
-    'E22', 'E23', 'E24', 'E124'};
-Clust.left_central = {...
-    'E6', 'E7', 'E13', 'E30', 'E31', 'E37', 'E54', 'E55'};
-Clust.right_central = {...
-    'E6', 'E55', 'E112', 'E106', 'E105', 'E80', 'E87', 'E79'};
-Clust.central = {...
-    'E6', 'E7', 'E13', 'E30', 'E31', 'E37', 'E54', 'E55', 'E79', ...
-    'E80', 'E87', 'E105', 'E106', 'E112'};
-Clust.left_temporal = {...
-    'E46', 'E51', 'E45', 'E50', 'E58', 'E56', 'E63'};
-Clust.right_temporal = {...
-    'E108', 'E102', 'E101', 'E97', 'E96', 'E99', 'E107'};
-Clust.left_parietal = {...
-    'E53', 'E61', 'E62', 'E72', 'E67', 'E52', 'E60', 'E59', 'E66', ...
-    'E65', 'E64', 'E68'};
-Clust.right_patietal = {...
-    'E62', 'E72', 'E78', 'E77', 'E86', 'E85', 'E84', 'E92', 'E91', ...
-    'E90', 'E95', 'E94'};
-Clust.parietal = {...
-    'E52', 'E61', 'E62', 'E59', 'E60', 'E67', 'E66', 'E72', 'E78', ...
-    'E77', 'E86', 'E85', 'E84', 'E92', 'E91','E53'};
-Clust.left_occipital = {...
-    'E71', 'E70', 'E75', 'E74', 'E69', 'E73'};
-Clust.right_occipital = {...
-    'E75', 'E76', 'E82', 'E83', 'E88', 'E89'};
-Clust.occipital = {...
-    'E71', 'E70', 'E74', 'E69', 'E73', 'E75', 'E76', 'E83', 'E82', ...
-    'E89', 'E88'};
-
-
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % For Declarative Associated Odor Night
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-filepath = 'D:\GermanData\DATA\RawData\preProcessing\Epoched_90SecTrial_MastoidRef_Interp\OdorD_Night\';
+%filepath = 'D:\GermanData\DATA\RawData\preProcessing\Epoched_90SecTrial_MastoidRef_Interp\OdorD_Night\';
 
-files = dir(strcat(filepath,'*.set'));
+filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_OdorD_Night/';
+
+%files = dir(strcat(filepath,'*.set'));
+files = dir(strcat(filepath,'*.mat'));
 
 
 for subj = 1:numel(files)
@@ -86,60 +48,60 @@ for subj = 1:numel(files)
     %______________________________________________________________________
     
     disp(strcat('Sujeto: ',num2str(subj)))
-    disp(strcat('Cue'))
     
-    %--------- Load Data --------------------------------------------------
-    addpath(genpath('C:\Users\lanan\Documents\MATLAB\eeglab2019_1\'))
-    EEGOdor = pop_loadset(strcat(filepath,files(subj).name));
-    dataOdor = eeglab2fieldtrip(EEGOdor,'raw');
-    rmpath(genpath('C:\Users\lanan\Documents\MATLAB\eeglab2019_1\'))
+%     %--------- Load Data --------------------------------------------------
+%     addpath(genpath('C:\Users\lanan\Documents\MATLAB\eeglab2019_1\'))
+%     EEGOdor = pop_loadset(strcat(filepath,files(subj).name));
+%     dataOdor = eeglab2fieldtrip(EEGOdor,'raw');
+%     rmpath(genpath('C:\Users\lanan\Documents\MATLAB\eeglab2019_1\'))
     
     
     %-----------Time-Frequency Calculation---------------------------------
-    Time_Freq_DA_Temp  = ft_freqanalysis(cfg_Tf, dataOdor);
+%     Time_Freq_DA_Temp  = ft_freqanalysis(cfg_Tf, dataOdor);
+%     
+%     %--------------Select time of interest---------------------------------
+%     cfg = [];
+%     cfg.latency = [-15 45];
+%     Time_Freq_DA{subj}  = ft_selectdata(cfg, Time_Freq_DA_Temp);
+
+
+    load(strcat(filepath,files(subj).name));
+    %-----------baseline Correction ---------------------------------------
     
-    %--------------Select time of interest---------------------------------
+    Time_Freq_DA_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq );
+    
+    %-----------Mean of all trials, each channel --------------------------
     cfg = [];
-    cfg.latency = [-15 45];
-    Time_Freq_DA{subj}  = ft_selectdata(cfg, Time_Freq_DA_Temp);
+    cfg.avgoverrpt = 'yes';
+    Time_Freq_Cue_baseline2 = rmfield(Time_Freq_DA_Baseline,  'trialinfo');
+    Time_Freq_DA_Mean = ft_selectdata(cfg, Time_Freq_Cue_baseline2);
     
-%     %-----------baseline Correction ---------------------------------------
-%     
-%     Time_Freq_DA_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq_DA{subj} );
-%     
-%     %-----------Mean of all trials, each channel --------------------------
-%     cfg = [];
-%     cfg.avgoverrpt = 'yes';
-%     Time_Freq_Cue_baseline2 = rmfield(Time_Freq_DA_Baseline,  'trialinfo');
-%     Time_Freq_DA_Mean = ft_selectdata(cfg, Time_Freq_Cue_baseline2);
-%     
-%     %-----------Separate conditions -----------------------  
-%     cfg = [];
-%     cfg.latency = [-15 15];
-%     Time_Freq_Cue = ft_selectdata(cfg, Time_Freq_DA_Mean);
-%     
-%     cfg = [];
-%     cfg.latency = [15 45];
-%     Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_DA_Mean);
-%     Time_Freq_Vehicle.time = Time_Freq_DA_Mean.time;
-%     
-%     %-----------Combine Mean of all frontal channels-----------------------
-%     [~,~,ind2] = intersect(Clust.frontal,Time_Freq_Cue.label);
-%     Time_Freq_Cue_Frontal(subj,:,:) = ...
-%         squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
-%     
-%     [~,~,ind2] = intersect(Clust.frontal,Time_Freq_Vehicle.label);
-%     Time_Freq_Vehicle_Frontal(subj,:,:) = ...
-%         squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
-%     
-%     %-----------Combine Mean of all central channels-----------------------
-%     [~,~,ind2] = intersect(Clust.central,Time_Freq_Cue.label);
-%     Time_Freq_Cue_Central(subj,:,:) = ...
-%         squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
-%     
-%     [~,~,ind2] = intersect(Clust.central,Time_Freq_Vehicle.label);
-%     Time_Freq_Vehicle_Central(subj,:,:) = ...
-%         squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
+    %-----------Separate conditions -----------------------  
+    cfg = [];
+    cfg.latency = [-15 15];
+    Time_Freq_Cue = ft_selectdata(cfg, Time_Freq_DA_Mean);
+    
+    cfg = [];
+    cfg.latency = [15 45];
+    Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_DA_Mean);
+    Time_Freq_Vehicle.time = Time_Freq_DA_Mean.time;
+    %----------------------------------------------------------------------
+    %           Combine Mean of channels by clusters
+    %----------------------------------------------------------------------
+    p_clustersOfInterest
+    
+    clusters = fieldnames(Clust);
+
+    for cluster = 1:numel(clusters)
+        [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Cue.label);
+        Time_Freq_Cue_clust.(clusters{cluster})(subj,:,:) = ...
+            squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
+        
+        [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Vehicle.label);
+        Time_Freq_Vehicle_clust.(clusters{cluster})(subj,:,:) = ...
+            squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
+        
+    end
 
 end
 
@@ -147,103 +109,119 @@ end
 
 %% Calculation of power change in specific bands
 
-SpindleBand     = [12 16];
+SpindleBand     = [10 18];
 DeltaBand       = [0.5 4];
-time = Time_Freq_DA{1}.time ;
+ThetaBand       = [4 8];
+BetaBand        = [18 30];
+time = Time_Freq.time ;
 subjects = 1:numel(files);
 
-%------------------------------------------------------
-% For Cue Night
-%------------------------------------------------------
 
-SpindleIdx = find(Time_Freq_DA{subj}.freq>=SpindleBand(1) &...
-    Time_Freq_DA{subj}.freq<=SpindleBand(2));
-DeltaIdx = find(Time_Freq_DA{subj}.freq>=DeltaBand(1) &...
-    Time_Freq_DA{subj}.freq<=DeltaBand(2));
+SpindleIdx = find(Time_Freq.freq>=SpindleBand(1) &...
+    Time_Freq.freq<=SpindleBand(2));
+DeltaIdx = find(Time_Freq.freq>=DeltaBand(1) &...
+    Time_Freq.freq<=DeltaBand(2));
+ThetaIdx = find(Time_Freq.freq>=ThetaBand(1) &...
+    Time_Freq.freq<=ThetaBand(2));
+BetaIdx = find(Time_Freq.freq>=BetaBand(1) &...
+    Time_Freq.freq<=BetaBand(2));
 
-% -----------------For Cue----------------------------------
-v_Spindle_Cue_Frontal = squeeze(mean(Time_Freq_Cue_Frontal(subjects,SpindleIdx,:),2));
+for cluster = 1:numel(clusters)
+    % -----------------For Cue----------------------------------
+    v_Spindle_Cue.(clusters{cluster}) = squeeze(mean(Time_Freq_Cue_clust.(clusters{cluster})(subjects,SpindleIdx,:),2));
+    v_Delta_Cue.(clusters{cluster}) = squeeze(mean(Time_Freq_Cue_clust.(clusters{cluster})(subjects,DeltaIdx,:),2));
+    v_Theta_Cue.(clusters{cluster}) = squeeze(mean(Time_Freq_Cue_clust.(clusters{cluster})(subjects,ThetaIdx,:),2));
+    v_Beta_Cue.(clusters{cluster}) = squeeze(mean(Time_Freq_Cue_clust.(clusters{cluster})(subjects,BetaIdx,:),2));
 
-v_Delta_Cue_Frontal = squeeze(mean(Time_Freq_Cue_Frontal(subjects,DeltaIdx,:),2));
+    % -----------------For Vehicle----------------------------------
+    v_Spindle_Vehicle.(clusters{cluster}) = squeeze(mean(Time_Freq_Vehicle_clust.(clusters{cluster})(subjects,SpindleIdx,:),2));
+    v_Delta_Vehicle.(clusters{cluster}) = squeeze(mean(Time_Freq_Vehicle_clust.(clusters{cluster})(subjects,DeltaIdx,:),2));
+    v_Theta_Vehicle.(clusters{cluster}) = squeeze(mean(Time_Freq_Vehicle_clust.(clusters{cluster})(subjects,ThetaIdx,:),2));
+    v_Beta_Vehicle.(clusters{cluster}) = squeeze(mean(Time_Freq_Vehicle_clust.(clusters{cluster})(subjects,BetaIdx,:),2));
 
-
-v_Spindle_Cue_Central = squeeze(mean(Time_Freq_Cue_Central(subjects,SpindleIdx,:),2));
-
-v_Delta_Cue_Central = squeeze(mean(Time_Freq_Cue_Central(subjects,DeltaIdx,:),2));
-    
-    
-
-% -----------------For Vehicle----------------------------------
-v_Spindle_Vehicle_Frontal = squeeze(mean(Time_Freq_Vehicle_Frontal(subjects,SpindleIdx,:),2));
-
-v_Delta_Vehicle_Frontal = squeeze(mean(Time_Freq_Vehicle_Frontal(subjects,DeltaIdx,:),2));
-
-
-v_Spindle_Vehicle_Central = squeeze(mean(Time_Freq_Vehicle_Central(subjects,SpindleIdx,:),2));
-
-v_Delta_Vehicle_Central = squeeze(mean(Time_Freq_Vehicle_Central(subjects,DeltaIdx,:),2));
-
+end
 %% plot CUE Night
+
+addpath(genpath('/gpfs01/born/group/Andrea/eeglab2019_1/'))
+addpath('./Scripts_Wilc')
 
 %p_plot_TimeFreq_All
 
- %% plot Wilcoxon test
+for cluster = 1:numel(clusters)
+    
+    y_lims = [];%[-0.1 0.1];
+    x_lims_parcial = [-15 15];
+    time_parcial = Time_Freq.time;
+    %z_lims = [min(Time_Freq_Cue_Frontal(:)),max(Time_Freq_Cue_Frontal(:))];
+    
+    figure
+    total_subplots = 6;
+    count = 1;
+    frequencies = Time_Freq.freq;
+    
+    subplot(total_subplots,1,count)
+    f_ImageMatrix(squeeze(mean(Time_Freq_Cue_clust.(clusters{cluster}),1)),time_parcial,frequencies,y_lims)
+    xlim(x_lims_parcial)
+    colormap(pink)
+    %colorbar
+    title('TF Odor')
  
- figure
- 
- v_time = Time_Freq_Cue.time ;
- addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
- 
-% eeglab nogui
- addpath('./Scripts_Wilc')
- 
- Title = 'Odor D Night Ref-Interp';
- 
- subplot(2,2,1)
- f_WilcTest('Spindle Frontal',...
-     'Time(sec)',' ','Cue','Vehicle',...
-     v_Spindle_Cue_Frontal,...
-     v_Spindle_Vehicle_Frontal,...
-     v_time,'-r',1,[])
- 
- subplot(2,2,3)
- ValidTimeCue = v_time(~isnan(v_Delta_Cue_Frontal(1,:)));
- ValidTimeVehicle = v_time(~isnan(v_Delta_Vehicle_Frontal(1,:)));
- 
- ValidTime = intersect(ValidTimeCue,ValidTimeVehicle);
- start_sample = ceil(ValidTime(1)-v_time(1)/s_tstep);
- end_sample = floor(ValidTime(end)-v_time(1)/s_tstep);
- 
- f_WilcTest('Delta Frontal',...
-     'Time(sec)',' ','Cue','Vehicle',...
-     v_Delta_Cue_Frontal,...
-     v_Delta_Vehicle_Frontal,...
-     v_time,'-r',start_sample,end_sample)
- 
- subplot(2,2,2)
- f_WilcTest('Spindle Central',...
-     'Time(sec)',' ','Cue','Vehicle',...
-     v_Spindle_Cue_Central,...
-     v_Spindle_Vehicle_Central,...
-     v_time,'-r',1,[])
- 
- subplot(2,2,4)
- ValidTimeCue = v_time(~isnan(v_Delta_Cue_Central(1,:)));
- ValidTimeVehicle = v_time(~isnan(v_Delta_Vehicle_Central(1,:)));
- 
- ValidTime = intersect(ValidTimeCue,ValidTimeVehicle);
- start_sample = ceil(ValidTime(1)-v_time(1)/s_tstep);
- end_sample = floor(ValidTime(end)-v_time(1)/s_tstep);
- 
- f_WilcTest('Delta Central',...
-     'Time(sec)',' ','Cue','Vehicle',...
-     v_Delta_Cue_Central,...
-     v_Delta_Vehicle_Central,...
-     v_time,'-r',start_sample,end_sample)
+    count = count+1;
+    subplot(total_subplots,1,count)
+    f_ImageMatrix(squeeze(mean(Time_Freq_Vehicle_clust.(clusters{cluster}),1)),time_parcial,frequencies,y_lims)
+    xlim(x_lims_parcial)
+    colormap(pink)
+    %colorbar
+    title('TF Vehicle')
+    
+    v_time = Time_Freq_Cue.time ;
+    ValidTimeCue = v_time(~isnan(Time_Freq_Cue_clust.(clusters{cluster})(1,1,:)));
+    ValidTimeVehicle = v_time(~isnan(Time_Freq_Vehicle_clust.(clusters{cluster})(1,1,:)));
+    
+    ValidTime = intersect(ValidTimeCue,ValidTimeVehicle);
+    start_sample = ceil(ValidTime(1)-v_time(1)/s_tstep);
+    end_sample = floor(ValidTime(end)-v_time(1)/s_tstep);
+    
+    count = count+1;
+    subplot(total_subplots,1,count)
+    f_WilcTest('Beta',...
+        ' ',' ','Odor D','Vehicle',...
+        v_Beta_Cue.(clusters{cluster}),...
+        v_Beta_Vehicle.(clusters{cluster}),...
+        v_time,'-r',start_sample,end_sample)
+    
+    count = count+1;
+    subplot(total_subplots,1,count)
+    f_WilcTest('Spindle',...
+        ' ',' ','Odor D','Vehicle',...
+        v_Spindle_Cue.(clusters{cluster}),...
+        v_Spindle_Vehicle.(clusters{cluster}),...
+        v_time,'-r',start_sample,end_sample)
+    
+    count = count+1;
+    subplot(total_subplots,1,count)
+    f_WilcTest('Theta',...
+        ' ',' ','Odor D','Vehicle',...
+        v_Theta_Cue.(clusters{cluster}),...
+        v_Theta_Vehicle.(clusters{cluster}),...
+        v_time,'-r',start_sample,end_sample)
+    
+    count = count+1;
+    subplot(total_subplots,1,count)
+    f_WilcTest('Delta',...
+        'Time(sec)',' ','Odor D','Vehicle',...
+        v_Delta_Cue.(clusters{cluster}),...
+        v_Delta_Vehicle.(clusters{cluster}),...
+        v_time,'-r',start_sample,end_sample)
+    
+    
+    set(gcf,'position',[81,35,1252,926])
+    
+    l = suptitle(clusters{cluster});
+    set(l, 'Interpreter', 'none')
+    
+    %saveas(gcf,strcat(clusters{cluster},'.png'))
 
- sgtitle(Title)
+end
+
  
- 
- set(gcf,'position',[1,35,1920,926])
- 
- saveas(gcf,strcat(Title,'.png'))

@@ -5,15 +5,15 @@
 % In this section we add the the Fieldtrip folder in the path and run ft_defaults 
 % to have access to all functions of fieldtrip
 
-addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/')
+addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/')
 
 ft_defaults
-addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/qsub')
+addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/qsub')
 
 ft_warning off
 
 %% Initial parameters
-addpath('/mnt/disk1/andrea/German_Study/');
+%addpath('/mnt/disk1/andrea/German_Study/');
 p_clustersOfInterest
 
 
@@ -24,7 +24,7 @@ cfg_Sel.channel = Clust.occipital;
 % Start MVPA-Light
 %--------------------------------------------------------------------------
 
-addpath('/home/andrea/Documents/MatlabFunctions/MVPA-Light/startup/')
+addpath('/gpfs01/born/group/Andrea/Github/MVPA-Light/startup/')
 startup_MVPA_Light
 
 %--------------------------------------------------------------------------
@@ -39,7 +39,7 @@ cfg_Bas.baselinetype        = 'zscore';
 %--------------------------------------------------------------------------
 
 % For Odor D Night
-filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_OdorD_Night/';
+filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_OdorD_Night/';
 
 % For Odor M Night
 %filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_OdorM%_Night/';
@@ -47,7 +47,7 @@ filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_OdorD_Night/';
 files = dir(strcat(filepath,'*.mat'));
 %% MVPA TF analysis
 % 
-subjects = 1:numel(files);
+subjects = 10:numel(files);
 
 % load('Time-Freq_DNight_MastoidRef_Interp_12cycles_90secTrial.mat');
 
@@ -60,7 +60,7 @@ for subj = subjects
     disp(strcat('Sujeto: ',num2str(subj)))
     
     % Load Data
-    %load(strcat(filepath,files(subj).name));
+    load(strcat(filepath,files(subj).name));
     
     %----------------------------------------------------------------------
     % baseline correction
@@ -68,7 +68,7 @@ for subj = subjects
     cfg_Bas                     = [];
     cfg_Bas.baseline            = [-15 45];
     cfg_Bas.baselinetype        = 'zscore';
-    Time_Freq_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq{subj});
+    Time_Freq_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq);
     
     %----------------------------------------------------------------------
     % Separate conditions
@@ -213,8 +213,8 @@ for subj = subjects
     resultsfreq.occipital{subj,1} = result_freq{subj,1};
 
  
-    Time_Freq{subj} = [];
-    save('resultsfreq.mat','resultsfreq','-v7.3')
+    %Time_Freq{subj} = [];
+    save(strcat('/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_OdorD_Night/','resultsfreq.mat'),'resultsfreq','-v7.3')
     
 end
 
@@ -317,8 +317,8 @@ p_MVPA_TFClusterStats
 stat2.occipital = stat_level2;
 resultAverage.occipital = result_average;
 
-save('stat2_TF','stat2','-v7.3')
-save('resultAverage','resultAverage','-v7.3')
+save(strcat('/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_OdorD_Night','stat2_TF'),'stat2','-v7.3')
+save(strcat('/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_OdorD_Night','resultAverage'),'resultAverage','-v7.3')
 
 
  

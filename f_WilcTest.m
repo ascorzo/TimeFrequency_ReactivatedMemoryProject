@@ -1,6 +1,6 @@
 %% Wilcoxon test
 
-function f_WilcTest(ROI,xMeassure,yMeassure,condition1,condition2,data1,data2,x_axis,color)
+function stats = f_WilcTest(ROI,xMeassure,yMeassure,condition1,condition2,data1,data2,x_axis,color,start_point,end_sample)
 
 % ROI is going to be the name of the channel or scout to include in the
 % title (string)
@@ -17,7 +17,7 @@ savefig = 0;           % binario 1 = guardar, 0 = no guardar
 % t = 2;                 % COMPARE FREQS (1) OR TASKS (2)
 testType = 'signrank'; % type of wilcoxon or statistical test
 windowSize = 5;       % non-overlapping window size for test % 32 = 250 ms, 63 = 500 ms,  96 = 750
-start_point = 20;     % start sample for testing (usually after baseline), 1537 (500 ms), 126 = 0 189 (500 ms)
+%start_point = 1;     % start sample for testing (usually after baseline), 1537 (500 ms), 126 = 0 189 (500 ms)
 error = 'Sem';         % define error
 x1 = 0; % events line plots in seconds
 
@@ -33,30 +33,28 @@ grupo = Title_roi;
 c1 = data1; % Vector de Condicion 1
 c2 = data2; %Vector de Condicion 2
 
-
-yaxis = [-30 30];%[min(min([c1;c2]))-0.2, max(max([c1;c2]))+0.2];        % define yaxis limits
+%[-30 30];
+yaxis = [nanmean(nanmean([c1;c2]))-7*nanstd(nanstd([c1;c2])), nanmean(nanmean([c1;c2]))+7*nanstd(nanstd([c1;c2]))];        % define yaxis limits
 
 %% run stats (Wilcoxon ranksum or signed test) and save
 
-[stats] = test_wilcoxon_cvar(c1, c2, condition1, condition2, testType, windowSize, start_point);
+[stats] = test_wilcoxon_cvar(c1, c2, condition1, condition2, testType, windowSize, start_point,end_sample);
 
 %% Plot configuration
 
 Xt = x_axis;%EjeX; % Time o EjeX
 
 figure1 = grupo;
-figure%('visible',display_fig,'position', [0, 0, 1000, 500]); hold on;
+%figure%('visible',display_fig,'position', [0, 0, 1000, 500]); hold on;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-p1 = shadedErrorBar(Xt,c1,{@mean,@std},'lineprops', color);hold on;
-p2 = shadedErrorBar(Xt,c2,{@mean,@std},'lineprops', '-k');hold on;
+p1 = shadedErrorBar(Xt,mean(c1,1),std(c1,[],1)/sqrt(size(c1,1)),'lineprops', color);hold on;
+p2 = shadedErrorBar(Xt,mean(c2,1),std(c2,[],1)/sqrt(size(c2,1)),'lineprops', '-k');hold on;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 xlabel([xMeassure],'FontSize',12,'FontWeight','bold')
 ylabel([yMeassure],'FontSize',12,'FontWeight','bold')
 %%%%%%%%%%%%%%%%%%%%%%%%%% AXIS SCALE %%%%
-ylim([yaxis(1) yaxis(2)])
+ylim(yaxis)
 xlim ([x_axis(1) x_axis(end)])
-
-
 
 title(figure1,'Fontsize',12,'FontWeight','bold','interpreter', 'none');
 h = title(figure1,'Fontsize',12,'FontWeight','bold','interpreter', 'none');
