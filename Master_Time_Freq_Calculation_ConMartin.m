@@ -11,12 +11,12 @@ ft_warning off
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Filtered-David/CueNight/';
+%filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Filtered-David/CueNight/';
 
-%filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorD_Night/';
+filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorD_Night/';
 
 %files = dir(strcat(filepath,'*.set'));
-filesOdor = dir(strcat(filepath,'*.set'));%dir(strcat(filepath,'*_Odor.mat'));
+filesOdor = dir(strcat(filepath,'*_Odor.mat'));
 filesVehicle = dir(strcat(filepath,'*_Vehicle.mat'));
 p_clustersOfInterest
 clusters = fieldnames(Clust);
