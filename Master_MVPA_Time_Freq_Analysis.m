@@ -39,61 +39,65 @@ cfg_Bas.baselinetype        = 'zscore';
 %--------------------------------------------------------------------------
 
 % For Odor D Night
-filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_OdorD_Night/';
+filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorD_Night/';
 
 % For Odor M Night
-%filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_OdorM%_Night/';
+%filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_OdorD%_Night/';
 
-files = dir(strcat(filepath,'*.mat'));
+filesOdor = dir(strcat(filepath,'*Odor.mat'));
+filesVehicle = dir(strcat(filepath,'*Vehicle.mat'));
 %% MVPA TF analysis
 % 
-subjects = 10:numel(files);
+subjects = 1:numel(filesOdor);
 
 % load('Time-Freq_DNight_MastoidRef_Interp_12cycles_90secTrial.mat');
 
 % Time_Freq = Time_Freq_DA;
 
-clear Time_Freq_DA
+%clear Time_Freq_DA
 
 for subj = subjects
     % display current subject name
     disp(strcat('Sujeto: ',num2str(subj)))
     
     % Load Data
-    load(strcat(filepath,files(subj).name));
+    load(strcat(filepath,filesOdor(subj).name));
+    load(strcat(filepath,filesVehicle(subj).name));
+
+%     %----------------------------------------------------------------------
+%     % baseline correction
+%     %----------------------------------------------------------------------
+%     cfg_Bas                     = [];
+%     cfg_Bas.baseline            = [-15 45];
+%     cfg_Bas.baselinetype        = 'zscore';
+%     Time_Freq_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq);
     
-    %----------------------------------------------------------------------
-    % baseline correction
-    %----------------------------------------------------------------------
-    cfg_Bas                     = [];
-    cfg_Bas.baseline            = [-15 45];
-    cfg_Bas.baselinetype        = 'zscore';
-    Time_Freq_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq);
+%     %----------------------------------------------------------------------
+%     % Separate conditions
+%     %----------------------------------------------------------------------
+%     cfg = [];
+%     cfg.latency = [-15 15];
+%     Time_Freq_Odor = ft_selectdata(cfg, Time_Freq_Baseline);
+%     
+%     cfg = [];
+%     cfg.latency = [15 45];
+%     Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Baseline);
+%     Time_Freq_Vehicle.time = Time_Freq_Odor.time;
     
-    %----------------------------------------------------------------------
-    % Separate conditions
-    %----------------------------------------------------------------------
-    cfg = [];
-    cfg.latency = [-15 15];
-    Time_Freq_Odor = ft_selectdata(cfg, Time_Freq_Baseline);
-    
-    cfg = [];
-    cfg.latency = [15 45];
-    Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Baseline);
-    Time_Freq_Vehicle.time = Time_Freq_Odor.time;
-    
+
+
     
     clabel = [ones(1,size(Time_Freq_Odor.powspctrm,1)),...
     ones(1,size(Time_Freq_Vehicle.powspctrm,1))+1];
 
 
-    %-- For Clust.left_frontal
+%     -- For Clust.left_frontal
     cfg = []; cfg.channel = Clust.left_frontal; cfg.avgoverchan = 'yes';
     Time_Freq_Odor_Temp = ft_selectdata(cfg,Time_Freq_Odor);
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.left_frontal{subj,1} = result_freq{subj,1};
+    resultsfreq.left_frontal{subj,1} = result_freq;
 
 
     %-- For Clust.right_frontal 
@@ -102,7 +106,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.right_frontal{subj,1} = result_freq{subj,1};
+    resultsfreq.right_frontal{subj,1} = result_freq;
 
 
     %-- For Clust.frontal 
@@ -111,7 +115,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.frontal{subj,1} = result_freq{subj,1};
+    resultsfreq.frontal{subj,1} = result_freq;
 
 
     %-- For Clust.left_central
@@ -120,7 +124,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.left_central{subj,1} = result_freq{subj,1};
+    resultsfreq.left_central{subj,1} = result_freq;
 
 
     %-- For Clust.right_central
@@ -129,7 +133,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.right_central{subj,1} = result_freq{subj,1};
+    resultsfreq.right_central{subj,1} = result_freq;
 
 
     %-- For Clust.central
@@ -138,7 +142,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.central{subj,1} = result_freq{subj,1};
+    resultsfreq.central{subj,1} = result_freq;
 
 
     %-- For Clust.left_temporal
@@ -147,7 +151,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.left_temporal{subj,1} = result_freq{subj,1};
+    resultsfreq.left_temporal{subj,1} = result_freq;
 
 
     %-- For Clust.right_temporal
@@ -156,7 +160,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.right_temporal{subj,1} = result_freq{subj,1};
+    resultsfreq.right_temporal{subj,1} = result_freq;
 
 
     %-- For Clust.left_parietal 
@@ -165,7 +169,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.left_parietal{subj,1} = result_freq{subj,1};
+    resultsfreq.left_parietal{subj,1} = result_freq;
 
 
     %-- For Clust.right_parietal
@@ -174,7 +178,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.right_parietal{subj,1} = result_freq{subj,1};
+    resultsfreq.right_parietal{subj,1} = result_freq;
 
 
     %-- For Clust.parietal
@@ -183,7 +187,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.parietal{subj,1} = result_freq{subj,1};
+    resultsfreq.parietal{subj,1} = result_freq;
 
 
     %-- For Clust.left_occipital
@@ -192,7 +196,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.left_occipital{subj,1} = result_freq{subj,1};
+    resultsfreq.left_occipital{subj,1} = result_freq;
 
 
     %-- For Clust.right_occipital 
@@ -201,7 +205,7 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.right_occipital{subj,1} = result_freq{subj,1};
+    resultsfreq.right_occipital{subj,1} = result_freq;
 
 
     %-- For Clust.occipital
@@ -210,14 +214,22 @@ for subj = subjects
     Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
 
     p_MVPA_TFclassifier
-    resultsfreq.occipital{subj,1} = result_freq{subj,1};
+    resultsfreq.occipital{subj,1} = result_freq;
 
+    %-- For all chans
+    cfg = []; cfg.channel = 'all'; cfg.avgoverchan = 'yes';
+    Time_Freq_Odor_Temp = ft_selectdata(cfg,Time_Freq_Odor);
+    Time_Freq_Vehicle_Temp = ft_selectdata(cfg,Time_Freq_Vehicle);
+
+    p_MVPA_TFclassifier
+    resultsfreq.Allchans{subj,1} = result_freq;
  
     %Time_Freq{subj} = [];
-    save(strcat('/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_OdorD_Night/','resultsfreq.mat'),'resultsfreq','-v7.3')
+    save(strcat('/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorD_Night/','resultsfreq_ONOFF.mat'),'resultsfreq','-v7.3')
     
 end
 
+%%
 %-- For Clust.left_frontal
 result_freq = resultsfreq.left_frontal;
 p_MVPA_TFClusterStats
@@ -317,8 +329,40 @@ p_MVPA_TFClusterStats
 stat2.occipital = stat_level2;
 resultAverage.occipital = result_average;
 
-save(strcat('/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_OdorD_Night','stat2_TF'),'stat2','-v7.3')
-save(strcat('/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_OdorD_Night','resultAverage'),'resultAverage','-v7.3')
+%-- For AllChans
+result_freq = resultsfreq.Allchans;
+p_MVPA_TFClusterStats
 
+stat2.Allchans = stat_level2;
+resultAverage.Allchans = result_average;
 
- 
+save(strcat('/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorD_Night/','stat2_TF_ONOFF'),'stat2','-v7.3')
+save(strcat('/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorD_Night/','resultAverage_ONOFF'),'resultAverage','-v7.3')
+
+%%
+clusters = fieldnames(resultAverage);
+
+for clust = 1:numel(clusters)
+    
+    cluster = clusters{clust};
+    mv_plot_result(resultAverage.(cluster),(-5:0.1:30),(0.5:0.1:20),'mask', stat2.(cluster).mask)
+    
+    l = title(strcat(cluster,'  Average'));
+    set(l,'interpreter','none')
+    xlabel('time(s)')
+    ylabel('Frequency(Hz)')
+    
+    
+%     saveas(gcf,strcat(cluster,'_Mask_OdorD_Night.png'))
+    
+    mv_plot_result(resultAverage.(cluster),(-5:0.1:30),(0.5:0.1:20))
+    
+    l = title(strcat(cluster,'  Average'));
+    set(l,'interpreter','none')
+    xlabel('time(s)')
+    ylabel('Frequency(Hz)')
+    
+%     saveas(gcf,strcat(cluster,'_NoMask_OdorD_Night.png'))
+end
+% close all
+

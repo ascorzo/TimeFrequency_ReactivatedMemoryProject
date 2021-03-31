@@ -26,6 +26,7 @@ cfg_Bas                     = [];
 cfg_Bas.baseline            = [-15 45];
 cfg_Bas.baselinetype        = 'zscore';
 
+
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % For Declarative Associated Odor Night
@@ -34,13 +35,15 @@ cfg_Bas.baselinetype        = 'zscore';
 
 %filepath = 'D:\GermanData\DATA\RawData\preProcessing\Epoched_90SecTrial_MastoidRef_Interp\OdorD_Night\';
 
-filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_OdorD_Night/';
+filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorM_Night/';
 
 %files = dir(strcat(filepath,'*.set'));
-files = dir(strcat(filepath,'*.mat'));
+filesOdor = dir(strcat(filepath,'*_Odor.mat'));
+filesVehicle = dir(strcat(filepath,'*_Vehicle.mat'));
+p_clustersOfInterest
+clusters = fieldnames(Clust);
 
-
-for subj = 1:numel(files)
+for subj = 1:numel(filesOdor)
     
     %______________________________________________________________________
     %
@@ -49,11 +52,11 @@ for subj = 1:numel(files)
     
     disp(strcat('Sujeto: ',num2str(subj)))
     
-%     %--------- Load Data --------------------------------------------------
-%     addpath(genpath('C:\Users\lanan\Documents\MATLAB\eeglab2019_1\'))
-%     EEGOdor = pop_loadset(strcat(filepath,files(subj).name));
-%     dataOdor = eeglab2fieldtrip(EEGOdor,'raw');
-%     rmpath(genpath('C:\Users\lanan\Documents\MATLAB\eeglab2019_1\'))
+    %--------- Load Data --------------------------------------------------
+    addpath(genpath('C:\Users\lanan\Documents\MATLAB\eeglab2019_1\'))
+    EEGOdor = pop_loadset(strcat(filepath,files(subj).name));
+    dataOdor = eeglab2fieldtrip(EEGOdor,'raw');
+    rmpath(genpath('C:\Users\lanan\Documents\MATLAB\eeglab2019_1\'))
     
     
     %-----------Time-Frequency Calculation---------------------------------
@@ -65,32 +68,39 @@ for subj = 1:numel(files)
 %     Time_Freq_DA{subj}  = ft_selectdata(cfg, Time_Freq_DA_Temp);
 
 
-    load(strcat(filepath,files(subj).name));
+    load(strcat(filepath,filesOdor(subj).name));
+    load(strcat(filepath,filesVehicle(subj).name));
+    
     %-----------baseline Correction ---------------------------------------
     
-    Time_Freq_DA_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq );
-    
+%     Time_Freq_DA_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq );
+%     
+
+%     p_plotSubject
     %-----------Mean of all trials, each channel --------------------------
     cfg = [];
     cfg.avgoverrpt = 'yes';
-    Time_Freq_Cue_baseline2 = rmfield(Time_Freq_DA_Baseline,  'trialinfo');
-    Time_Freq_DA_Mean = ft_selectdata(cfg, Time_Freq_Cue_baseline2);
+    Time_Freq_Cue_baseline2 = rmfield(Time_Freq_Odor,  'trialinfo');
+    Time_Freq_Cue = ft_selectdata(cfg, Time_Freq_Cue_baseline2);
     
-    %-----------Separate conditions -----------------------  
-    cfg = [];
-    cfg.latency = [-15 15];
-    Time_Freq_Cue = ft_selectdata(cfg, Time_Freq_DA_Mean);
+
+    Time_Freq_Cue_baseline2 = rmfield(Time_Freq_Vehicle,  'trialinfo');
+    Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Cue_baseline2);
     
-    cfg = [];
-    cfg.latency = [15 45];
-    Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_DA_Mean);
-    Time_Freq_Vehicle.time = Time_Freq_DA_Mean.time;
+%     %-----------Separate conditions -----------------------  
+%     cfg = [];
+%     cfg.latency = [-5 30];
+%     Time_Freq_Cue = ft_selectdata(cfg, Time_Freq_DA_Mean);
+%     
+%     cfg = [];
+%     cfg.latency = [25 60];
+%     Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_DA_Mean);
+%     Time_Freq_Vehicle.time = Time_Freq_DA_Mean.time;
     %----------------------------------------------------------------------
     %           Combine Mean of channels by clusters
     %----------------------------------------------------------------------
-    p_clustersOfInterest
     
-    clusters = fieldnames(Clust);
+    
 
     for cluster = 1:numel(clusters)
         [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Cue.label);
@@ -102,19 +112,22 @@ for subj = 1:numel(files)
             squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
         
     end
-
+    
+    
 end
 
 
 
 %% Calculation of power change in specific bands
+Time_Freq = Time_Freq_Odor;
+
 
 SpindleBand     = [10 18];
 DeltaBand       = [0.5 4];
 ThetaBand       = [4 8];
 BetaBand        = [18 30];
 time = Time_Freq.time ;
-subjects = 1:numel(files);
+subjects = 1:numel(filesOdor);
 
 
 SpindleIdx = find(Time_Freq.freq>=SpindleBand(1) &...
@@ -150,7 +163,7 @@ addpath('./Scripts_Wilc')
 for cluster = 1:numel(clusters)
     
     y_lims = [];%[-0.1 0.1];
-    x_lims_parcial = [-15 15];
+    x_lims_parcial = [-5 30];
     time_parcial = Time_Freq.time;
     %z_lims = [min(Time_Freq_Cue_Frontal(:)),max(Time_Freq_Cue_Frontal(:))];
     
@@ -162,7 +175,7 @@ for cluster = 1:numel(clusters)
     subplot(total_subplots,1,count)
     f_ImageMatrix(squeeze(mean(Time_Freq_Cue_clust.(clusters{cluster}),1)),time_parcial,frequencies,y_lims)
     xlim(x_lims_parcial)
-    colormap(pink)
+    colormap(parula)
     %colorbar
     title('TF Odor')
  
@@ -170,7 +183,7 @@ for cluster = 1:numel(clusters)
     subplot(total_subplots,1,count)
     f_ImageMatrix(squeeze(mean(Time_Freq_Vehicle_clust.(clusters{cluster}),1)),time_parcial,frequencies,y_lims)
     xlim(x_lims_parcial)
-    colormap(pink)
+    colormap(parula)
     %colorbar
     title('TF Vehicle')
     
@@ -179,48 +192,48 @@ for cluster = 1:numel(clusters)
     ValidTimeVehicle = v_time(~isnan(Time_Freq_Vehicle_clust.(clusters{cluster})(1,1,:)));
     
     ValidTime = intersect(ValidTimeCue,ValidTimeVehicle);
-    start_sample = ceil(ValidTime(1)-v_time(1)/s_tstep);
-    end_sample = floor(ValidTime(end)-v_time(1)/s_tstep);
+    start_sample = ceil((ValidTime(1)-v_time(1))/s_tstep)+1;
+    end_sample = floor((ValidTime(end)-v_time(1))/s_tstep);
     
-    count = count+1;
-    subplot(total_subplots,1,count)
-    f_WilcTest('Beta',...
-        ' ',' ','Odor D','Vehicle',...
-        v_Beta_Cue.(clusters{cluster}),...
-        v_Beta_Vehicle.(clusters{cluster}),...
-        v_time,'-r',start_sample,end_sample)
-    
-    count = count+1;
-    subplot(total_subplots,1,count)
-    f_WilcTest('Spindle',...
-        ' ',' ','Odor D','Vehicle',...
-        v_Spindle_Cue.(clusters{cluster}),...
-        v_Spindle_Vehicle.(clusters{cluster}),...
-        v_time,'-r',start_sample,end_sample)
-    
-    count = count+1;
-    subplot(total_subplots,1,count)
-    f_WilcTest('Theta',...
-        ' ',' ','Odor D','Vehicle',...
-        v_Theta_Cue.(clusters{cluster}),...
-        v_Theta_Vehicle.(clusters{cluster}),...
-        v_time,'-r',start_sample,end_sample)
+%     count = count+1;
+%     subplot(total_subplots,1,count)
+%     f_WilcTest('Beta',...
+%         ' ',' ','Odor M','Vehicle',...
+%         v_Beta_Cue.(clusters{cluster}),...
+%         v_Beta_Vehicle.(clusters{cluster}),...
+%         v_time,'-b',start_sample,end_sample)
+%     
+%     count = count+1;
+%     subplot(total_subplots,1,count)
+%     f_WilcTest('Spindle',...
+%         ' ',' ','Odor M','Vehicle',...
+%         v_Spindle_Cue.(clusters{cluster}),...
+%         v_Spindle_Vehicle.(clusters{cluster}),...
+%         v_time,'-b',start_sample,end_sample)
+%     
+%     count = count+1;
+%     subplot(total_subplots,1,count)
+%     f_WilcTest('Theta',...
+%         ' ',' ','Odor M','Vehicle',...
+%         v_Theta_Cue.(clusters{cluster}),...
+%         v_Theta_Vehicle.(clusters{cluster}),...
+%         v_time,'-b',start_sample,end_sample)
     
     count = count+1;
     subplot(total_subplots,1,count)
     f_WilcTest('Delta',...
-        'Time(sec)',' ','Odor D','Vehicle',...
+        'Time(sec)',' ','Odor M','Vehicle',...
         v_Delta_Cue.(clusters{cluster}),...
         v_Delta_Vehicle.(clusters{cluster}),...
-        v_time,'-r',start_sample,end_sample)
+        v_time,'-b',start_sample,end_sample)
     
     
-    set(gcf,'position',[81,35,1252,926])
+    set(gcf,'position',[81,35,700,926])
     
     l = suptitle(clusters{cluster});
     set(l, 'Interpreter', 'none')
     
-    %saveas(gcf,strcat(clusters{cluster},'.png'))
+    saveas(gcf,strcat(clusters{cluster},'Final.png'))
 
 end
 

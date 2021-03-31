@@ -18,7 +18,7 @@ cfg_stat.statistic       = 'wilcoxon';
 cfg_stat.null            = 0.5;
 
 
-cfg_stat.clustercritval  = 1.96
+cfg_stat.clustercritval  = 1.96;
 % z-val = 1.65 corresponds to uncorrected p-value = 0.1
 % z-val = 1.96 corresponds to uncorrected p-value = 0.05
 % z-val = 2.58 corresponds to uncorrected p-value = 0.01

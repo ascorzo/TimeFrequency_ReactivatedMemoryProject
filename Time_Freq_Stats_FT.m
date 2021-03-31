@@ -1,56 +1,13 @@
 % load('Time_Freq_All_JensData.mat')
 
 
-addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/')
+addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/')
 
 ft_defaults
-addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/qsub')
+addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/qsub')
 
-load('clusterChans.mat')
 ft_warning off
 
-central_channels_small = {'E13';'E6';'E112';'E30';'E7';'E106';'E105';'E37';'E31';...
-    'E80';'E87';'E54';'E55';'E79'};
-
-% Clusters of interest
-Clust.left_frontal = {...
-    'E15', 'E16', 'E11', 'E18', 'E19', 'E22', 'E23', 'E24', 'E26', ...
-    'E27', 'E33', 'E38'};
-Clust.right_frontal = {...
-    'E15', 'E16', 'E11', 'E10', 'E4', 'E9', 'E3', 'E124', 'E2', ...
-    'E123', 'E122', 'E121'};
-Clust.frontal = {...
-    'E3', 'E4', 'E9', 'E10', 'E11', 'E15', 'E16', 'E18', 'E19', ...
-    'E22', 'E23', 'E24', 'E124'};
-Clust.left_central = {...
-    'E6', 'E7', 'E13', 'E30', 'E31', 'E37', 'E54', 'E55'};
-Clust.right_central = {...
-    'E6', 'E55', 'E112', 'E106', 'E105', 'E80', 'E87', 'E79'};
-Clust.central = {...
-    'E6', 'E7', 'E13', 'E30', 'E31', 'E37', 'E54', 'E55', 'E79', ...
-    'E80', 'E87', 'E105', 'E106', 'E112'};
-Clust.left_temporal = {...
-    'E46', 'E51', 'E45', 'E50', 'E58', 'E56', 'E63'};
-Clust.right_temporal = {...
-    'E108', 'E102', 'E101', 'E97', 'E96', 'E99', 'E107'};
-Clust.left_parietal = {...
-    'E53', 'E61', 'E62', 'E72', 'E67', 'E52', 'E60', 'E59', 'E66', ...
-    'E65', 'E64', 'E68'};
-Clust.right_patietal = {...
-    'E62', 'E72', 'E78', 'E77', 'E86', 'E85', 'E84', 'E92', 'E91', ...
-    'E90', 'E95', 'E94'};
-Clust.parietal = {...
-    'E52', 'E61', 'E62', 'E59', 'E60', 'E67', 'E66', 'E72', 'E78', ...
-    'E77', 'E86', 'E85', 'E84', 'E92', 'E91','E53'};
-Clust.left_occipital = {...
-    'E71', 'E70', 'E75', 'E74', 'E69', 'E73'};
-Clust.right_occipital = {...
-    'E75', 'E76', 'E82', 'E83', 'E88', 'E89'};
-Clust.occipital = {...
-    'E71', 'E70', 'E74', 'E69', 'E73', 'E75', 'E76', 'E83', 'E82', ...
-    'E89', 'E88'};
-
-cluster = Clust.occipital;
 %--------------------------------------------------------------------------
 % Parameters for Baseline Correction 
 %--------------------------------------------------------------------------
@@ -64,7 +21,7 @@ cfg_Bas.baselinetype        = 'zscore';
 
 %commonChans = Time_Freq_Cue_ChanSel{1, 1}.label;
 
-filename     = 'dummyfile.set';
+filename     = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/dummyfile.set';
 sensors = ft_read_sens(filename);
 
 %% Baseline correction
@@ -72,35 +29,51 @@ sensors = ft_read_sens(filename);
 % For Declarative associated odor Night
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-for subj = 1:length(Time_Freq_DA)
-    
-    Time_Freq_baseline = ...
-        ft_freqbaseline(cfg_Bas, Time_Freq_DA{subj});
-    
-    % Average over trials
-    cfg = []; 
-    cfg.avgoverrpt = 'yes';
-    %cfg.avgoverchan = 'yes';
-    cfg.channel = cluster;
-    
-    Time_Freq_baseline2 = rmfield(Time_Freq_baseline,  'trialinfo');
-    avg_Time_Freq = ft_selectdata(cfg, Time_Freq_baseline2);
-    
-    % Separate Conditions
-    cfg = [];
-    cfg.latency = [-15 15];
-    Time_Freq_Cue{subj} = ft_selectdata(cfg, avg_Time_Freq);
-    
-    cfg = [];
-    cfg.latency = [15 45];
-    Time_Freq_Vehicle{subj} = ft_selectdata(cfg, avg_Time_Freq);
-    
-    Time_Freq_Vehicle{subj}.time = Time_Freq_Cue{subj}.time;
-     
-end
+% for subj = 1:length(Time_Freq_DA)
+%     
+%     Time_Freq_baseline = ...
+%         ft_freqbaseline(cfg_Bas, Time_Freq_DA{subj});
+%     
+%     % Average over trials
+%     cfg = []; 
+%     cfg.avgoverrpt = 'yes';
+%     %cfg.avgoverchan = 'yes';
+%     cfg.channel = cluster;
+%     
+%     Time_Freq_baseline2 = rmfield(Time_Freq_baseline,  'trialinfo');
+%     avg_Time_Freq = ft_selectdata(cfg, Time_Freq_baseline2);
+%     
+%     % Separate Conditions
+%     cfg = [];
+%     cfg.latency = [-15 15];
+%     Time_Freq_Cue{subj} = ft_selectdata(cfg, avg_Time_Freq);
+%     
+%     cfg = [];
+%     cfg.latency = [15 45];
+%     Time_Freq_Vehicle{subj} = ft_selectdata(cfg, avg_Time_Freq);
+%     
+%     Time_Freq_Vehicle{subj}.time = Time_Freq_Cue{subj}.time;
+%      
+% end
 
 %clear TimeFreq_DA 
+filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorD_Night/';
+filesOdor = dir(strcat(filepath,'*_Odor.mat'));
+filesVehicle = dir(strcat(filepath,'*_Vehicle.mat'));
 
+subjects = 1:numel(filesOdor);
+for subj = subjects
+    temp = load(strcat(filepath,filesOdor(subj).name));
+    
+    %Average over trials
+    cfg = []; 
+    cfg.avgoverrpt = 'yes';
+    Time_Freq_Cue{subj} = ft_selectdata(cfg, temp.Time_Freq_Odor);
+    
+    temp = load(strcat(filepath,filesVehicle(subj).name));
+    Time_Freq_Vehicle{subj} =  ft_selectdata(cfg, temp.Time_Freq_Vehicle);
+    
+end
 
 %% statistics
 
@@ -110,7 +83,7 @@ end
 %--------------------
 
 cfg                     = [];
-cfg.latency             = [-15 15];
+cfg.latency             = [0 30];
 cfg.frequency           = 'all';
 cfg.channel             = 'all';
 cfg.correctm            = 'cluster';
@@ -127,7 +100,7 @@ cfg.neighbours          = ft_prepare_neighbours(cfg_neighb);
 cfg.tail                = 0;
 cfg.clustertail         = cfg.tail;
 cfg.alpha               = 0.025;
-cfg.numrandomization    = 10000;             
+cfg.numrandomization    = 1000;             
 cfg.clusteralpha        = 0.05;              % threshold over which a triplet is chosen, e.g. .01 / .02 / .05
 cfg.uvar                = 1;                 % condition (uvar would be the subjects)
 cfg.ivar                = 2;
