@@ -1,9 +1,12 @@
-addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/')
+addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/')
 
 ft_defaults
-addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/qsub')
+addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/qsub')
 
 ft_warning off
+
+s_tstep = 0.1; % try with 0.005
+s_fstep = 0.1; % 0.005
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -13,7 +16,7 @@ ft_warning off
 
 %filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Filtered-David/CueNight/';
 
-filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorD_Night/';
+filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/';
 
 %files = dir(strcat(filepath,'*.set'));
 filesOdor = dir(strcat(filepath,'*_Odor.mat'));
@@ -103,7 +106,7 @@ for cluster = 1:numel(clusters)
 end
 %% plot CUE Night
 
-addpath(genpath('/gpfs01/born/group/Andrea/eeglab2019_1/'))
+addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
 addpath('./Scripts_Wilc')
 
 %p_plot_TimeFreq_All
@@ -117,24 +120,35 @@ for cluster = 1:numel(clusters)
     %z_lims = [min(Time_Freq_Cue_Frontal(:)),max(Time_Freq_Cue_Frontal(:))];
     
     figure
-    total_subplots = 3;
+    total_subplots = 2;
     count = 1;
     frequencies = Time_Freq_Cue.freq;
     
+    TF_Odor = squeeze(mean(Time_Freq_Cue_clust.(clusters{cluster}),1));
+    TF_Vehicle = squeeze(mean(Time_Freq_Vehicle_clust.(clusters{cluster}),1));
+    
+    bottom  = min(min(TF_Odor(:)),min(TF_Vehicle(:)));
+    top     = max(min(TF_Odor(:)),max(TF_Vehicle(:)));
+    
+    
     tf(count) = subplot(total_subplots,1,count);
-    f_ImageMatrix(squeeze(mean(Time_Freq_Cue_clust.(clusters{cluster}),1)),time_parcial,frequencies,y_lims)
+    f_ImageMatrix(TF_Odor,time_parcial,frequencies,y_lims)
     xlim(x_lims_parcial)
     colormap(parula)
-    colorbar('northoutside')
+    caxis manual
+    caxis([bottom top]);
+    colorbar
     title('TF Odor')
     
  
     count = count+1;
     tf(count) = subplot(total_subplots,1,count);
-    f_ImageMatrix(squeeze(mean(Time_Freq_Vehicle_clust.(clusters{cluster}),1)),time_parcial,frequencies,y_lims)
+    f_ImageMatrix(TF_Vehicle,time_parcial,frequencies,y_lims)
     xlim(x_lims_parcial)
     colormap(parula)
-    colorbar('northoutside')
+    caxis manual
+    caxis([bottom top]);
+    colorbar
     title('TF Vehicle')
     
     
@@ -172,20 +186,20 @@ for cluster = 1:numel(clusters)
 %         v_Theta_Cue.(clusters{cluster}),...
 %         v_Theta_Vehicle.(clusters{cluster}),...
 %         v_time,'-b',start_sample,end_sample);
-    
-    count = count+1;
-    tf(count) = subplot(total_subplots,1,count);
-    f_nonParametricTest('Delta',...
-        'Time(sec)',' ','Odor D','Vehicle',...
-        v_Delta_Cue.(clusters{cluster}),...
-        v_Delta_Vehicle.(clusters{cluster}),...
-        v_time,'-r',start_sample,end_sample);
+%     
+%     count = count+1;
+%     tf(count) = subplot(total_subplots,1,count);
+%     f_nonParametricTest('Delta',...
+%         'Time(sec)',' ','Odor D','Vehicle',...
+%         v_Delta_Cue.(clusters{cluster}),...
+%         v_Delta_Vehicle.(clusters{cluster}),...
+%         v_time,'-r',start_sample,end_sample);
     
     linkaxes(tf,'x')
     
-    set(gcf,'position',[81,35,700,926])
+    %set(gcf,'position',[81,35,700,926])
     
-    l = suptitle(clusters{cluster});
+    l = sgtitle(clusters{cluster});
     set(l, 'Interpreter', 'none')
     
     saveas(gcf,strcat(clusters{cluster},'Final_OdorD.png'))

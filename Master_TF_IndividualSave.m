@@ -1,7 +1,7 @@
-addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/')
+addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/')
 
 ft_defaults
-addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/qsub')
+addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/qsub')
 ft_warning off
 
 %--------------------------------------------------------------------------
@@ -16,7 +16,7 @@ cfg_Tf.method               = 'wavelet';
 cfg_Tf.output               = 'pow';
 cfg_Tf.foi                  = 0.5:s_fstep:20; 
 cfg_Tf.width                = cycles;
-cfg_Tf.toi                  = -17:s_tstep:72; 
+cfg_Tf.toi                  = -12:s_tstep:72; 
 % toi this is extended before and after to deal with border effect of wavelet
 cfg_Tf.keeptrials           = 'yes';
 
@@ -28,8 +28,8 @@ cfg_Tf.keeptrials           = 'yes';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/RawSleepData/preProcessing/Epoched_90Sec_ONOFF/OdorD_Night/';
-savepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorD_Night/';
+filepath = '/mnt/disk1/andrea/German_Study/Data/PreProcessed/Epoched_90SecTrial_MastoidRef-Interp_NewEpochs/DNight/';
+savepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/';
 
 files = dir(strcat(filepath,'*.set'));
 
@@ -45,10 +45,10 @@ for subj = 1:numel(files)
     disp(strcat('Cue'))
     
     %--------- Load Data --------------------------------------------------
-    addpath(genpath('/gpfs01/born/group/Andrea/eeglab2019_1/'))
+    addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
     EEGOdor = pop_loadset(strcat(filepath,files(subj).name));
     dataOdor = eeglab2fieldtrip(EEGOdor,'raw');
-    rmpath(genpath('/gpfs01/born/group/Andrea/eeglab2019_1/'))
+    rmpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
     
     
     %-----------Time-Frequency Calculation---------------------------------
@@ -95,8 +95,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/RawSleepData/preProcessing/Epoched_90Sec_ONOFF/OdorM_Night/';
-savepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorM_Night/';
+filepath = '/mnt/disk1/andrea/German_Study/Data/PreProcessed/Epoched_90SecTrial_MastoidRef-Interp_NewEpochs/MNight/';
+savepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/MNight/';
 
 files = dir(strcat(filepath,'*.set'));
 
