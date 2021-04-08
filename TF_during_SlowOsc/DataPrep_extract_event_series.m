@@ -39,7 +39,7 @@ PM.Conditions       = {'OdorOn', 'ShamOn', 'OdorOff', 'ShamOff'};
 %    - Size of desired time window to extract
 PM.s_timeWindow     = 6;
 %    - Time stamp to center time window around
-PM.SOlocations      = [2, 7, 4]; % See list below
+PM.SOlocations      = [2, 3, 4]; % See list below
 % 1) = To which time bin corresponds that particular event
 % 2) = startTime
 % 3) = midTime (SO: down-up zero crossing)

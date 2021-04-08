@@ -132,14 +132,8 @@ for i_subj = 1:length(files)
             %% Average wave form of cluster
             %  ------------------------------------------------------------
         
-            % /!\ The time series of the wave forms has the borders still
-            % attached that were used to circumvent border effects in TF
-            % computation. We hard-code the time selection here. This has 
-            % been corrected in the TF computation script and therefore, 
-            % v_times here can be erased in future.
-            v_times = 201:1:1000;
             WF_subject.(char(condition))(i_subj, i_chan, :) = ...
-                SO_wave.(char(condition))(idx_chan, v_times);
+                SO_wave.(char(condition))(idx_chan, :);
             
         end
         
@@ -425,9 +419,9 @@ if any(p_all < s_thrld)
     %% Plot time-frequency clusters of channels belonging to them
     %  --------------------------------------------------------------------
     
-    Cluster_labels = unique(cluster_labels(:))';
-    Cluster_labels(Cluster_labels == 0) = [];
-    for i_clust = Cluster_labels
+    significant_clusters = unique(cluster_labels(:))';
+    significant_clusters(significant_clusters == 0) = [];
+    for i_clust = significant_clusters
     
         
         % Find channels, frequencies and times that are involved in cluster

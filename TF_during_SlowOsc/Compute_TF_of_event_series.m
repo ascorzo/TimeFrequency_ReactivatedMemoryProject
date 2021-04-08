@@ -35,7 +35,9 @@ PM.Spindleband          = 'fast';
 PM.FrRange              = 10; % Hz, range of frequencies to take into
                               % account around spindle band peak 
 %       - Time frequency parameters
-PM.s_tstep              = 0.1; % try with 0.005
+PM.s_tstep              = 0.05; % try with 0.005
+% Probably a good idea to have highest time resolution possible since the
+% shift in prefered angles of spindles during SO is rather small.
 PM.s_fstep              = 0.05; % 0.005
 PM.cycles               = 12;
 PM.cfg_Tf.method        = 'wavelet';
@@ -343,7 +345,7 @@ for i_subj = 1:numel(files)
     %% Parsing last parameters to output and save results for subjects
     %  --------------------------------------------------------------------
     
-    PM_datapreparation  = SOseries.PM;
+    PM.datapreparation  = SOseries.PM;
     PM.Clust.all        = SOseries.PM.Info.ROIs.str_chans;
     PM.Info             = SOseries.PM.Info;
     save([savepath, filesep, subject_short, '_TF.mat'], ...
