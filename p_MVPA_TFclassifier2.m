@@ -4,8 +4,8 @@ cfg.metric                      = {'auc'};
 cfg.repeat                      = 2;
 cfg.k                           = 5;
 cfg.sample_dimension            = 1;
-cfg.feature_dimension           = [3,4];
-cfg.generalization_dimension    = 2;
+cfg.feature_dimension           = [2,4];
+cfg.generalization_dimension    = 3;
 cfg.dimension_names     = {'samples','channels','frequencies','time points'};
 
 [cf_freqxfreq ,result_freq] = mv_classify(cfg, ...

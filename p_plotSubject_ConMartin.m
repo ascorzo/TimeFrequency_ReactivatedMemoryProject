@@ -43,7 +43,7 @@ for cluster = 1:numel(clusters)
 end
 %% plot CUE Night
 
-addpath(genpath('/gpfs01/born/group/Andrea/eeglab2019_1/'))
+addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
 addpath('./Scripts_Wilc')
 
 %p_plot_TimeFreq_All
@@ -53,6 +53,7 @@ for cluster = 1:numel(clusters)
     y_lims = [];%[-0.1 0.1];
     x_lims_parcial = [-5 30];
     time_parcial = Time_Freq.time;
+    v_time = time_parcial;
     %z_lims = [min(Time_Freq_Cue_Frontal(:)),max(Time_Freq_Cue_Frontal(:))];
     
     figure
@@ -63,7 +64,7 @@ for cluster = 1:numel(clusters)
     subplot(total_subplots,1,count)
     f_ImageMatrix(squeeze(mean(Time_Freq_Cue_subj_clust.(clusters{cluster}),1)),time_parcial,frequencies,y_lims)
     xlim(x_lims_parcial)
-    colormap(pink)
+    colormap(parula)
     %colorbar
     title('TF Odor')
  
@@ -71,7 +72,7 @@ for cluster = 1:numel(clusters)
     subplot(total_subplots,1,count)
     f_ImageMatrix(squeeze(mean(Time_Freq_Vehicle_subj_clust.(clusters{cluster}),1)),time_parcial,frequencies,y_lims)
     xlim(x_lims_parcial)
-    colormap(pink)
+    colormap(parula)
     %colorbar
     title('TF Vehicle')
 
