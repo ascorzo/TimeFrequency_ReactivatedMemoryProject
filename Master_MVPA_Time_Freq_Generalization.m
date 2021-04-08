@@ -5,10 +5,10 @@
 % In this section we add the the Fieldtrip folder in the path and run ft_defaults 
 % to have access to all functions of fieldtrip
 
-addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/')
+addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/')
 
 ft_defaults
-addpath('/gpfs01/born/group/Andrea/fieldtrip-20200828/qsub')
+addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/qsub')
 
 ft_warning off
 
@@ -24,7 +24,7 @@ cfg_Sel.channel = Clust.occipital;
 % Start MVPA-Light
 %--------------------------------------------------------------------------
 
-addpath('/gpfs01/born/group/Andrea/Github/MVPA-Light/startup/')
+addpath('//home/andrea/Documents/MatlabFunctions/MVPA-Light/startup/')
 startup_MVPA_Light
 
 %--------------------------------------------------------------------------
@@ -32,7 +32,7 @@ startup_MVPA_Light
 %--------------------------------------------------------------------------
 
 % For Odor D Night
-filepath = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorM_Night/';
+filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/';
 
 % For Odor M Night
 %filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_OdorD%_Night/';
@@ -88,9 +88,9 @@ for subj = subjects
 
     p_MVPA_TFclassifier2
     
-    cf_chanGeneralization{subj} = cf_freqxfreq;
+    cf_Generalization{subj} = cf_freqxfreq;
     
-    resultchanGeneralization{subj}  = result_freq;
+    resultGeneralization{subj}  = result_freq;
     
     
 %     figure
@@ -115,38 +115,13 @@ end
 %    
 % end
 % % 
-result_average_ChanGeneralization = mv_combine_results(resultchanGeneralization, 'average');
+result_average_Generalization = mv_combine_results(resultGeneralization, 'average');
 
 figure
-F = 1:numel(Time_Freq_Odor.elec.label);
-mv_plot_2D(result_average_ChanGeneralization.perf{1}, 'x', F, 'y', F)
-xlabel('Test Channel'), ylabel('Train Channel')
-title('Channel generalization using Time-x-frequencies as features')
-
-%%
-for subj = 1:numel(cf_freqGeneralization)
-    for f = 1:size(cf_freqGeneralization{subj},1)
-        FreqDiagonal(subj,f) = cf_freqGeneralization{subj}(f,f);
-    end
-    
-    figure
-    F =Time_Freq_Odor.freq;
-    plot(F,FreqDiagonal(subj,:))
-end
-
-
-
-%%
-
-for subj = 1:numel(cf_freqGeneralization)
-    for f = 1:size(cf_freqGeneralization{subj},1)
-        FreqDiagonal(subj,f) = cf_freqGeneralization{subj}(f,f);
-    end
-    
-    figure
-    F =Time_Freq_Odor.freq;
-    plot(F,FreqDiagonal(subj,:))
-end
+F = Time_Freq_Odor.freq;
+mv_plot_2D(result_average_Generalization.perf{1}, 'x', F, 'y', F)
+xlabel('Test Frequency'), ylabel('Train Frequency')
+title('Frequency generalization using channels x time as features')
 
 
 
