@@ -33,7 +33,7 @@ PM.ClustOI          = 'all';
 % Cell array of channels of interest. See Cluster list below. Can also be
 % 'all' to include all channels
 %       - subject group if interest
-grp_subj            = {'BL_DvsM'}; % {'All', 'GL_DvsM', 'BL_DvsM'}
+PM.Grp_subj            = {'All'}; % {'All', 'GL_DvsM', 'BL_DvsM'}
 %       - Conditions to analyze
 PM.Conditions       = {'ShamOn', 'OdorOn'};
 %       - channel locations in fieldtrip and EEGLAB structures
@@ -260,7 +260,7 @@ TF_subject.ShamOn.elec = sensors;
 v_pseudo = NaN(1, numel(files));
 [~, c_kept_subj, v_kept_subj] = ...
     f_skip_subject(v_pseudo, ...
-    extractBefore(PM.Info.Subjects, '_sleep'), grp_subj);
+    extractBefore(PM.Info.Subjects, '_sleep'), PM.Grp_subj);
 
 TF_subject.OdorOn.powspctrm = ...
     TF_subject.OdorOn.powspctrm(v_kept_subj, :, :, :);
@@ -371,13 +371,21 @@ if any(p_all < s_thrld)
     %% Retrieve information about clusters
     %  --------------------------------------------------------------------
     
-    dimensions      = size(stats.prob);
+    % We go through the label matrices for cluster matrices and search for
+    % labels higher than 0. Each cluster found by fieldtrip is assigned an
+    % individual integer > 0. At the coordinates of the cluster matrices
+    % belonging to such labels, we extract the corresponding labels as well
+    % as p values and put them into cluster_labels and cluster_pvals.
+    % We move everything over to one labelmat array since we are
+    % equally interested in pos and neg clusters.
     
-    % First, we move everything over to one labelmat array since we are
-    % equally interested in pos and neg clusters
+    dimensions      = size(stats.prob);
     cluster_labels  = zeros(dimensions);
     cluster_pvals   = zeros(dimensions);
     
+    
+    % Positive clusters
+    % -----------------
     for i_chan = 1:dimensions(1)
         for i_freq = 1:dimensions(2)
             for i_time = 1:dimensions(3)
@@ -396,6 +404,9 @@ if any(p_all < s_thrld)
         end
     end
     
+    
+    % Negative clusters
+    % -----------------
     % Overlay negative clusters with new labels
     s_raise_label = max(cluster_labels(:));
     for i_chan = 1:dimensions(1)
@@ -445,7 +456,23 @@ if any(p_all < s_thrld)
         idx_clusttimes = unique(idx_clusttimes);
         idx_clustfreqs = unique(idx_clustfreqs);
         
-        figure('units','normalized','outerposition', [0 0 1 0.5]);
+        
+        
+        %% Plot
+        %  ----------------------------------------------------------------
+        
+        % We will generate a 5 panel plot:
+        % 1. Channels belonging to current cluster
+        % 2. The TF averaged over cluster channels for vehicle condition
+        %    with average wave form of time series
+        % 3. The TF averaged over cluster channels for odor cue condition
+        %    with average wave form of time series
+        % 4. The difference between the TF of conditions
+        % 5. Only the section of the TF that belongs to the cluster
+        
+        
+        figure('units','normalized','outerposition', [0 0 1 0.3]);
+        colororder({'k', 'r'})
         
         
         % Plot all channels as small dots and overlay bigger size
@@ -518,6 +545,7 @@ if any(p_all < s_thrld)
             
             v_times       = 1:dimensions(3);
             v_times       = v_times - (size(TF_meanChans, 4) / 2);
+            v_times       = v_times ./ PM.Info.TrialParameters.s_fs;
             
             TF_meanSubj.(char(condition)) = squeeze(mean(TF_meanChans, 1));
             yyaxis left
@@ -541,11 +569,12 @@ if any(p_all < s_thrld)
                 PM.Info.TrialParameters.s_fs  + 1 : 1 : ...
                 PM.cfg_seldat.latency(2) * ...
                 PM.Info.TrialParameters.s_fs;
+            v_times = v_times ./ PM.Info.TrialParameters.s_fs;
             WF_meanClust.(char(condition)) = mean(WF_subject.(...
                 char(condition))(:, idx_clustchans, :), 2);
             plot(v_times, ...
                 squeeze(mean(WF_meanClust.(char(condition)), 1)), ...
-                'Color',        [0, 0, 0], ...
+                'Color',        'r', ...
                 'LineWidth',    2)
             
             i_plot = i_plot + 1;
@@ -567,6 +596,7 @@ if any(p_all < s_thrld)
         subplot(1, 5, 4)
         v_times         = 1:size(TF_meanChans, 4);
         v_times         = v_times - (size(TF_meanChans, 4) / 2);
+        v_times         = v_times ./ PM.Info.TrialParameters.s_fs;
         pcolor(v_times, v_frequencies, TF_difference);
         shading interp
         colorbar;
@@ -582,9 +612,16 @@ if any(p_all < s_thrld)
         subplot(1, 5, 5)
         v_times         = 1:size(TF_meanChans, 4);
         v_times         = v_times - (size(TF_meanChans, 4) / 2);
+        v_times         = v_times ./ PM.Info.TrialParameters.s_fs;
         TF_selective    = NaN(dimensions(2), dimensions(3));
-        TF_selective(idx_clustfreqs, idx_clusttimes) = ...
-            TF_difference(idx_clustfreqs, idx_clusttimes);
+        for i_freq = 1:numel(idx_clustfreqs)
+            for i_time = 1:numel(idx_clusttimes)
+                TF_selective(idx_clustfreqs(i_freq), idx_clusttimes(i_time)) = ...
+                    TF_difference(idx_clustfreqs(i_freq), idx_clusttimes(i_time));
+            end
+        end
+%         TF_selective(idx_clustfreqs, idx_clusttimes) = ...
+%             TF_difference(idx_clustfreqs, idx_clusttimes);
         pcolor(v_times, v_frequencies, TF_selective);
         shading interp
         colorbar;
@@ -596,10 +633,10 @@ if any(p_all < s_thrld)
         % Put p value of cluster as title
         % -------------------------------
         
-        all_labels = cluster_labels(:);
-        all_labels = find(all_labels == i_clust);
-        all_pvals = cluster_pvals(:);
-        all_pvals = all_pvals(all_labels);
+        all_labels  = cluster_labels(:);
+        all_labels  = find(all_labels == i_clust);
+        all_pvals   = cluster_pvals(:);
+        all_pvals   = all_pvals(all_labels);
         
         if numel(unique(all_pvals)) ~= 1
             error('P value does not match cluster label!')
@@ -620,6 +657,23 @@ if any(p_all < s_thrld)
         end
         title(str_p)
         
+        saveas(gcf, [cd, filesep, 'PermutationStats_', ...
+    char(PM.Grp_subj), 'Subjects_', 'Cluster', num2str(i_clust), '.png']);
+        
+        
+        % Verify rectanglely behavior of TF stats
+        % ---------------------------------------
+        
+%         figure
+%         hold on
+%         for i_freq = 1:numel(idx_clustfreqs)
+%             for i_time = 1:numel(idx_clusttimes)
+%                 scatter(idx_clusttimes(i_time), ...
+%                     idx_clustfreqs(i_freq), 5, 'o', 'k')
+%             end
+%         end
+%         close
+        
         
     end
     
@@ -627,4 +681,10 @@ end
 
 
 
+%% Save statistical output
+%  ------------------------------------------------------------------------
+
+save([cd, filesep, 'PermutationStats_', ...
+    char(PM.Grp_subj), 'Subjects.mat'], ...
+    'PM', 'stats', '-v7')
 
