@@ -314,7 +314,7 @@ cfg_stats.alpha                 = 0.05; % = False detection rate ?
 % Cluster perm stats --> Which clusters are "significant"
 cfg_stats.correcttail           = 'alpha'; % {'prob', 'alpha'}
 % Adapts alpha value corresponding to one-tailed or two-tailed test
-cfg_stats.numrandomization      = 1000;
+cfg_stats.numrandomization      = 100;
 cfg_stats.clusteralpha          = 0.05;  % "which chans to use for clustering" aka
 % include more or less channels
 % threshold over which a triplet is chosen
@@ -371,8 +371,7 @@ eeglab nogui % Point to eeglab functions (topoplot, ...)
 
 
 
-%% Look for clusters with significant differences between conditions
-%  ------------------------------------------------------------------------
+%% Look for cl
 
 % Clusters and probabilities are given by channel by freq by time.
 % We will extract the channels that show significant differences and plot
@@ -677,7 +676,7 @@ if any(p_all < s_thrld)
         title(str_p)
         
         saveas(gcf, [cd, filesep, 'PermutationStats_', ...
-            char(PM_stats.Grp_subj), 'Subjects_', 'Cluster', ...
+            char(PM.Grp_subj), 'Subjects_', 'Cluster', ...
             num2str(i_clust), '.png']);
         
         
@@ -706,6 +705,6 @@ end
 
 PM.Stats = PM_stats;
 save([cd, filesep, 'PermutationStats_', ...
-    char(PM_stats.Grp_subj), 'Subjects.mat'], ...
+    char(PM.Grp_subj), 'Subjects.mat'], ...
     'PM', 'stats', '-v7')
 
