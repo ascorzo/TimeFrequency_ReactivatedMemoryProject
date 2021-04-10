@@ -32,16 +32,20 @@ startup_MVPA_Light
 %--------------------------------------------------------------------------
 
 % For Odor D Night
-filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/';
+filepath_DNight = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/';
+
+filesOdor_DNight = dir(strcat(filepath_DNight,'*Odor.mat'));
+filesVehicle_DNight = dir(strcat(filepath_DNight,'*Vehicle.mat'));
 
 % For Odor M Night
-%filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_OdorD%_Night/';
+filepath_MNight = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/MNight/';
 
-filesOdor = dir(strcat(filepath,'*Odor.mat'));
-filesVehicle = dir(strcat(filepath,'*Vehicle.mat'));
+filesOdor_MNight = dir(strcat(filepath_MNight,'*Odor.mat'));
+filesVehicle_MNight = dir(strcat(filepath_MNight,'*Vehicle.mat'));
+
 %% MVPA TF analysis
 % 
-subjects = 1:numel(filesOdor);
+subjects = 1:numel(filesOdor_DNight);
 
 
 for subj = subjects
@@ -49,28 +53,11 @@ for subj = subjects
     disp(strcat('Sujeto: ',num2str(subj)))
     
     % Load Data
-    load(strcat(filepath,filesOdor(subj).name));
-    load(strcat(filepath,filesVehicle(subj).name));
+    D_Night_Odor = load(strcat(filepath_DNight,filesOdor_DNight(subj).name));
+    D_Night_Vehicle = load(strcat(filepath_DNight,filesVehicle_DNight(subj).name));
 
-%     %----------------------------------------------------------------------
-%     % baseline correction
-%     %----------------------------------------------------------------------
-%     cfg_Bas                     = [];
-%     cfg_Bas.baseline            = [-15 45];
-%     cfg_Bas.baselinetype        = 'zscore';
-%     Time_Freq_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq);
-    
-%     %----------------------------------------------------------------------
-%     % Separate conditions
-%     %----------------------------------------------------------------------
-%     cfg = [];
-%     cfg.latency = [-15 15];
-%     Time_Freq_Odor = ft_selectdata(cfg, Time_Freq_Baseline);
-%     
-%     cfg = [];
-%     cfg.latency = [15 45];
-%     Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Baseline);
-%     Time_Freq_Vehicle.time = Time_Freq_Odor.time;
+    M_Night_Odor = load(strcat(filepath_MNight,filesOdor_MNight(subj).name));
+    M_Night_Vehicle = load(strcat(filepath_MNight,filesVehicle_MNight(subj).name));
 
 
     %----------------------------------------------------------------------
@@ -78,31 +65,37 @@ for subj = subjects
     %----------------------------------------------------------------------
     cfg = [];
     cfg.latency = [0 20];
-    Time_Freq_Odor = ft_selectdata(cfg, Time_Freq_Odor);
-    Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Vehicle);
-    
-    
- 
-    clabel = [ones(1,size(Time_Freq_Odor.powspctrm,1)),...
-    ones(1,size(Time_Freq_Vehicle.powspctrm,1))+1];
+    D_Night_Time_Freq_Odor = ft_selectdata(cfg, D_Night_Odor.Time_Freq_Odor);
+    D_Night_Time_Freq_Vehicle = ft_selectdata(cfg, D_Night_Vehicle.Time_Freq_Vehicle);
 
-    p_MVPA_TFclassifier2
+    M_Night_Time_Freq_Odor = ft_selectdata(cfg, M_Night_Odor.Time_Freq_Odor);
+    M_Night_Time_Freq_Vehicle = ft_selectdata(cfg, M_Night_Vehicle.Time_Freq_Vehicle);
+    
+    %----------------------------------------------------------------------
+    % Balance data
+    %----------------------------------------------------------------------
+
+    s_minTrials = min([size(D_Night_Time_Freq_Odor.powspctrm,1),...
+    size(D_Night_Time_Freq_Vehicle.powspctrm,1),...
+    size(M_Night_Time_Freq_Odor.powspctrm,1),...
+    size(M_Night_Time_Freq_Vehicle.powspctrm,1)]);
+
+ 
+    clabel = [ones(1,s_minTrials),...
+    ones(1,s_minTrials)+1,...
+    ones(1,s_minTrials)+2,...
+    ones(1,s_minTrials)+3];
+
+    p_MVPA_TFclassifier_4Conditions
     
     cf_Generalization{subj} = cf_freqxfreq;
     
     resultGeneralization{subj}  = result_freq;
-    
-    
-%     figure
-%     F = Time_Freq_Odor.freq;
-%     mv_plot_2D(cf_freqxfreq, 'x', F, 'y', F)
-%     xlabel('Test frequency [Hz]'), ylabel('Train frequency [Hz]')
-%     title('Frequency generalization using channels-x-times as features')
 
-
-%     
-    
 end
+
+savepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/';
+save(strcat(savepath,'FreqGeneralization_4Conditions'),'cf_Generalization','resultGeneralization')
 
 
 % for subj = 1:numel(cf_freqGeneralization)
