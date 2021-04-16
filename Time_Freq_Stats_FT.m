@@ -21,7 +21,7 @@ cfg_Bas.baselinetype        = 'zscore';
 
 %commonChans = Time_Freq_Cue_ChanSel{1, 1}.label;
 
-filename     = '/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/dummyfile.set';
+filename     = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/dummyfile.set';
 sensors = ft_read_sens(filename);
 
 %% Baseline correction

@@ -7,8 +7,8 @@ ft_warning off
 %--------------------------------------------------------------------------
 % Time frequency parameters
 %--------------------------------------------------------------------------
-s_tstep = 0.05; % try with 0.005
-s_fstep = 0.05; % 0.005
+s_tstep = 0.005; % try with 0.005
+s_fstep = 0.005; % 0.005
 cycles  = 12;
 
 cfg_Tf                      = [];
@@ -79,10 +79,10 @@ for subj = 1:numel(files)
     % baseline correction
     %----------------------------------------------------------------------
     cfg_Bas                     = [];
-    cfg_Bas.baseline            = 'all';
+    cfg_Bas.baseline            = [-1 5];
     cfg_Bas.baselinetype        = 'zscore';
-    Time_Freq_Odor  = ft_freqbaseline(cfg, Time_Freq_Odor);
-    Time_Freq_Vehicle  = ft_freqbaseline(cfg, Time_Freq_Vehicle);
+    Time_Freq_Odor  = ft_freqbaseline(cfg_Bas, Time_Freq_Odor);
+    Time_Freq_Vehicle  = ft_freqbaseline(cfg_Bas, Time_Freq_Vehicle);
 
 
     save(strcat(savepath,files(subj).name(1:12),'TF_DN_Odor'),'Time_Freq_Odor','-v7.3')
@@ -148,10 +148,10 @@ for subj = 1:numel(files)
     % baseline correction
     %----------------------------------------------------------------------
     cfg_Bas                     = [];
-    cfg_Bas.baseline            = 'all';
+    cfg_Bas.baseline            = [-1 5];
     cfg_Bas.baselinetype        = 'zscore';
-    Time_Freq_Odor  = ft_freqbaseline(cfg, Time_Freq_Odor);
-    Time_Freq_Vehicle  = ft_freqbaseline(cfg, Time_Freq_Vehicle);
+    Time_Freq_Odor  = ft_freqbaseline(cfg_Bas, Time_Freq_Odor);
+    Time_Freq_Vehicle  = ft_freqbaseline(cfg_Bas, Time_Freq_Vehicle);
 
     save(strcat(savepath,files(subj).name(1:12),'TF_MN_Odor'),'Time_Freq_Odor','-v7.3')
     save(strcat(savepath,files(subj).name(1:12),'TF_MN_Vehicle'),'Time_Freq_Vehicle','-v7.3')
