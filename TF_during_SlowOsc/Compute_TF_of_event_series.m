@@ -24,8 +24,6 @@
 %
 % 3. Parameters
 %       - General
-ft_defaults
-ft_warning off
 PM.Conditions           = {'ShamOn', 'OdorOn'};
 % Off periods ignored since baseline done during TF
 PM.ClustOI              = 'all';
@@ -58,7 +56,7 @@ PM.cfg_Bas.baselinetype  = 'zscore';
 %       - File paths
 filepath = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
            'preProcessing\EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-           '05-Mar-2021_Cue_NEW\SO_timeSeries\'];
+           '05-Mar-2021_Cue\SO_timeSeries\'];
 % filepath = ['/mnt/disk1/sleep/Datasets/CueD_SO_TimeSeires/'];
 savepath = strcat(filepath, 'TF_matrices');
 peakpath = ['D:\Gits\SO_Spindle_Detection_Coupling\', ...
@@ -66,6 +64,10 @@ peakpath = ['D:\Gits\SO_Spindle_Detection_Coupling\', ...
 % peakpath = ['/home/sleep/Documents/DAVID/Gits/', ...
 %             'SO_Spindle_Detection_Coupling/', ...
 %             'SubjectSpecific/Max_spindlebands_byEye.mat'];
+%       - paths to toolboxes
+fieldtrippath       = 'D:\MATLAB\fieldtrip-20200831';
+% fieldtrippath       = '/home/sleep/Documents/MATLAB/fieldtrip-20200831';
+
 
 
 % -------------------------------------------------------------------------
@@ -140,6 +142,10 @@ if ~strcmp(PM.ClustOI, 'all')
     % Otherwise, will be defined later when a subject file has been loaded
     % containing channel information.
 end
+
+addpath(fieldtrippath)
+ft_defaults
+ft_warning off
 
 
 
