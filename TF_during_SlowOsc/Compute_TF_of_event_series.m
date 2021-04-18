@@ -54,9 +54,9 @@ PM.cfg_Bas.baseline      = PM.cfg_seldat.latency;
 % effects.
 PM.cfg_Bas.baselinetype  = 'zscore';
 %       - File paths
-filepath = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
+filepath = ['D:\germanStudyData\datasetsSETS\Ori_PlaceboNight\', ...
            'preProcessing\EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-           '05-Mar-2021_Cue\SO_timeSeries\'];
+           '06-Mar-2021_Placebo\SO_timeSeries\'];
 % filepath = ['/mnt/disk1/sleep/Datasets/CueD_SO_TimeSeires/'];
 savepath = strcat(filepath, 'TF_matrices');
 peakpath = ['D:\Gits\SO_Spindle_Detection_Coupling\', ...
@@ -247,11 +247,11 @@ for i_subj = 1:numel(files)
             %% Extract average wave form of slow osc. of channel
             %  ------------------------------------------------------------
             
-            SO_wave_trl =   NaN(numTrials(i_chan), ...
+            SO_wave_trl =   NaN(numel(data_raw.trial), ...
                             SOseries.PM.s_timeWindow * ...
                             SOseries.PM.Info.TrialParameters.s_fs);
             
-            for i_trl = 1:numTrials(i_chan)
+            for i_trl = 1:numel(data_raw.trial)
                 SO_wave_trl(i_trl, :) = data_raw.trial{i_trl};
             end
             
@@ -273,9 +273,8 @@ for i_subj = 1:numel(files)
                 SOseries.PM.Info.TrialParameters.s_fs;
             % -------------------------------------------------------------
             
-            SO_wave_chans(i_chan, :) = ...
-            SO_wave_wholeWindow(...
-            ismember(v_wave_times_whole, v_wave_times));
+            SO_wave_chans(i_chan, :) = SO_wave_wholeWindow(...
+                ismember(v_wave_times_whole, v_wave_times));
             
         end
         
@@ -285,8 +284,6 @@ for i_subj = 1:numel(files)
         
         % This allows for easier data preparation when calling
         % permutation-based stats.
-        
-        % /!\ Could not get it done with ft_appenddata ...
         
         % TF_condition_restr
         %   cfg             = various information about data processing
