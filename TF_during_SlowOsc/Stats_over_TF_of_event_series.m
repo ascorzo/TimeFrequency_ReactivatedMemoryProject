@@ -25,9 +25,9 @@
 % 2. Parameters
 %       - File paths
 seriespath          = ['D:\germanStudyData\datasetsSETS\', ...
-                        'Ori_PlaceboNight\preProcessing\', ...
+                        'Ori_CueNight\preProcessing\', ...
                         'EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-                        '06-Mar-2021_Placebo\SO_timeSeries\TF_matrices\'];
+                        '05-Mar-2021_Cue\SO_timeSeries\TF_matrices\'];
 % seriespath          = ['/mnt/disk1/sleep/Datasets/', ...
 %                         'CueD_SO_TimeSeires/TF_matrices/'];
 %       - Channel cluster
@@ -176,8 +176,18 @@ TF_Sham = squeeze(TF_Sham);
 minVal = min([TF_Odor(:); TF_Sham(:)]);
 maxVal = max([TF_Odor(:); TF_Sham(:)]);
 
-limits = [- max(abs(minVal), abs(maxVal)), ...
+limitsTF = [- max(abs(minVal), abs(maxVal)), ...
     max(abs(minVal), abs(maxVal))];
+
+average_WF.ShamOn = squeeze(mean(mean(WF_subject.ShamOn, 1), 2));
+average_WF.OdorOn = squeeze(mean(mean(WF_subject.OdorOn, 1), 2));
+
+minVal      = min([average_WF.ShamOn(:); average_WF.OdorOn(:)]);
+maxVal      = max([average_WF.ShamOn(:); average_WF.OdorOn(:)]);
+
+limitsWF = [- max(abs(minVal), abs(maxVal)), ...
+    max(abs(minVal), abs(maxVal))];
+
 
 
 figure('units','normalized','outerposition', [0 0 1 0.5]);
@@ -207,7 +217,7 @@ for condition = PM.Conditions
     pcolor(v_times, v_frequencies, TF_meanSubj.(char(condition)));
     shading interp
     colorbar;
-    set(gca, 'clim', limits)
+    set(gca, 'clim', limitsTF)
     ylabel('Distance from spindle peak (Hz)')
     xlabel('Time (s)')
     title(char(condition))
@@ -221,10 +231,10 @@ for condition = PM.Conditions
         PM.Info.TrialParameters.s_fs  + 1 : 1 : ...
         PM.cfg_seldat.latency(2) * ...
         PM.Info.TrialParameters.s_fs;
-    WF_SubjChans = WF_subject.(char(condition));
-    plot(v_times, squeeze(mean(mean(WF_SubjChans, 1), 2)), ...
+    plot(v_times, average_WF.(char(condition)), ...
         'Color',        [0, 0, 0], ...
         'LineWidth',    2)
+    ylim(limitsWF)
     
     i_plot = i_plot + 1;
 end
@@ -563,8 +573,22 @@ for i_clust = significant_clusters
     minVal = min([TF_Odor(:); TF_Sham(:)]);
     maxVal = max([TF_Odor(:); TF_Sham(:)]);
     
-    limits = [- max(abs(minVal), abs(maxVal)), ...
+    limitsTF = [- max(abs(minVal), abs(maxVal)), ...
         max(abs(minVal), abs(maxVal))];
+    
+    average_WFCluster.ShamOn = squeeze(...
+        mean(mean(WF_subject.ShamOn(:, idx_clustchans, :), 2), 1));
+    average_WFCluster.OdorOn = squeeze(...
+        mean(mean(WF_subject.OdorOn(:, idx_clustchans, :), 2), 1));
+    
+    minVal = min([average_WFCluster.ShamOn(:); ...
+        average_WFCluster.OdorOn(:)]);
+    maxVal = max([average_WFCluster.ShamOn(:); ...
+        average_WFCluster.OdorOn(:)]);
+    
+    limitsWF = [- max(abs(minVal), abs(maxVal)), ...
+        max(abs(minVal), abs(maxVal))];
+    
     
     i_plot = 2;
     for condition = PM_stats.Conditions
@@ -597,7 +621,7 @@ for i_clust = significant_clusters
         shading interp
         colorbar;
         colormap parula
-        set(gca, 'clim', limits)
+        set(gca, 'clim', limitsTF)
         ylabel('Distance from spindle peak (Hz)')
         xlabel('Time (s)')
         title(char(condition))
@@ -616,10 +640,10 @@ for i_clust = significant_clusters
         v_times = v_times ./ PM.Info.TrialParameters.s_fs;
         WF_meanClust.(char(condition)) = mean(WF_subject.(...
             char(condition))(:, idx_clustchans, :), 2);
-        plot(v_times, ...
-            squeeze(mean(WF_meanClust.(char(condition)), 1)), ...
+        plot(v_times, average_WFCluster.(char(condition)), ...
             'Color',        'r', ...
             'LineWidth',    2)
+        ylim(limitsWF)
         
         i_plot = i_plot + 1;
     end
@@ -636,7 +660,7 @@ for i_clust = significant_clusters
     minVal = min(TF_clustDiff(:));
     maxVal = max(TF_clustDiff(:));
     
-    limits = [- max(abs(minVal), abs(maxVal)), ...
+    limitsTF = [- max(abs(minVal), abs(maxVal)), ...
         max(abs(minVal), abs(maxVal))];
     
     
@@ -647,7 +671,7 @@ for i_clust = significant_clusters
     figDiff = pcolor(v_times, v_frequencies, TF_clustDiff);
     shading interp
     colorbar;
-    set(gca, 'clim', limits)
+    set(gca, 'clim', limitsTF)
     ylabel('Distance from spindle peak (Hz)')
     xlabel('Time (s)')
     title('Odor - Sham')
@@ -669,7 +693,7 @@ for i_clust = significant_clusters
     figSign = pcolor(v_times, v_frequencies, TF_selective);
     shading interp
     colorbar;
-    set(gca, 'clim', limits)
+    set(gca, 'clim', limitsTF)
     ylabel('Distance from spindle peak (Hz)')
     xlabel('Time (s)')
     
