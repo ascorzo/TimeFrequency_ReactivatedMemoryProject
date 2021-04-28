@@ -45,7 +45,7 @@ PM.cfg_Tf.toi           = 'all'; % Extended before and after to deal with
                                  % border effect of wavelet
 PM.cfg_Tf.keeptrials    = 'yes';
 %       - Data window selection
-PM.cfg_seldat.latency   = [-2 2];
+PM.cfg_seldat.latency   = [-2.25 1.75]; % [-2 2]
 %       - Baseline parameters
 PM.cfg_Bas.baseline      = PM.cfg_seldat.latency;
 % Purposely choosing the whole window as baseline as we must assume that

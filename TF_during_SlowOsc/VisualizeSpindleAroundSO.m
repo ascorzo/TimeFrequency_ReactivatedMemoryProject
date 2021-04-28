@@ -16,7 +16,7 @@ TFseriespath            = ['D:\germanStudyData\datasetsSETS\', ...
 %       - General
 PM.Conditions           = {'ShamOn', 'OdorOn'};
 % Off periods ignored since baseline done during TF
-PM.ClustOI              = 'all';
+PM.ClustOI              = 'central';
 %       - Data window selection
 PM.cfg_seldat.latency   = [-2 2];
 
@@ -110,11 +110,11 @@ for i_subj = 1:numel(filesSOseries)
             error('/!\ You were about to load incompatible datasets')
         end
         
-        SOseries = load([SOseriespath, filesSOseries(i_subj).name]);
-        % Has to be loaded into new variable, otherwise PM will get
+        % Have to be loaded into new variables, otherwise PM will get
         % overwritten.
+        SOseries = load([SOseriespath, filesSOseries(i_subj).name]);
         TFseries = load([TFseriespath, filesTFseries(i_subj).name]);
-        file_loaded = 1; %#ok<NASGU>
+        file_loaded = 1;
     end
     
     
@@ -122,10 +122,10 @@ for i_subj = 1:numel(filesSOseries)
     %% Define channels to go through
     %  --------------------------------------------------------------------
     
-    if ~strcmp(PM.ClustOI, 'all')
-        Cluster = PM.Clust.(PM.ClustOI);
-    else
+    if strcmp(PM.ClustOI, 'all')
         Cluster = fieldnames(SOseries.SO_timeSeries)';
+    else
+        Cluster = PM.Clust.(PM.ClustOI);
     end
     
     
