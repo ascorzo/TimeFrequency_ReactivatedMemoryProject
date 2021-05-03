@@ -30,12 +30,13 @@ filePath_TRIALS     = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
                         'preProcessing\TRIALS'];
 eventfilePath       = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
                         'preProcessing\EEGLABFilt_Mastoids_Off_On_', ...
-                        '200Hz_Oct_NEW\', '05-Mar-2021_Cue_NEW\'];
+                        '200Hz_Oct_NEW\05-Mar-2021_Cue\'];
 eventFile           = '05-Mar-2021_22-23-41_AllData.mat';
+% eventFile           = '06-Mar-2021_18-08-41_AllData.mat';
 %    - Channels to include
 chanOfInterest      = 'all';
 %    - Conditions to include
-PM.Conditions       = {'OdorOn', 'ShamOn', 'OdorOff', 'ShamOff'};
+PM.Conditions       = {'OdorOn', 'ShamOn'};
 %    - Size of desired time window to extract
 PM.s_timeWindow     = 6;
 %    - Time stamp to center time window around
@@ -53,6 +54,8 @@ PM.SOlocations      = [2, 3, 4]; % See list below
 % 11)= p2pTime
 % 12)= Power
 % 13)= Frequency
+%    - Time stamp of spindle to couple to SO
+PM.SSCoupling       = 6;
 %    - Various parameters
 fileNames           = {...
     'RC_051_sleep','RC_091_sleep','RC_121_sleep','RC_131_sleep',...
@@ -82,6 +85,8 @@ PM.stimulation_seq    = 'OFF_ON';
 % 1. Fieldtrip-structured time series (trials) centered around event time
 %    stamps.
 %    Each dataset (subject) will be saved separately.
+% 2. Spindle latencies relative to Slow oscillation center latencies for
+%    each channel for each condition subject-wise (in samples)
 
 
 
@@ -233,6 +238,14 @@ for i_subj = 1:numel(fileNames)
             SO_events = OverallSlowOsc.(...
                 channel).(char(condition))(:, i_subj);
             
+            
+            % We will also extract relative latencies of spindles according
+            % to slow oscillation center points.
+            SS_events = OverallSpindles.(...
+                channel).(char(condition))(:, i_subj);
+            coupled_spindles = [];
+            
+            
             OriginalStartTime   = [];
             OriginalCentTime    = [];
             OriginalendTime     = [];
@@ -273,6 +286,35 @@ for i_subj = 1:numel(fileNames)
                     OriginalendTime     = cat(1, OriginalendTime, ...
                         Latencies.(char(condition))(trial) + ...
                         TrialendTime);
+                    
+                    
+                    
+                    %% Extract Spindles that are coupled to this very SO
+                    %  ----------------------------------------------------
+                    
+                    for SS = 1:size(SS_events{trial}, 1)
+                        curr_spindle = SS_events{trial}(SS, :);
+                        
+                        % Verify whether spindle time stamp of choice
+                        % falls between onset (2) and end latency (4) of SO
+                        if curr_spindle(PM.SSCoupling) > ...
+                                SO_events{trial}(SO, PM.SOlocations(1)) ...
+                                && curr_spindle(PM.SSCoupling) < ...
+                                SO_events{trial}(SO, PM.SOlocations(3))
+                            
+                            % If so, we catenate for this condition for
+                            % this subject for this channel the spindle
+                            % latency relative to center point of SO
+                            rel_latency = ...
+                                curr_spindle(PM.SSCoupling) - ...
+                                SO_events{trial}(SO, PM.SOlocations(2));
+                            
+                            coupled_spindles = [coupled_spindles, ...
+                                rel_latency];
+                        end
+                        
+                    end
+                    
                     
                 end
             end
@@ -332,10 +374,16 @@ for i_subj = 1:numel(fileNames)
             %  ------------------------------------------------------------
             
             outFT = eeglab2fieldtrip(EEGWholeOUT, 'raw');
-            SO_condition.(char(condition)) = outFT;
+            SO_timeSeries.(channel).(char(condition)) = outFT;
+            
+            
+            
+            %% Store SO-relative latencies of coupled spindles
+            %  ------------------------------------------------------------
+            
+            SS_latencies.(channel).(char(condition)) = coupled_spindles;
+            
         end
-        
-        SO_timeSeries.(channel) = SO_condition;
     end
     
     
@@ -346,6 +394,8 @@ for i_subj = 1:numel(fileNames)
     PM.ListChanges  = EEGWholeOUT.lst_changes;
         
     save(strcat(saveFolder, char(fileNames(i_subj)), '.mat'), ...
-        'PM', 'SO_timeSeries', '-v7.3')
+        'PM', 'SO_timeSeries', 'SS_latencies', '-v7.3')
+    
+    
     
 end
