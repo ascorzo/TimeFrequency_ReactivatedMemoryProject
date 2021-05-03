@@ -71,52 +71,52 @@ save('Time_Freq_Clust_ToPlot_DNight','Time_Freq_OdorD_clust','Time_Freq_VehicleD
 % For Motor Associated Odor Night
 %--------------------------------------------------------------------------
 
-filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/MNight/';
+% filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/MNight/';
 
-filesOdor = dir(strcat(filepath,'*_Odor.mat'));
-filesVehicle = dir(strcat(filepath,'*_Vehicle.mat'));
-p_clustersOfInterest
-clusters = fieldnames(Clust);
+% filesOdor = dir(strcat(filepath,'*_Odor.mat'));
+% filesVehicle = dir(strcat(filepath,'*_Vehicle.mat'));
+% p_clustersOfInterest
+% clusters = fieldnames(Clust);
 
-for subj = 1:numel(filesOdor)
+% for subj = 1:numel(filesOdor)
 
-    disp(strcat('Sujeto: ',num2str(subj)))
+%     disp(strcat('Sujeto: ',num2str(subj)))
 
 
-    load(strcat(filepath,filesOdor(subj).name));
-    load(strcat(filepath,filesVehicle(subj).name));
+%     load(strcat(filepath,filesOdor(subj).name));
+%     load(strcat(filepath,filesVehicle(subj).name));
    
 
-    %p_plotSubject_ConMartin
-    %-----------Mean of all trials, each channel --------------------------
-    cfg = [];
-    cfg.avgoverrpt = 'yes';
-    %cfg.latency = [-5 25];
-    Time_Freq_Cue_baseline2 = rmfield(Time_Freq_Odor,  'trialinfo');
-    Time_Freq_Cue = ft_selectdata(cfg, Time_Freq_Cue_baseline2);
+%     %p_plotSubject_ConMartin
+%     %-----------Mean of all trials, each channel --------------------------
+%     cfg = [];
+%     cfg.avgoverrpt = 'yes';
+%     %cfg.latency = [-5 25];
+%     Time_Freq_Cue_baseline2 = rmfield(Time_Freq_Odor,  'trialinfo');
+%     Time_Freq_Cue = ft_selectdata(cfg, Time_Freq_Cue_baseline2);
     
 
-    Time_Freq_Cue_baseline2 = rmfield(Time_Freq_Vehicle,  'trialinfo');
-    Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Cue_baseline2);
+%     Time_Freq_Cue_baseline2 = rmfield(Time_Freq_Vehicle,  'trialinfo');
+%     Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Cue_baseline2);
 
-    %----------------------------------------------------------------------
-    %           Combine Mean of channels by clusters
-    %----------------------------------------------------------------------
+%     %----------------------------------------------------------------------
+%     %           Combine Mean of channels by clusters
+%     %----------------------------------------------------------------------
     
-    for cluster = 1:numel(clusters)
-        [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Cue.label);
-        Time_Freq_OdorM_clust.(clusters{cluster})(subj,:,:) = ...
-            squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
+%     for cluster = 1:numel(clusters)
+%         [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Cue.label);
+%         Time_Freq_OdorM_clust.(clusters{cluster})(subj,:,:) = ...
+%             squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
         
-        [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Vehicle.label);
-        Time_Freq_VehicleM_clust.(clusters{cluster})(subj,:,:) = ...
-            squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
+%         [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Vehicle.label);
+%         Time_Freq_VehicleM_clust.(clusters{cluster})(subj,:,:) = ...
+%             squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
         
-    end
+%     end
      
-end
+% end
 
-save('Time_Freq_Clust_ToPlot_MNight','Time_Freq_OdorM_clust','Time_Freq_VehicleM_clust')
+% save('Time_Freq_Clust_ToPlot_MNight','Time_Freq_OdorM_clust','Time_Freq_VehicleM_clust')
 
 % %% 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
