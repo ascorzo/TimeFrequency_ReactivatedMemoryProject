@@ -16,10 +16,6 @@ ft_warning off
 %addpath('/mnt/disk1/andrea/German_Study/');
 p_clustersOfInterest
 
-
-cfg_Sel = [];
-cfg_Sel.channel = Clust.occipital;
-
 %--------------------------------------------------------------------------
 % Start MVPA-Light
 %--------------------------------------------------------------------------
@@ -32,7 +28,7 @@ startup_MVPA_Light
 %--------------------------------------------------------------------------
 
 % For Odor D Night
-filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/';
+filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/MNight/';
 
 % For Odor M Night
 %filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_OdorD%_Night/';
@@ -51,26 +47,6 @@ for subj = subjects
     % Load Data
     load(strcat(filepath,filesOdor(subj).name));
     load(strcat(filepath,filesVehicle(subj).name));
-
-%     %----------------------------------------------------------------------
-%     % baseline correction
-%     %----------------------------------------------------------------------
-%     cfg_Bas                     = [];
-%     cfg_Bas.baseline            = [-15 45];
-%     cfg_Bas.baselinetype        = 'zscore';
-%     Time_Freq_Baseline = ft_freqbaseline(cfg_Bas,Time_Freq);
-    
-%     %----------------------------------------------------------------------
-%     % Separate conditions
-%     %----------------------------------------------------------------------
-%     cfg = [];
-%     cfg.latency = [-15 15];
-%     Time_Freq_Odor = ft_selectdata(cfg, Time_Freq_Baseline);
-%     
-%     cfg = [];
-%     cfg.latency = [15 45];
-%     Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Baseline);
-%     Time_Freq_Vehicle.time = Time_Freq_Odor.time;
 
 
     %----------------------------------------------------------------------
@@ -91,18 +67,12 @@ for subj = subjects
     cf_Generalization{subj} = cf_freqxfreq;
     
     resultGeneralization{subj}  = result_freq;
-    
-    
-%     figure
-%     F = Time_Freq_Odor.freq;
-%     mv_plot_2D(cf_freqxfreq, 'x', F, 'y', F)
-%     xlabel('Test frequency [Hz]'), ylabel('Train frequency [Hz]')
-%     title('Frequency generalization using channels-x-times as features')
-
-
-%     
+       
     
 end
+
+savepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/';
+save(strcat(savepath,'OdorMvsVehicle_FreqGeneralization'),'cf_Generalization','resultGeneralization');
 
 
 % for subj = 1:numel(cf_freqGeneralization)
