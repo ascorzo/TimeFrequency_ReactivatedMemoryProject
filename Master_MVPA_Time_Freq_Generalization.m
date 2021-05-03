@@ -119,9 +119,13 @@ end
 % % 
 result_average_Generalization = mv_combine_results(resultGeneralization, 'average');
 
+resultPlot = result_average_Generalization.perf{1}.*(result_average_Generalization.perf{1}>=0.57);
+
 figure
 F = Time_Freq_Odor.freq;
-mv_plot_2D(result_average_Generalization.perf{1}, 'x', F, 'y', F)
+mv_plot_2D(resultPlot, 'x', F, 'y', F)
+caxis manual
+caxis([min(result_average_Generalization.perf{1}(:)),max(result_average_Generalization.perf{1}(:))])
 xlabel('Test Frequency'), ylabel('Train Frequency')
 title('Frequency generalization using channels x time as features')
 
