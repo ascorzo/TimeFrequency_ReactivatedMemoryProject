@@ -228,7 +228,10 @@ for subj = subjects
     save(strcat('/gpfs01/born/group/Andrea/ReactivatedConnectivity/Time-Frequency_FT/TF_ONOFF_OdorD_Night/','resultsfreq_ONOFF.mat'),'resultsfreq','-v7.3')
     
 end
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 %%
 %-- For Clust.left_frontal
 result_freq = resultsfreq.left_frontal;
