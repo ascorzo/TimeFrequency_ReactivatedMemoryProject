@@ -8,7 +8,7 @@
 
 % Events' TF are averaged (post-TF computation) for each channel. If you
 % want to maintain individual event TF matrices for each channel, comment
-% out line 229: data_TF_norm.powspctrm  = mean(data_TF_norm.powspctrm, 1);
+% out line "data_TF_norm.powspctrm  = mean(data_TF_norm.powspctrm, 1);"
 
 
 % -------------------------------------------------------------------------
@@ -32,8 +32,11 @@ PM.ClustOI              = 'all';
 PM.Spindleband          = 'fast';
 PM.FrRange              = 10; % Hz, range of frequencies to take into
                               % account around spindle band peak 
+PM.FrCenter             = 'mean'; % Whether to center around 
+                                            % subject's "individual" or 
+                                            % "mean" peak of all subjects
 %       - Time frequency parameters
-PM.s_tstep              = 0.05; % try with 0.005
+PM.s_tstep              = 0.05; % FASTER!
 % Probably a good idea to have highest time resolution possible since the
 % shift in prefered angles of spindles during SO is rather small.
 PM.s_fstep              = 0.05; % 0.005
@@ -41,8 +44,6 @@ PM.cycles               = 12;
 PM.cfg_Tf.method        = 'wavelet';
 PM.cfg_Tf.output        = 'pow';
 PM.cfg_Tf.width         = PM.cycles;
-PM.cfg_Tf.toi           = 'all'; % Extended before and after to deal with
-                                 % border effect of wavelet
 PM.cfg_Tf.keeptrials    = 'yes';
 %       - Data window selection
 PM.cfg_seldat.latency   = [-2.25 1.75]; % [-2 2]
@@ -175,7 +176,18 @@ for i_subj = 1:numel(files)
     subject_short    = extractBefore(files(i_subj).name, '_sleep');
     idx_spindle_peak = find(strcmp({spindle_max.subjects}, subject_short));
     
-    PM.peakFr        = spindle_max(idx_spindle_peak).(PM.Spindleband);
+    if strcmp(PM.FrCenter, 'individual')
+        PM.peakFr        = spindle_max(idx_spindle_peak).(PM.Spindleband);
+    elseif strcmp(PM.FrCenter, 'mean')
+        PM.peakFr        = mean([spindle_max.(PM.Spindleband)]);
+                                % Wavelet-based TF has different
+                                % resolutions for different frequency bands
+                                % and we might biais the outcome of TF by
+                                % centering the TF matrices around
+                                % subjects' individual spindle fr peaks. We
+                                % verify this here by centering around the
+                                % grand average of spindle peaks
+    end
     
     v_freqs          = ...
         PM.peakFr-PM.FrRange/2:PM.s_fstep:PM.peakFr+PM.FrRange/2;
@@ -220,8 +232,14 @@ for i_subj = 1:numel(files)
             
             % Time-Frequency Calculation
             PM.cfg_Tf.foi       = v_freqs;
+%             PM.cfg_Tf.toi       = 'all';
+            PM.cfg_Tf.toi       = -SOseries.PM.s_timeWindow / 2:...
+                                    PM.s_tstep:...
+                                    SOseries.PM.s_timeWindow / 2;
+                                 % 'all', Extended before and after to deal 
+                                 % with border effect of wavelet
+            PM.cfg_Tf.feedback = 'off'; % Speed up
             data_TF             = ft_freqanalysis(PM.cfg_Tf, data_raw);
-            
             
             % Select time of interest removing borders
             data_TF_bas         = ft_selectdata(PM.cfg_seldat, data_TF);
