@@ -24,23 +24,27 @@
 
 % 3. Parameters:
 %    - File paths
-filePath_CONTINUOUS = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
+filePath_CONTINUOUS = ['D:\germanStudyData\datasetsSETS\Ori_PlaceboNight\', ...
                         'preProcessing\NREM'];
-filePath_TRIALS     = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
+filePath_TRIALS     = ['D:\germanStudyData\datasetsSETS\Ori_PlaceboNight\', ...
                         'preProcessing\TRIALS'];
-eventfilePath       = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
+eventfilePath       = ['D:\germanStudyData\datasetsSETS\Ori_PlaceboNight\', ...
                         'preProcessing\EEGLABFilt_Mastoids_Off_On_', ...
-                        '200Hz_Oct_NEW\05-Mar-2021_Cue\'];
-eventFile           = '05-Mar-2021_22-23-41_AllData.mat';
-% eventFile           = '06-Mar-2021_18-08-41_AllData.mat';
+                        '200Hz_Oct_NEW\06-Mar-2021_Placebo\'];
+% eventFile           = '05-Mar-2021_22-23-41_AllData.mat';
+eventFile           = '06-Mar-2021_18-08-41_AllData.mat';
 %    - Channels to include
 chanOfInterest      = 'all';
 %    - Conditions to include
 PM.Conditions       = {'OdorOn', 'ShamOn'};
 %    - Size of desired time window to extract
 PM.s_timeWindow     = 6;
-%    - Time stamp to center time window around
-PM.SOlocations      = [2, 3, 4]; % See list below
+%    - Time stamps of start and end of slow oscillations
+PM.SOlocations      = [2, 4];
+%    - Time stamp to center time window around: Can be based on angles from
+%      hilbert transform or time stamps of the delta band time series
+%      ({'timeseries', 3} or {'angles', -90} for example)
+PM.SOcenter      = {'angles', 0}; % (0 is pos. peak, -90 = inflection)
 % 1) = To which time bin corresponds that particular event
 % 2) = startTime
 % 3) = midTime (SO: down-up zero crossing)
@@ -57,22 +61,22 @@ PM.SOlocations      = [2, 3, 4]; % See list below
 %    - Time stamp of spindle to couple to SO
 PM.SSCoupling       = 6;
 %    - Various parameters
-fileNames           = {...
-    'RC_051_sleep','RC_091_sleep','RC_121_sleep','RC_131_sleep',...
-    'RC_141_sleep','RC_161_sleep','RC_171_sleep','RC_201_sleep',...
-    'RC_241_sleep','RC_251_sleep','RC_261_sleep','RC_281_sleep',...
-    'RC_291_sleep','RC_301_sleep',...
-    'RC_392_sleep','RC_412_sleep','RC_442_sleep','RC_452_sleep',...
-    'RC_462_sleep','RC_472_sleep','RC_482_sleep','RC_492_sleep',...
-    'RC_512_sleep'};
 % fileNames           = {...
-%     'RC_052_sleep','RC_092_sleep','RC_122_sleep','RC_132_sleep',...
-%     'RC_142_sleep','RC_162_sleep','RC_172_sleep','RC_202_sleep',...
-%     'RC_242_sleep','RC_252_sleep','RC_262_sleep','RC_282_sleep',...
-%     'RC_292_sleep','RC_302_sleep',...
-%     'RC_391_sleep','RC_411_sleep','RC_441_sleep','RC_451_sleep',...
-%     'RC_461_sleep','RC_471_sleep','RC_481_sleep','RC_491_sleep',...
-%     'RC_511_sleep'};
+%     'RC_051_sleep','RC_091_sleep','RC_121_sleep','RC_131_sleep',...
+%     'RC_141_sleep','RC_161_sleep','RC_171_sleep','RC_201_sleep',...
+%     'RC_241_sleep','RC_251_sleep','RC_261_sleep','RC_281_sleep',...
+%     'RC_291_sleep','RC_301_sleep',...
+%     'RC_392_sleep','RC_412_sleep','RC_442_sleep','RC_452_sleep',...
+%     'RC_462_sleep','RC_472_sleep','RC_482_sleep','RC_492_sleep',...
+%     'RC_512_sleep'};
+fileNames           = {...
+    'RC_052_sleep','RC_092_sleep','RC_122_sleep','RC_132_sleep',...
+    'RC_142_sleep','RC_162_sleep','RC_172_sleep','RC_202_sleep',...
+    'RC_242_sleep','RC_252_sleep','RC_262_sleep','RC_282_sleep',...
+    'RC_292_sleep','RC_302_sleep',...
+    'RC_391_sleep','RC_411_sleep','RC_441_sleep','RC_451_sleep',...
+    'RC_461_sleep','RC_471_sleep','RC_481_sleep','RC_491_sleep',...
+    'RC_511_sleep'};
 saveFolder            = [eventfilePath, 'SO_timeSeries', filesep];
 PM.stimulation_seq    = 'OFF_ON';
 
@@ -136,6 +140,11 @@ for i_subj = 1:numel(fileNames)
     clearvars SO_timeSeries
     disp(strcat('Subject:', {' '}, fileNames(i_subj)))
     
+    if exist([saveFolder, char(fileNames(i_subj)), '.mat'], 'file') == 2
+        disp('... skipped because exsists already')
+        continue 
+    end
+    
     
     % Check for compatibility
     if ~contains(Info.Subjects(i_subj), fileNames(i_subj))
@@ -148,22 +157,26 @@ for i_subj = 1:numel(fileNames)
     % around slow oscillations.
     % 2. Trial datasets will serve as indicator of event in EEG structure
     % based on trials containing slow oscillation
-    dataType    = '.set';
-    [EEGWhole] = f_load_data(...
-        strcat(char(fileNames_CONTINUOUS(i_subj)), dataType), ...
-        filePath_CONTINUOUS, dataType);
-    
-    dataType    = '.set';
-    [EEGTrialCue] = f_load_data(...
-        strcat(char(fileNames_TRIALS(i_subj)), ...
-        '_', PM.stimulation_seq, '_Odor',...
-        dataType), filePath_TRIALS, dataType);
-    
-    dataType    = '.set';
-    [EEGTrialVehicle] = f_load_data(...
-        strcat(char(fileNames_TRIALS(i_subj)), ...
-        '_', PM.stimulation_seq, '_Sham',...
-        dataType), filePath_TRIALS, dataType);
+    if ~exist('data_loaded', 'var') || data_loaded == 0
+        dataType    = '.set';
+        [EEGWhole] = f_load_data(...
+            strcat(char(fileNames_CONTINUOUS(i_subj)), dataType), ...
+            filePath_CONTINUOUS, dataType);
+        
+        dataType    = '.set';
+        [EEGTrialCue] = f_load_data(...
+            strcat(char(fileNames_TRIALS(i_subj)), ...
+            '_', PM.stimulation_seq, '_Odor',...
+            dataType), filePath_TRIALS, dataType);
+        
+        dataType    = '.set';
+        [EEGTrialVehicle] = f_load_data(...
+            strcat(char(fileNames_TRIALS(i_subj)), ...
+            '_', PM.stimulation_seq, '_Sham',...
+            dataType), filePath_TRIALS, dataType);
+        
+        data_loaded = 1;
+    end
     
     
     
@@ -230,6 +243,19 @@ for i_subj = 1:numel(fileNames)
         
         
         
+        %% Prepare trial time vectors
+        %  ----------------------------------------------------------------
+        
+        timeOff = 1:Info.TrialParameters.s_TimeBeforeZero * ...
+            Info.TrialParameters.s_fs;
+        timeOn  = Info.TrialParameters.s_TimeBeforeZero * ...
+            Info.TrialParameters.s_fs + 1: ...
+            (Info.TrialParameters.s_TimeBeforeZero + ...
+            Info.TrialParameters.s_TimeAfterZero) * ...
+            Info.TrialParameters.s_fs;
+        
+        
+        
         %% Add Slow oscillation event latencies to continuous time series
         %  ----------------------------------------------------------------
                 
@@ -241,14 +267,15 @@ for i_subj = 1:numel(fileNames)
             
             % We will also extract relative latencies of spindles according
             % to slow oscillation center points.
-            SS_events = OverallSpindles.(...
-                channel).(char(condition))(:, i_subj);
-            coupled_spindles = [];
+            SS_events           = OverallSpindles.(...
+                                    channel).(char(condition))(:, i_subj);
+            coupled_spindles    = [];
             
             
             OriginalStartTime   = [];
             OriginalCentTime    = [];
             OriginalendTime     = [];
+            Lat_diff            = [];
             for trial = 1:length(SO_events)
                 
                 if isempty(SO_events{trial})
@@ -265,27 +292,125 @@ for i_subj = 1:numel(fileNames)
                 
                 for SO = 1:size(SO_events{trial}, 1)
                     
-                    % Time of SO occurence in the trial (in samples)
-                    StartTime   = SO_events{trial}(SO, PM.SOlocations(1));
-                    centTime    = SO_events{trial}(SO, PM.SOlocations(2));
-                    endTime     = SO_events{trial}(SO, PM.SOlocations(3));
                     
-                    % Time of SO occurence accorging to trigger in the
-                    % whole recording (in miliseconds)
-                    TrialStartTime  = StartTime;
-                    TrialCentTime   = centTime;
-                    TrialendTime    = endTime;
+                    
+                    %% Extract time points according to axis crossings
+                    %  -----------------------------------------------
+                    
+                    % Time of SO occurence in the trial (in samples)
+                    startTime = SO_events{trial}(SO, PM.SOlocations(1));
+                    endTime   = SO_events{trial}(SO, PM.SOlocations(2));
+                    
+                    if strcmp(PM.SOcenter(1), 'timeseries')
+                        
+                        centTime  = SO_events{trial}(SO, PM.SOcenter{2});
+                        
+                    elseif strcmp(PM.SOcenter(1), 'angles')
+                                                
+                        % Search for the angle of interest of the signal
+                        % between start end end of slow oscillation. For
+                        % this, we:
+                        % 1. Extract the time series of the current
+                        %    trial and the current condition
+                        % 2. Filter it accordingly to parameters used 
+                        %    during SO detection
+                        % 3. Determine the angles of the slow oscillation
+                        % 4. Seach for the angle of interest
+                        
+                        centTime  = NaN; % Make sure to reset
+                        
+                        % 1. Extract trial condition series
+                        if contains(condition, 'OdorOn')
+                            DataIN = ...
+                                EEGTrialCueIN.data(1, timeOn, trial);
+                        elseif contains(condition, 'OdorOff')
+                            DataIN = ...
+                                EEGTrialCueIN.data(1, timeOff, trial);
+                        elseif contains(condition, 'ShamOn')
+                            DataIN = ...
+                                EEGTrialVehicleIN.data(1, timeOn, trial);
+                        elseif contains(condition, 'ShamOff')
+                            DataIN = ...
+                                EEGTrialVehicleIN.data(1, timeOff, trial);
+                        end
+                        
+                        % 2. Filter the signal into delta band using 
+                        %    parameters of SO detection (stored in
+                        %    Info.SOparameters): For general Slow osc. 
+                        %    detection, signal was filtered in whole delta
+                        %    range; for phase-coupling (PC), signal was 
+                        %    filtered into low delta range.
+                        DataFilt    = f_filter_deltaband(DataIN', ...
+                                        Info.SOparameters.butter_order, ...
+                                        Info.TrialParameters.s_fs, ...
+                                        Info.SOparameters.LowPassFr, ...
+                                        Info.SOparameters.HighPassFr);
+                        DataFiltPC  = f_filter_deltaband(DataIN', ...
+                                        Info.SOparameters.butter_order, ...
+                                        Info.TrialParameters.s_fs, ...
+                                        Info.SOparameters.LowPassPhCpl, ...
+                                        Info.SOparameters.HighPassFr);
+                        
+                        % 3. Determination of SO angles
+                        DataHil     = hilbert(DataFiltPC);
+                        DataAngles  = angle(DataHil);
+                        
+                        SO_Dat      = DataFiltPC(startTime:endTime)';
+                        SO_Hil      = real(DataHil(startTime:endTime))';
+                        SO_Ang      = DataAngles(startTime:endTime)';
+                        
+                        % 4. Angle point determination
+                        % We take first derivative and look where in it the
+                        % difference between data points and zero is
+                        % smallest.
+                        % v_grad        = gradient(SO_Hil) ./ ...
+                        %                   gradient(1:numel(SO_Hil));
+                       	% v_sub         = zeros(1, numel(v_grad));
+                        % [~, i_delt]	= min(diff([v_grad; v_sub]));
+                        
+                        % Above method is rejected since it is working with
+                        % time series data and not angle data. Furthermore,
+                        % it is only working if angle of interest is -90.
+                        % We should probably work with angles directly 
+                        % since they have been used in phase-shift analysis
+                        v_grad      = SO_Ang;
+                        v_sub       = repmat(deg2rad(PM.SOcenter{2}), ...
+                                        1, numel(v_grad));
+                        [~, i_delt]	= min(abs(diff([v_grad; v_sub])));
+                        
+                        % My brain explodes, therefore we visualize!
+                        % run p_visualize_time_stamps.m
+                        % close all
+                        
+                        centTime        = startTime + i_delt - 1;
+                        
+                        % Difference to zero-crossing of delta signal?
+                        Lat_diff = [Lat_diff, ...
+                            SO_events{trial}(SO, 3) - centTime];
+                        
+                    end
+                    
+                    
+                    % Some Slow oscillations, when filtered in low delta
+                    % band opposed to whole delta band do not have
+                    % appropriate wave forms to determine angle inflection
+                    % points. See example of flawed SO detection as figure.
+                    % We skip these here:
+                    if isnan(centTime)
+                        continue
+                    end
+                    
                     
                     % Time of SO occurence in the whole recording
                     OriginalStartTime   = cat(1, OriginalStartTime, ...
                         Latencies.(char(condition))(trial) + ...
-                        TrialStartTime);
+                        startTime);
                     OriginalCentTime    = cat(1, OriginalCentTime, ...
                         Latencies.(char(condition))(trial) + ...
-                        TrialCentTime);
+                        centTime);
                     OriginalendTime     = cat(1, OriginalendTime, ...
                         Latencies.(char(condition))(trial) + ...
-                        TrialendTime);
+                        endTime);
                     
                     
                     
@@ -300,14 +425,13 @@ for i_subj = 1:numel(fileNames)
                         if curr_spindle(PM.SSCoupling) > ...
                                 SO_events{trial}(SO, PM.SOlocations(1)) ...
                                 && curr_spindle(PM.SSCoupling) < ...
-                                SO_events{trial}(SO, PM.SOlocations(3))
+                                SO_events{trial}(SO, PM.SOlocations(2))
                             
                             % If so, we catenate for this condition for
                             % this subject for this channel the spindle
                             % latency relative to center point of SO
                             rel_latency = ...
-                                curr_spindle(PM.SSCoupling) - ...
-                                SO_events{trial}(SO, PM.SOlocations(2));
+                                curr_spindle(PM.SSCoupling) - centTime;
                             
                             coupled_spindles = [coupled_spindles, ...
                                 rel_latency];
@@ -323,6 +447,8 @@ for i_subj = 1:numel(fileNames)
             
             %% Add event latencies of Slow osc. to EEG.event structure
             %  ------------------------------------------------------------
+            
+            Lat_diff
             
             s_last_event = numel(EEGWholeIN.event);
             for SO = 1:numel(OriginalStartTime)
@@ -397,5 +523,6 @@ for i_subj = 1:numel(fileNames)
         'PM', 'SO_timeSeries', 'SS_latencies', '-v7.3')
     
     
+    data_loaded = 0; % Load next subject
     
 end

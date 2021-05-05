@@ -152,7 +152,7 @@ cfg.parameter = 'powspctrm';
 cfg.maskparameter = 'mask';
 cfg.maskstyle = 'outline';
 
-cfg.zlim = [-0.5 0.5];
+cfg.zlim = [-0.2 0.2];
 ft_multiplotTFR(cfg, this_tfr);
 c = colorbar('location', 'southoutside');
 c.Label.String = '(Power ratio odor over sham)';

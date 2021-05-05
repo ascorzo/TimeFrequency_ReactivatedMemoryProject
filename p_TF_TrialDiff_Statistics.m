@@ -41,6 +41,8 @@ end
 %%
 
 filename     = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/dummyfile.set';
+
+filename     = 'dummyfile.set';
 sensors = ft_read_sens(filename);
 
 %%
@@ -69,10 +71,15 @@ cfg.uvar                = 1;                 % condition (uvar would be the subj
 cfg.ivar                = 2;
 % Design the statistical contrast
 
-design                  = [];
-design(1,:)             = [1:length(Time_Freq_Diff_D_All) 1:length(Time_Freq_Diff_M_All)];        % conditions, eg:   1 1 1 1 2 2 2 2
-design(2,:)             = [ones(1,length(Time_Freq_Diff_D_All)) ones(1,length(Time_Freq_Diff_M_All))*2];        % conditions, eg:   1 1 1 1 2 2 2 2
-cfg.design              = design;
+%% Subject by Subject
 
-%%
-stats1                  = ft_freqstatistics(cfg, Time_Freq_Diff_D_All{:}, Time_Freq_Diff_M_All{:});
+for subj = 1:length(Time_Freq_Diff_D_All)
+    design                  = [];
+    design(1,:)             = [1:length(Time_Freq_Diff_D_All{subj}) 1:length(Time_Freq_Diff_M_All{subj})];        % conditions, eg:   1 1 1 1 2 2 2 2
+    design(2,:)             = [ones(1,length(Time_Freq_Diff_D_All{subj})) ones(1,length(Time_Freq_Diff_M_All{subj}))*2];        % conditions, eg:   1 1 1 1 2 2 2 2
+    cfg.design              = design;
+    
+    
+    stats1{subj}            = ft_freqstatistics(cfg, Time_Freq_Diff_D_All{subj}, Time_Freq_Diff_M_All{subj});
+    
+end
