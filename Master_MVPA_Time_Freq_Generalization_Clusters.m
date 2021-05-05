@@ -53,7 +53,7 @@ for subj = subjects
     % Select Time of interest
     %----------------------------------------------------------------------
     cfg = [];
-    cfg.latency = [0 15];
+    cfg.latency = [0 20];
     Time_Freq_Odor = ft_selectdata(cfg, Time_Freq_Odor);
     Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Vehicle);
     
@@ -89,10 +89,11 @@ for subj = subjects
     end
 
     F = Time_Freq_Odor.freq;
+    t = Time_Freq_Odor.time;
     
     savepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/';
-    save(strcat(savepath,'OdorDvsVehicle_FreqGeneralization_clusters'),...
-        'cf_Generalization','resultGeneralization','F','-v7.3');
+    save(strcat(savepath,'OdorDvsVehicle_FreqGeneralization_to20_clusters'),...
+        'cf_Generalization','resultGeneralization','F','t','-v7.3');
 end
 
 
@@ -127,7 +128,7 @@ for subj = subjects
     % Select Time of interest
     %----------------------------------------------------------------------
     cfg = [];
-    cfg.latency = [0 15];
+    cfg.latency = [0 20];
     Time_Freq_Odor = ft_selectdata(cfg, Time_Freq_Odor);
     Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Vehicle);
     
@@ -163,10 +164,11 @@ for subj = subjects
     end
 
     F = Time_Freq_Odor.freq;
+    t = Time_Freq_Odor.time;
     
     savepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/';
-    save(strcat(savepath,'OdorMvsVehicle_FreqGeneralization_clusters'),...
-        'cf_Generalization','resultGeneralization','F','-v7.3');
+    save(strcat(savepath,'OdorMvsVehicle_FreqGeneralization_to20_clusters'),...
+        'cf_Generalization','resultGeneralization','F','t','-v7.3');
 end
 
 
@@ -195,7 +197,7 @@ for subj = subjects
     % Select Time of interest
     %----------------------------------------------------------------------
     cfg = [];
-    cfg.latency = [0 15];
+    cfg.latency = [0 20];
     Time_Freq_OdorD = ft_selectdata(cfg, Time_freq_OdorD.Time_Freq_Odor);
     Time_Freq_OdorM = ft_selectdata(cfg, Time_freq_OdorM.Time_Freq_Odor);
     
@@ -228,10 +230,11 @@ for subj = subjects
         resultGeneralization.(clusters{cluster}){subj}  = result_freq;  
     end 
     F = Time_Freq_Odor.freq;
+    t = Time_Freq_Odor.time;
 
     savepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/';
-    save(strcat(savepath,'OdorDvsOdorM_FreqGeneralization_clusters'),...
-        'cf_Generalization','resultGeneralization','F','-v7.3');
+    save(strcat(savepath,'OdorDvsOdorM_FreqGeneralization_to20_clusters'),...
+        'cf_Generalization','resultGeneralization','F','t','-v7.3');
     
 end
 
