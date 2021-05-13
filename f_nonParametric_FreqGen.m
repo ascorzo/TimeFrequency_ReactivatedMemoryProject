@@ -13,7 +13,6 @@ perms = 10000;
     'method',method,'naccu',perms);
 
 %[~, pmask] = fdr(pvals(:),0.05,'nonParametric');
-
 pmask = pvals<=0.05;
 %pmask = pvals;
 cluster = 'on';
