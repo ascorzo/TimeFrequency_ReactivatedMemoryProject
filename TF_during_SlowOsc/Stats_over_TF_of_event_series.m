@@ -20,14 +20,11 @@
 %
 % 3. Parameters
 %       - File paths
-seriespath          = ['D:\germanStudyData\datasetsSETS\', ...
-                        'Ori_CueNight\preProcessing\', ...
-                        'EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-                        '05-Mar-2021_Cue\SO_timeSeries\TF_matrices\'];
 SOseriespath        = ['D:\germanStudyData\datasetsSETS\', ...
-                         'Ori_CueNight\preProcessing\', ...
+                         'Ori_PlaceboNight\preProcessing\', ...
                          'EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-                         '05-Mar-2021_Cue\SO_timeSeries\'];
+                         '06-Mar-2021_Placebo\SO_timeSeries\'];
+seriespath          = [SOseriespath, '\TF_matrices\'];
 % SOseriespath contains datasets with spindle latencies
 str_folderOut       = [cd, filesep, 'Clusters'];
 %       - Channel cluster
@@ -106,6 +103,9 @@ for i_chan = 1 :numel(Cluster)
         Cluster(i_chan)));
 end
 chanlocs = chanlocs(idx_ROI);
+
+load(chanlocspath) % contains 'sensors'
+
 addpath(eeglabpath)
 eeglab nogui % Point to eeglab functions (topoplot, ...)
 
@@ -197,8 +197,6 @@ end
 %% Prepare structures for stats
 %  ------------------------------------------------------------------------
 
-load(chanlocspath) % contains 'sensors'
-
 c_fields = fieldnames(TF_series.OdorOn);
 for i_field = 1:numel(c_fields)
     
@@ -218,8 +216,35 @@ TF_subject.ShamOn.elec = sensors;
 
 
 
+%% Intermediate storage of outputs
+%  ------------------------------------------------------------------------
+
+Night.SS_latencies = SS_latencies;
+Night.WF_subject   = WF_subject;
+Night.TF_subject   = TF_subject;
+
+save([cd, filesep, 'Night.mat'], 'Night', '-v7')
+
+
+
 %% Select subject group and removal of outliers
 %  ------------------------------------------------------------------------
+
+% =========================================================================
+% warning('Next lines of code are there to combine nights ...')
+% clearvars TF_subject SS_latencies WF_subject
+% 
+NightD = load('NightD.mat');
+NightM = load('NightM.mat');
+
+SS_latencies.OdorOn = NightD.Night.SS_latencies.OdorOn;
+SS_latencies.ShamOn = NightM.Night.SS_latencies.OdorOn;
+WF_subject.OdorOn   = NightD.Night.WF_subject.OdorOn;
+WF_subject.ShamOn   = NightM.Night.WF_subject.OdorOn;
+TF_subject.OdorOn   = NightD.Night.TF_subject.OdorOn;
+TF_subject.ShamOn   = NightM.Night.TF_subject.OdorOn;
+% =========================================================================
+
 
 % Generate pseudo data in order to make function work
 v_pseudo = NaN(1, numel(files));
@@ -259,467 +284,14 @@ SS_latencies.ShamOn = SS_latencies.ShamOn(v_kept_subj);
 
 
 
-% % Prepare cell-like structure
-% % -----------------------------
-% 
-% % Place each rpt in separate cell. This does not change the outcome as
-% % compared to having all rpt inside same powspctrm field along the first
-% % dimension.
-% 
-% retained_subj = find(v_kept_subj)';
-% for i_rpt = 1:numel(retained_subj)
-%    
-%     struct_tmp = TF_subject.OdorOn;
-%     struct_tmp = rmfield(struct_tmp, 'powspctrm');
-%     struct_tmp.powspctrm = ...
-%         TF_subject.OdorOn.powspctrm(retained_subj(i_rpt), :, :, :);
-%     TF_subject_cell.OdorOn{i_rpt} = struct_tmp;
-%     
-%     struct_tmp = TF_subject.ShamOn;
-%     struct_tmp = rmfield(struct_tmp, 'powspctrm');
-%     struct_tmp.powspctrm = ...
-%         TF_subject.ShamOn.powspctrm(retained_subj(i_rpt), :, :, :);
-%     TF_subject_cell.ShamOn{i_rpt} = struct_tmp;
-%     
-% end
-
-
-
-% -------------------------------------------------------------------------
-% ---------------------------               -------------------------------
-% ---------------------------   P A R T 1   -------------------------------
-% ---------------------------               -------------------------------
-% -------------------------------------------------------------------------
-
 % Here, we have data input defined as repetitions x channels x
 % times x frequencies and let the permutation-based analysis find channel
-% clusters itself.
-
-%% Parameters for stats
-%  ------------------------------------------------------------------------
-
-addpath(fieldtrippath)
-ft_defaults
-
-cfg_stats                       = [];
-% cfg_stats.latency               = [1]; % Setting this to one rejects the
-%time vector. Probably, this indicates the time vector, but it doesn't seem
-%necessary to specify since fieldtrip is taking it from structure.time
-cfg_stats.frequency             = 'all';
-cfg_stats.channel               = 'all';
-cfg_stats.correctm              = 'cluster';
-cfg_stats.method                = 'montecarlo';
-cfg_stats.statistic             = 'depsamplesT';
-% use actvsblT for activation against baseline
-cfg_stats.clusterstatistic      = 'maxsum';
-cfg_stats.minnbchan             = 2;
-
-cfg_neighb.method               = 'distance'; %'triangulation';
-cfg_neighb.neighbourdist        = 3.5; % Default is "smart guess".
-% 3.5 gets rid of edge clusters while maintaining high statistical 
-% significance in central clusters.
-cfg_neighb.channel              = 'all';
-cfg_neighb.elec                 = sensors;
-cfg_stats.neighbours            = ft_prepare_neighbours(cfg_neighb);
-
-cfg_stats.tail                  = 0; % -/+1 or 0 for one-sided or two-sided
-cfg_stats.clustertail           = cfg_stats.tail;
-% cfg_stats.alpha                 = 0.1;
-cfg_stats.alpha                 = 0.05; % = False detection rate ?
-% Commented out in order to get p values of channels that would otherwise
-% be set to p = 1 in case the p value is higher than the alpha here.
-% Cluster perm stats --> Which clusters are "significant"
-cfg_stats.correcttail           = 'alpha'; % {'prob', 'alpha'}
-% Adapts alpha value corresponding to one-tailed or two-tailed test
-cfg_stats.numrandomization      = 1000;
-% cfg_stats.clusteralpha          = 0.1;
-cfg_stats.clusteralpha          = 0.05;  % "which points for clustering" 
-% aka include more or less channels, freqs and times
-% threshold over which a triplet is chosen
-% Design needs to be adapted to cfg.uvar and cfg.ivar
-cfg_stats.uvar                  = 1;
-% condition (uvar would be the subjects)
-% Iactivate for cfg.statistic = 'indepsamplesT'
-cfg_stats.ivar                  = 2;
-cfg_stats.design                = [1:numel(c_kept_subj), ...
-                                    1:numel(c_kept_subj); ...
-                                    repmat(1, 1, numel(c_kept_subj)), ...
-                                    repmat(2, 1, numel(c_kept_subj))];
-
-cfg_stats.feedback = 'on';
-stats  = ft_freqstatistics(cfg_stats, ...
-    TF_subject.OdorOn, TF_subject.ShamOn);
-
-% stats  = ft_freqstatistics(cfg_stats, ...
-%     TF_subject_cell.OdorOn{:}, TF_subject_cell.ShamOn{:});
-
-
-
-%% Extract statistical information
-%  ------------------------------------------------------------------------
-
-% Here, we:
-% 1. Extract information about channel positions for EEGLAB's topoplot that
-%    will draw cluster-belonging electrodes over the scalp
-% 2. Look if any of the clusters has a significant difference (p <
-%    threshold)
-% 3. Retrieve the cluster labels (1, 2, ...) and the corresponding p values
-% 4. Go through each cluster found by fieldtrip and
-%           - Plot the channels that belong to cluster
-%           - Plot the time-frequency matrix averaged over these channels
-%           - Plot the difference between the time-frequency matrices of
-%             the conditions
-%           - Selectively plot only the part of the "difference matrix"
-%             that belongs to the current cluster
-
-
-
-%% Look for clusters with significant differences between conditions
-%  ------------------------------------------------------------------------
-
-% Clusters and probabilities are given by channel by freq by time.
-% We will extract the channels that show significant differences and plot
-% their average TF. Then, we will overlay the time-frequency cluster part
-% that shows significant differences.
-
-% Look for clusters with probability of <= 0.2 (permissive threshold)
-s_thrld = 0.2;
-
-
-
-%% Retrieve information about clusters
-%  --------------------------------------------------------------------
-
-% We go through the label matrices for cluster matrices and search for
-% labels higher than 0. Each cluster found by fieldtrip is assigned an
-% individual integer > 0. At the coordinates of the cluster matrices
-% belonging to such labels, we extract the corresponding labels as well
-% as p values and put them into cluster_labels and cluster_pvals.
-% We move everything over to one labelmat array since we are
-% equally interested in pos and neg clusters.
-
-dimensions      = size(stats.prob);
-cluster_labels  = zeros(dimensions);
-cluster_pvals   = [];
-
-% ---------------------------------------------------------------------
-%                           /!\ /!\ /!\
-% Here, better circumvent the use of stats.mask since we will be
-% limited for cluster labels according to set alpha during permutation
-% analysis. Only cluster with p values lower than set alpha would be
-% represented in mask. We get more freedom with pos/negclusterlabelmat.
-% ---------------------------------------------------------------------
-
-% Positive cluster
-% cluster_labels(stats.mask)  = stats.posclusterslabelmat(stats.mask);
-cluster_labels(stats.posclusterslabelmat ~= 0) = ...
-    stats.posclusterslabelmat(stats.posclusterslabelmat ~= 0);
-
-% Extract p values of positive clusters: Labels indicate position in
-% stats.posclusters.prob array
-idx_labels_pos                      = unique(cluster_labels(:));
-idx_labels_pos(idx_labels_pos == 0) = []; % zeros are "no cluster"
-cluster_pvals                       = [cluster_pvals, ...
-    stats.posclusters(idx_labels_pos).prob];
-
-% Negative cluster
-s_raise_label               = max(cluster_labels(:));
-matrix_raise                = repmat(s_raise_label, dimensions);
-stats.negclusterslabelmat   = stats.negclusterslabelmat + matrix_raise;
-% cluster_labels(stats.mask)  = stats.negclusterslabelmat(stats.mask);
-cluster_labels(stats.negclusterslabelmat ~= matrix_raise) = ...
-    stats.negclusterslabelmat(stats.negclusterslabelmat ~= matrix_raise);
-
-% Extract p values of negative clusters
-idx_labels_neg              = ...
-    unique(cluster_labels(cluster_labels > s_raise_label));
-
-idx_labels_neg              = idx_labels_neg - s_raise_label;
-% Point to correct position in neg cluster structure
-
-cluster_pvals               = [cluster_pvals, ...
-    stats.negclusters(idx_labels_neg).prob];
-
-
-
-%% Plot time-frequency clusters of channels belonging to them
-%  --------------------------------------------------------------------
-
-significant_clusters = unique(cluster_labels(:))';
-significant_clusters(significant_clusters == 0) = [];
-for i_clust = significant_clusters
-    
-    
-    if cluster_pvals(significant_clusters(i_clust)) >= s_thrld
-        % Not "significant enough"
-        continue
-    end
-    
-    
-    true_labels = NaN(size(cluster_labels));
-    true_labels(cluster_labels == i_clust) = 1;
-    
-    % Find channels belonging to cluster
-    % ----------------------------------
-    % Channels belonging to clusters should be converted to 1, the rest
-    % is NaN
-    idx_clustchans = nanmean(nanmean(true_labels, 3), 2);
-    idx_clustchans = find(idx_clustchans == 1);
-    
-    
-    
-    %% Plot
-    %  ----------------------------------------------------------------
-    
-    % We will generate a 5 panel plot:
-    % 1. Channels belonging to current cluster
-    % 2. The TF averaged over cluster channels for vehicle condition
-    %    with average wave form of time series
-    % 3. The TF averaged over cluster channels for odor cue condition
-    %    with average wave form of time series
-    % 4. The difference between the TF of conditions
-    % 5. Only the section of the TF that belongs to the cluster
-    
-    
-    figure('units','normalized','outerposition', [0 0 1 0.3]);
-    colororder({'k', 'r'})
-    
-    
-    % Plot all channels as small dots and overlay bigger size
-    % electrodes for channels belonging to cluster
-    % -------------------------------------------------------
-    
-    subplot(1, 5, 1)
-    no_results = zeros(numel(chanlocs), 1);
-    topoplot(no_results, chanlocs, ...
-        'style', 'blank', ...
-        'electrodes', 'pts', ...
-        'shading', 'interp', ...
-        'headcolor', [0, 0, 0], ...
-        'plotchans', [], ...
-        'conv', 'on', ...
-        'emarker', {'.', [0, 0, 0], 5, 1}, ...
-        'plotrad', max(max([chanlocs.radius]),0.5));
-    hold on
-    topoplot(no_results, chanlocs, ...
-        'style', 'blank', ...
-        'electrodes', 'pts', ...
-        'shading', 'interp', ...
-        'headcolor', [0, 0, 0], ...
-        'conv', 'off', ...
-        'plotchans', idx_clustchans, ...
-        'emarker', {'.', [0.1, 0.1, 0.1], 20, 1}, ...
-        'plotrad', max(max([chanlocs.radius]), 0.5));
-    hold off
-    
-    
-    % Find minima and maxima of time-freq matrices
-    % --------------------------------------------
-    
-    TF_Odor = TF_subject.OdorOn.powspctrm;
-    TF_Odor = mean(TF_Odor, 1);
-    TF_Odor = mean(TF_Odor, 2);
-    TF_Odor = squeeze(TF_Odor);
-    
-    TF_Sham = TF_subject.ShamOn.powspctrm;
-    TF_Sham = mean(TF_Sham, 1);
-    TF_Sham = mean(TF_Sham, 2);
-    TF_Sham = squeeze(TF_Sham);
-    
-    minVal = min([TF_Odor(:); TF_Sham(:)]);
-    maxVal = max([TF_Odor(:); TF_Sham(:)]);
-    
-    limitsTF = [- max(abs(minVal), abs(maxVal)), ...
-        max(abs(minVal), abs(maxVal))];
-    
-    average_WFCluster.ShamOn = squeeze(...
-        mean(mean(WF_subject.ShamOn(:, idx_clustchans, :), 2), 1));
-    average_WFCluster.OdorOn = squeeze(...
-        mean(mean(WF_subject.OdorOn(:, idx_clustchans, :), 2), 1));
-    
-    minVal = min([average_WFCluster.ShamOn(:); ...
-        average_WFCluster.OdorOn(:)]);
-    maxVal = max([average_WFCluster.ShamOn(:); ...
-        average_WFCluster.OdorOn(:)]);
-    
-    limitsWF = [- max(abs(minVal), abs(maxVal)), ...
-        max(abs(minVal), abs(maxVal))];
-    
-    
-    i_plot = 2;
-    for condition = PM_stats.Conditions
-        
-        TF_meanSubj.(char(condition))  = ...
-            squeeze(mean(TF_subject.(char(condition)).powspctrm, 1));
-        
-        subplot(1, 5, i_plot)
-        
-        
-        % Time frequency plot
-        % -------------------
-        
-        TF_meanCluster.(char(condition)) = squeeze(mean(TF_meanSubj.(...
-            char(condition))(idx_clustchans, :, :), 1));
-        
-        v_frequencies = 1:dimensions(2);
-        v_frequencies = (max(v_frequencies) - v_frequencies) / ...
-            (max(v_frequencies) - min(v_frequencies));
-        v_frequencies = v_frequencies * PM.FrRange;
-        v_frequencies = v_frequencies - (PM.FrRange / 2);
-        v_frequencies = flip(v_frequencies);
-        
-        v_times       = ...
-            PM.cfg_seldat.latency(1) * ...
-            PM.Info.TrialParameters.s_fs:1/PM.s_tstep/2:...
-            PM.cfg_seldat.latency(2) * ...
-            PM.Info.TrialParameters.s_fs;
-        v_times       = v_times ./ PM.Info.TrialParameters.s_fs;
-        
-        yyaxis left
-        pcolor(v_times, v_frequencies, TF_meanCluster.(char(condition)));
-        shading interp
-        colorbar;
-        colormap parula
-        set(gca, 'clim', limitsTF)
-        ylabel('Distance from spindle peak (Hz)')
-        xlabel('Time (s)')
-        title(char(condition))
-        
-        hold on
-        
-        
-        % Wave form plot
-        % --------------
-        
-        yyaxis right
-        v_times = PM.cfg_seldat.latency(1) * ...
-            PM.Info.TrialParameters.s_fs  + 1 : 1 : ...
-            PM.cfg_seldat.latency(2) * ...
-            PM.Info.TrialParameters.s_fs;
-        v_times = v_times ./ PM.Info.TrialParameters.s_fs;
-        WF_meanClust.(char(condition)) = mean(WF_subject.(...
-            char(condition))(:, idx_clustchans, :), 2);
-        plot(v_times, average_WFCluster.(char(condition)), ...
-            'Color',        'r', ...
-            'LineWidth',    2)
-        ylim(limitsWF)
-        
-        i_plot = i_plot + 1;
-    end
-    
-    
-    TF_difference   = TF_meanSubj.OdorOn - TF_meanSubj.ShamOn;
-    
-    
-    % Plot difference between the two conditions' TF
-    % ----------------------------------------------
-    
-    TF_clustDiff        = TF_meanCluster.OdorOn - TF_meanCluster.ShamOn;
-    
-    minVal = min(TF_clustDiff(:));
-    maxVal = max(TF_clustDiff(:));
-    
-    limitsTF = [- max(abs(minVal), abs(maxVal)), ...
-        max(abs(minVal), abs(maxVal))];
-    
-    
-    subplot(1, 5, 4)
-    v_times = PM.cfg_seldat.latency(1) * ...
-        PM.Info.TrialParameters.s_fs : 1/PM.s_tstep/2 : ...
-        PM.cfg_seldat.latency(2) * ...
-        PM.Info.TrialParameters.s_fs;
-    v_times = v_times ./ PM.Info.TrialParameters.s_fs;
-    figDiff = pcolor(v_times, v_frequencies, TF_clustDiff);
-    shading interp
-    colorbar;
-    set(gca, 'clim', limitsTF)
-    ylabel('Distance from spindle peak (Hz)')
-    xlabel('Time (s)')
-    title('Odor - Sham')
-    
-    
-    % Plot time-frequencies of significant difference (cluster)
-    % ---------------------------------------------------------
-    
-    subplot(1, 5, 5)
-    v_times = PM.cfg_seldat.latency(1) * ...
-        PM.Info.TrialParameters.s_fs : 1/PM.s_tstep/2 : ...
-        PM.cfg_seldat.latency(2) * ...
-        PM.Info.TrialParameters.s_fs;
-    v_times = v_times ./ PM.Info.TrialParameters.s_fs;
-    TF_selective    = NaN(dimensions);
-    
-    TF_selective(true_labels == 1) = TF_difference(true_labels == 1);
-    TF_selective = squeeze(...
-        nanmean(TF_selective(idx_clustchans, :, :), 1));
-    
-    figSign = pcolor(v_times, v_frequencies, TF_selective);
-    shading interp
-    colorbar;
-    set(gca, 'clim', limitsTF)
-    ylabel('Distance from spindle peak (Hz)')
-    xlabel('Time (s)')
-    
-    % figSign = imagesc(flipud(...
-    %     squeeze(nanmean(...
-    %     true_labels(idx_clustchans, :, :), 1))), [0, 1]);
-    
-    
-    % Put p value of cluster as title
-    % -------------------------------
-    
-    pVal = cluster_pvals(i_clust);
-    pVal = round(pVal, 4);
-    if pVal < 0.001
-        str_p = 'p < 0.001';
-    else
-        str_convert = num2str(pVal(1));
-        if numel(str_convert) < 6
-            idx_end = numel(str_convert);
-        else
-            idx_end = 6;
-        end
-        str_p = char(strcat('p =', {' '}, str_convert(1:idx_end)));
-    end
-    title(str_p)
-    
-    saveas(gcf, [str_folderOut, filesep, 'PermutationStats_', ...
-        char(PM_stats.Grp_subj), 'Subjects_', 'Cluster', ...
-        num2str(i_clust), '.png']);
-    
-    close
-    
-end
-
-
-%% Save statistical output
-%  ------------------------------------------------------------------------
-
-PM.Stats        = PM_stats;
-PM.Cfgs.neighb  = cfg_neighb;
-PM.Cfgs.stats   = cfg_stats;
-save([cd, filesep, 'PermutationStats_', ...
-    char(PM_stats.Grp_subj), 'Subjects.mat'], ...
-    'PM', 'stats', '-v7')
-
-
-
-% -------------------------------------------------------------------------
-% ---------------------------               -------------------------------
-% ---------------------------   P A R T 2   -------------------------------
-% ---------------------------               -------------------------------
-% -------------------------------------------------------------------------
-
-% Here, we average channels' TFs for pre-defined clusters and compute
-% permutation-based analysis on each of those and extract clusters that are
-% found.
-
-
-%% TF matrix statistics and wave forms for pre-defined clusters
-%  ------------------------------------------------------------------------
+% clusters itself. We vary channels according to the selected cluster of
+% interest.
 
 % Clusters of interest
 % --------------------
+PM.Clust.all = dummyFile.PM.Clust.all;
 PM.Clust.left_frontal = {...
     'E15', 'E16', 'E11', 'E18', 'E19', 'E22', 'E23', 'E24', 'E26', ...
     'E27', 'E33', 'E38'};
@@ -756,191 +328,44 @@ PM.Clust.right_occipital = {...
 PM.Clust.occipital = {...
     'E71', 'E70', 'E74', 'E69', 'E73', 'E75', 'E76', 'E83', 'E82', ...
     'E89', 'E88'};
-PM.Clust.all = dummyFile.PM.Clust.all;
-
+PM.Clust.pseudo = [];
 
 Clusters = fieldnames(PM.Clust);
 
 for i_defined_clust = 1:numel(Clusters)
     
-    
-    % Prepare data structures and plot parameters
-    % -------------------------------------------
-    str_cluster     = char(Clusters(i_defined_clust));
-    idx_clustchans  = ...
-        find(ismember(dummyFile.PM.Clust.all, PM.Clust.(str_cluster)));
-    
-    TF_meanChans.ShamOn           = TF_subject.ShamOn;
-    TF_meanChans.ShamOn           = rmfield(TF_meanChans.ShamOn, 'elec');
-    TF_meanChans.ShamOn.label     = {str_cluster};
-    TF_meanChans.ShamOn.dimord    = 'rpt_freq_time';
-    TF_meanChans.ShamOn.powspctrm = squeeze(mean(...
-        TF_subject.ShamOn.powspctrm(:, idx_clustchans, :, :), 2));
-    TF_meanChans.OdorOn           = TF_subject.OdorOn;
-    TF_meanChans.OdorOn           = rmfield(TF_meanChans.OdorOn, 'elec');
-    TF_meanChans.OdorOn.label     = {str_cluster};
-    TF_meanChans.OdorOn.dimord    = 'rpt_freq_time';
-    TF_meanChans.OdorOn.powspctrm = squeeze(mean(...
-        TF_subject.OdorOn.powspctrm(:, idx_clustchans, :, :), 2));
-    
-    WF_meanChans.ShamOn          = WF_subject.ShamOn(:, idx_clustchans, :);
-    WF_meanChans.OdorOn          = WF_subject.OdorOn(:, idx_clustchans, :);
-    
-    TF_Odor = TF_subject.OdorOn.powspctrm;
-    TF_Odor = mean(TF_Odor, 1);
-    TF_Odor = mean(TF_Odor, 2);
-    TF_Odor = squeeze(TF_Odor);
-    
-    TF_Sham = TF_subject.ShamOn.powspctrm;
-    TF_Sham = mean(TF_Sham, 1);
-    TF_Sham = mean(TF_Sham, 2);
-    TF_Sham = squeeze(TF_Sham);
-    
-    minVal = min([TF_Odor(:); TF_Sham(:)]);
-    maxVal = max([TF_Odor(:); TF_Sham(:)]);
-    
-    limitsTF = [- max(abs(minVal), abs(maxVal)), ...
-        max(abs(minVal), abs(maxVal))];
-    
-    average_WF.ShamOn = squeeze(mean(mean(WF_meanChans.ShamOn, 1), 2));
-    average_WF.OdorOn = squeeze(mean(mean(WF_meanChans.OdorOn, 1), 2));
-    
-    minVal      = min([average_WF.ShamOn(:); average_WF.OdorOn(:)]);
-    maxVal      = max([average_WF.ShamOn(:); average_WF.OdorOn(:)]);
-    
-    limitsWF = [- max(abs(minVal), abs(maxVal)), ...
-        max(abs(minVal), abs(maxVal))];
+    clearvars TF_Chans
     
     
-    figure('units','normalized','outerposition', [0 0 1 0.3]);
     
-    % Plot all channels as small dots and overlay bigger size
-    % electrodes for channels belonging to cluster
-    % -------------------------------------------------------
-    
-    subplot(1, 5, 1)
-    no_results = zeros(numel(chanlocs), 1);
-    topoplot(no_results, chanlocs, ...
-        'style', 'blank', ...
-        'electrodes', 'pts', ...
-        'shading', 'interp', ...
-        'headcolor', [0, 0, 0], ...
-        'plotchans', [], ...
-        'conv', 'on', ...
-        'emarker', {'.', [0, 0, 0], 5, 1}, ...
-        'plotrad', max(max([chanlocs.radius]),0.5));
-    hold on
-    topoplot(no_results, chanlocs, ...
-        'style', 'blank', ...
-        'electrodes', 'pts', ...
-        'shading', 'interp', ...
-        'headcolor', [0, 0, 0], ...
-        'conv', 'off', ...
-        'plotchans', idx_clustchans, ...
-        'emarker', {'.', [0.1, 0.1, 0.1], 20, 1}, ...
-        'plotrad', max(max([chanlocs.radius]), 0.5));
-    hold off
-    
-    
-    colororder({'k', 'r'})
-    i_plot = 2;
-    for condition = PM.Conditions
-        
-        subplot(1, 5, i_plot)
-        
-        % Time frequency plot
-        % -------------------
-        
-        % There must be a more efficient way to determine v_frequencies ...
-        v_frequencies = 1:length(TF_series.OdorOn.freq);
-        v_frequencies = (max(v_frequencies) - v_frequencies) / ...
-            (max(v_frequencies) - min(v_frequencies));
-        v_frequencies = v_frequencies * PM.FrRange;
-        v_frequencies = v_frequencies - (PM.FrRange / 2);
-        v_frequencies = flip(v_frequencies);
-        
-        v_times       = ...
-            PM.cfg_seldat.latency(1) * ...
-            PM.Info.TrialParameters.s_fs: 1/PM.s_tstep/2 :...
-            PM.cfg_seldat.latency(2) * ...
-            PM.Info.TrialParameters.s_fs;
-        v_times       = v_times ./ PM.Info.TrialParameters.s_fs;
-        
-        TF_meanSubj.(char(condition)) = ...
-            squeeze(mean(TF_meanChans.(char(condition)).powspctrm, 1));
-        yyaxis left
-        pcolor(v_times, v_frequencies, TF_meanSubj.(char(condition)));
-        shading interp
-        colorbar;
-        set(gca, 'clim', limitsTF)
-        ylabel('Distance from spindle peak (Hz)')
-        xlabel('Time (s)')
-        title(char(condition))
-        
-        hold on
-        
-        % Wave form plot
-        % --------------
-        yyaxis right
-        v_times = PM.cfg_seldat.latency(1) * ...
-            PM.Info.TrialParameters.s_fs  + 1 : 1 : ...
-            PM.cfg_seldat.latency(2) * ...
-            PM.Info.TrialParameters.s_fs;
-        v_times = v_times ./ PM.Info.TrialParameters.s_fs;
-        plot(v_times, average_WF.(char(condition)), ...
-            'Color',        [0, 0, 0], ...
-            'LineWidth',    2, ...
-            'Color',        'r')
-        ylim(limitsWF)
-        
-        i_plot = i_plot + 1;
-    end
-    
-    % Overlay difference in TF
-    TF_difference = TF_meanSubj.OdorOn - TF_meanSubj.ShamOn;
-    
-    subplot(1, 5, i_plot)
-    v_times       = ...
-        PM.cfg_seldat.latency(1) * ...
-        PM.Info.TrialParameters.s_fs: 1/PM.s_tstep/2 :...
-        PM.cfg_seldat.latency(2) * ...
-        PM.Info.TrialParameters.s_fs;
-    v_times       = v_times ./ PM.Info.TrialParameters.s_fs;
-    pcolor(v_times, v_frequencies, TF_difference);
-    shading interp
-    colorbar;
-    % set(gca, 'clim', [minVal, maxVal])
-    ylabel('Distance from spindle peak (Hz)')
-    xlabel('Time (s)')
-    title('Odor - Sham')
-    colormap(parula)
-    
-    
-    %% Permutation-based statistics for cluster
+    %% General parameters for stats
     %  --------------------------------------------------------------------
     
     addpath(fieldtrippath)
     ft_defaults
     
     cfg_stats                   = [];
+    % cfg_stats.latency           = [1]; % Setting this to one rejects 
+    % the time vector. Probably, this indicates the time vector, but it
+    % doesn't seemnecessary to specify since fieldtrip is taking it from 
+    % structure.time
     cfg_stats.frequency         = 'all';
     cfg_stats.channel           = 'all';
+    cfg_stats.correctm          = 'cluster';
     cfg_stats.method            = 'montecarlo';
     cfg_stats.statistic         = 'depsamplesT';
     % use actvsblT for activation against baseline
     cfg_stats.clusterstatistic  = 'maxsum';
-    cfg_stats.tail              = 0; % -/+1 or 0 for one-sided or two-sided
+    cfg_stats.tail              = 0; % -/+1 = one-sided 0 = two-sided
     cfg_stats.clustertail       = cfg_stats.tail;
-    % cfg_stats.alpha                 = 0.1;
+    % cfg_stats.alpha             = 0.1;
     cfg_stats.alpha             = 0.05; % = False detection rate ?
-    % Commented out in order to get p vals of channels that would otherwise
+    % Commented out in order to get p values of channels that would otherwise
     % be set to p = 1 in case the p value is higher than the alpha here.
     % Cluster perm stats --> Which clusters are "significant"
     cfg_stats.correcttail       = 'alpha'; % {'prob', 'alpha'}
     % Adapts alpha value corresponding to one-tailed or two-tailed test
-    cfg_stats.numrandomization  = 10000;
-    % cfg_stats.clusteralpha          = 0.1;
-    cfg_stats.clusteralpha      = 0.05;  % "which points for clustering"
+    cfg_stats.clusteralpha      = 0.05; % "which points for clustering"
     % aka include more or less channels, freqs and times
     % threshold over which a triplet is chosen
     % Design needs to be adapted to cfg.uvar and cfg.ivar
@@ -953,78 +378,579 @@ for i_defined_clust = 1:numel(Clusters)
                                     repmat(1, 1, numel(c_kept_subj)), ...
                                     repmat(2, 1, numel(c_kept_subj))];
     
-    stats  = ft_freqstatistics(cfg_stats, ...
-        TF_meanChans.OdorOn, TF_meanChans.ShamOn);
     
     
-    
-    %% Retrieve statistical information
+    %% Prepare data structures
     %  --------------------------------------------------------------------
     
+    str_cluster     = char(Clusters(i_defined_clust));
+    
+    
+    if ~strcmp(str_cluster, 'pseudo')
+        
+        idx_defchans    = ...
+            find(ismember(dummyFile.PM.Clust.all, PM.Clust.(str_cluster)));
+        
+        clust_sensors   = sensors;
+        clust_sensors.chanpos = ...
+            clust_sensors.chanpos(idx_defchans, :);
+        clust_sensors.chantype = ...
+            clust_sensors.chantype(idx_defchans);
+        clust_sensors.chanunit = ...
+            clust_sensors.chanunit(idx_defchans);
+        clust_sensors.elecpos  = ...
+            clust_sensors.elecpos(idx_defchans, :);
+        clust_sensors.label    = ...
+            clust_sensors.label(idx_defchans);
+        
+        TF_Chans.ShamOn              = TF_subject.ShamOn;
+        TF_Chans.ShamOn.label        = PM.Clust.(str_cluster);
+        TF_Chans.ShamOn.dimord       = 'rpt_chan_freq_time';
+        TF_Chans.ShamOn.powspctrm    = ...
+            TF_subject.ShamOn.powspctrm(:, idx_defchans, :, :);
+        TF_Chans.ShamOn.elec.chanpos = ...
+            TF_Chans.ShamOn.elec.chanpos(idx_defchans, :);
+        TF_Chans.ShamOn.elec.chantype = ...
+            TF_Chans.ShamOn.elec.chantype(idx_defchans);
+        TF_Chans.ShamOn.elec.chanunit = ...
+            TF_Chans.ShamOn.elec.chanunit(idx_defchans);
+        TF_Chans.ShamOn.elec.elecpos  = ...
+            TF_Chans.ShamOn.elec.elecpos(idx_defchans, :);
+        TF_Chans.ShamOn.elec.label    = ...
+            TF_Chans.ShamOn.elec.label(idx_defchans);
+        
+        TF_Chans.OdorOn              = TF_subject.OdorOn;
+        TF_Chans.OdorOn.label        = PM.Clust.(str_cluster);
+        TF_Chans.OdorOn.dimord       = 'rpt_chan_freq_time';
+        TF_Chans.OdorOn.powspctrm    = ...
+            TF_subject.OdorOn.powspctrm(:, idx_defchans, :, :);
+        TF_Chans.OdorOn.elec.chanpos = ...
+            TF_Chans.OdorOn.elec.chanpos(idx_defchans, :);
+        TF_Chans.OdorOn.elec.chantype = ...
+            TF_Chans.OdorOn.elec.chantype(idx_defchans);
+        TF_Chans.OdorOn.elec.chanunit = ...
+            TF_Chans.OdorOn.elec.chanunit(idx_defchans);
+        TF_Chans.OdorOn.elec.elecpos  = ...
+            TF_Chans.OdorOn.elec.elecpos(idx_defchans, :);
+        TF_Chans.OdorOn.elec.label    = ...
+            TF_Chans.OdorOn.elec.label(idx_defchans);
+        
+        
+        % Additional paramaeters for stats
+        % --------------------------------
+        
+        cfg_stats.minnbchan             = 2;
+        cfg_neighb                      = [];
+        cfg_neighb.method               = 'distance'; %'triangulation';
+        cfg_neighb.neighbourdist        = 3.5; % Default is "smart guess".
+        % 3.5 gets rid of edge clusters while maintaining high statistical
+        % significance in central clusters.
+        cfg_neighb.channel              = 'all';
+        cfg_neighb.elec                 = clust_sensors;
+        
+        cluster_chanlocs                = chanlocs;
+        
+    else
+        
+        % Here, we build a pseudo channel group where each channel is an
+        % electrode in the center (hand-picked) of the pre-defined channel
+        % groups (left_frontal, ...). The position of these channels is not
+        % that important as it will only serve for satisfying the
+        % neighbouring during permutation analysis, but minnbchan will be
+        % set to 0 so that each individual channel is auto-sufficient in 
+        % order to determine ignificant changes inside each group.
+        
+        % Visualize channel locations
+        % for curr_cluster = Clusters'
+        %     
+        %     if any(strcmp(curr_cluster, {'all', 'pseudo'}))
+        %         continue
+        %     end
+        %     
+        %     idx_defchans    = find(ismember(...
+        %         dummyFile.PM.Clust.all, PM.Clust.(char(curr_cluster))));
+        %     
+        %     no_results = zeros(numel(chanlocs), 1);
+        %     figure
+        %     topoplot(no_results, chanlocs, ...
+        %         'style', 'blank', ...
+        %         'electrodes', 'labels', ...
+        %         'shading', 'interp', ...
+        %         'headcolor', [0, 0, 0], ...
+        %         'plotchans', idx_defchans, ...
+        %         'conv', 'on', ...
+        %         'emarker', {'.', [0, 0, 0], 5, 1}, ...
+        %         'plotrad', max(max([chanlocs.radius]),0.5));
+        %     title(curr_cluster)
+        % end
+        % close all
+        pseudo.occipital        = 'E75';
+        pseudo.right_occipital  = 'E89';
+        pseudo.left_occipital   = 'E69';
+        pseudo.parietal         = 'E62';
+        pseudo.right_parietal   = 'E91';
+        pseudo.left_parietal    = 'E59';
+        pseudo.right_temporal   = 'E108';
+        pseudo.left_temporal    = 'E45';
+        pseudo.central          = 'E6';
+        pseudo.right_central    = 'E105';
+        pseudo.left_central     = 'E30';
+        pseudo.frontal          = 'E16';
+        pseudo.right_frontal    = 'E2';
+        pseudo.left_frontal     = 'E26';
+        
+        % Build data structures according to channel (groups): Mean cluster
+        % channels and extract chan position
+        c_pseudos   = fieldnames(pseudo);
+        i_clust     = 1;
+        cat_pseudos = NaN(1, numel(c_pseudos));
+        for curr_cluster = c_pseudos'
+        
+            idx_defchans    = find(ismember(dummyFile.PM.Clust.all, ...
+                                PM.Clust.(char(curr_cluster))));
+            pseudo_chan     = pseudo.(char(curr_cluster));
+            idx_pseudo      = find(strcmp(dummyFile.PM.Clust.all, ...
+                                pseudo_chan));
+            cat_pseudos(i_clust) = idx_pseudo;
+            
+            TF_Chans.ShamOn.powspctrm(:, i_clust, :, :) = mean(...
+                TF_subject.ShamOn.powspctrm(:, idx_defchans, :, :), 2);
+            TF_Chans.ShamOn.label(i_clust, 1)           = curr_cluster;
+            TF_Chans.ShamOn.elec.chanpos(i_clust, :)    = ...
+                TF_subject.ShamOn.elec.chanpos(idx_pseudo, :);
+            TF_Chans.ShamOn.elec.chantype(i_clust, 1)   = ...
+                TF_subject.ShamOn.elec.chantype(idx_pseudo);
+            TF_Chans.ShamOn.elec.chanunit(i_clust, 1)   = ...
+                TF_subject.ShamOn.elec.chanunit(idx_pseudo, 1);
+            TF_Chans.ShamOn.elec.elecpos(i_clust, :)    = ...
+                TF_subject.ShamOn.elec.elecpos(idx_pseudo, :);
+            TF_Chans.ShamOn.elec.label(1, i_clust)      = curr_cluster;
+            
+            TF_Chans.OdorOn.powspctrm(:, i_clust, :, :) = mean(...
+                TF_subject.OdorOn.powspctrm(:, idx_defchans, :, :), 2);
+            TF_Chans.OdorOn.label(i_clust, 1)           = curr_cluster;
+            TF_Chans.OdorOn.elec.chanpos(i_clust, :)    = ...
+                TF_subject.OdorOn.elec.chanpos(idx_pseudo, :);
+            TF_Chans.OdorOn.elec.chantype(i_clust, 1)   = ...
+                TF_subject.OdorOn.elec.chantype(idx_pseudo);
+            TF_Chans.OdorOn.elec.chanunit(i_clust, 1)   = ...
+                TF_subject.OdorOn.elec.chanunit(idx_pseudo, 1);
+            TF_Chans.OdorOn.elec.elecpos(i_clust, :)    = ...
+                TF_subject.OdorOn.elec.elecpos(idx_pseudo, :);
+            TF_Chans.OdorOn.elec.label(1, i_clust)      = curr_cluster;
+            
+            
+            i_clust = i_clust + 1;
+        end
+        
+        TF_Chans.ShamOn.freq        = TF_subject.ShamOn.freq;
+        TF_Chans.ShamOn.time        = TF_subject.ShamOn.time;
+        TF_Chans.ShamOn.elec.type   = TF_subject.ShamOn.elec.type;
+        TF_Chans.ShamOn.elec.unit   = TF_subject.ShamOn.elec.unit;
+        TF_Chans.ShamOn.dimord      = 'rpt_chan_freq_time';
+        
+        TF_Chans.OdorOn.freq        = TF_subject.OdorOn.freq;
+        TF_Chans.OdorOn.time        = TF_subject.OdorOn.time;
+        TF_Chans.OdorOn.elec.type   = TF_subject.OdorOn.elec.type;
+        TF_Chans.OdorOn.elec.unit   = TF_subject.OdorOn.elec.unit;
+        TF_Chans.OdorOn.dimord      = 'rpt_chan_freq_time';
+        
+        clust_sensors               = TF_Chans.ShamOn.elec;
+        
+        idx_defchans                = sort(cat_pseudos); % reset for later
+        
+        
+        % Additional paramaeters for stats
+        % --------------------------------
+        
+        cfg_stats.minnbchan         = 0;
+        cfg_neighb                  = [];
+        cfg_neighb.method           = 'distance'; %'triangulation';
+        cfg_neighb.neighbourdist    = 12;
+        cfg_neighb.channel          = 'all';
+        cfg_neighb.elec             = clust_sensors;
+                
+    end
+    
+    
+    
+    %% Run stats
+    %  --------------------------------------------------------------------
+    
+    if strcmp(str_cluster, 'all')
+        cfg_stats.numrandomization  = 1000;
+    else
+        cfg_stats.numrandomization  = 10000;
+    end
+    cfg_stats.neighbours            = ft_prepare_neighbours(cfg_neighb);
+    
+    stats                           = ft_freqstatistics(cfg_stats, ...
+                                        TF_Chans.OdorOn, TF_Chans.ShamOn);
+    
+    
+    
+    %% Extract statistical information
+    %  --------------------------------------------------------------------
+    
+    % Here, we:
+    % 1. Extract information about channel positions for EEGLAB's topoplot 
+    %    that will draw cluster-belonging electrodes over the scalp
+    % 2. Look if any of the clusters has a significant difference (p <
+    %    threshold)
+    % 3. Retrieve the cluster labels (1, 2, ...) and the corresponding p
+    %    values
+    % 4. Go through each cluster found by fieldtrip and
+    %           - Plot the channels that belong to cluster
+    %           - Plot the time-frequency matrix averaged over these
+    %             channels
+    %           - Plot the difference between the time-frequency matrices 
+    %             of the conditions
+    %           - Selectively plot only the part of the "difference matrix"
+    %             that belongs to the current cluster
+    
+    
+    
+    %% Look for clusters with significant differences between conditions
+    %  --------------------------------------------------------------------
+    
+    % Clusters and probabilities are given by channel by freq by time.
+    % We will extract the channels that show significant differences and 
+    % plot their average TF. Then, we will overlay the time-frequency 
+    % cluster part that shows significant differences.
+    
+    % Look for clusters with probability of <= 0.2 (permissive threshold)
+    s_thrld = 0.2;
+    
+    
+    
+    %% Retrieve information about clusters
+    %  --------------------------------------------------------------------
+    
+    % We go through the label matrices for cluster matrices and search for
+    % labels higher than 0. Each cluster found by fieldtrip is assigned an
+    % individual integer > 0. At the coordinates of the cluster matrices
+    % belonging to such labels, we extract the corresponding labels as well
+    % as p values and put them into cluster_labels and cluster_pvals.
+    % We move everything over to one labelmat array since we are
+    % equally interested in pos and neg clusters.
+    
     dimensions      = size(stats.prob);
+    cluster_labels  = zeros(dimensions);
+    cluster_pvals   = [];
     
     % ---------------------------------------------------------------------
     %                           /!\ /!\ /!\
-    % Here, we do not have access to pos/negclusterlabelmat. We have to use
-    % the stats.mask output, which only indicates clusters lower than alpha
+    % Here, better circumvent the use of stats.mask since we will be
+    % limited for cluster labels according to set alpha during permutation
+    % analysis. Only cluster with p values lower than set alpha would be
+    % represented in mask. We get more freedom with pos/negclusterlabelmat.
     % ---------------------------------------------------------------------
-    cluster_pvals                       = Inf(dimensions);
-    cluster_pvals(stats.mask == true)   = stats.prob(stats.mask == true);
     
-    if numel(stats.mask == true) ~= numel(cluster_pvals ~= Inf)
+    if isfield(stats, 'posclusterslabelmat') && isstruct(stats.posclusters)
+        % Positive cluster
+        % cluster_labels(stats.mask)  = stats.posclusterslabelmat(stats.mask);
+        cluster_labels(stats.posclusterslabelmat ~= 0) = ...
+            stats.posclusterslabelmat(stats.posclusterslabelmat ~= 0);
+        
+        % Extract p values of positive clusters: Labels indicate position in
+        % stats.posclusters.prob array
+        idx_labels_pos                      = unique(cluster_labels(:));
+        idx_labels_pos(idx_labels_pos == 0) = []; % zeros are "no cluster"
+        cluster_pvals                       = [cluster_pvals, ...
+            stats.posclusters(idx_labels_pos).prob];
+    end
+    
+    if isfield(stats, 'negclusterslabelmat') && isstruct(stats.negclusters)
+        % Negative cluster
+        s_raise_label                 = max(cluster_labels(:));
+        matrix_raise                  = repmat(s_raise_label, dimensions);
+        stats.negclusterslabelmat_mod = ...
+            stats.negclusterslabelmat + matrix_raise;
+        % cluster_labels(stats.mask) = stats.negclusterslabelmat(stats.mask);
+        cluster_labels(stats.negclusterslabelmat_mod ~= matrix_raise) = ...
+            stats.negclusterslabelmat_mod(stats.negclusterslabelmat_mod ~= ...
+            matrix_raise);
+        
+        % Extract p values of negative clusters
+        idx_labels_neg            = ...
+            unique(cluster_labels(cluster_labels > s_raise_label));
+        
+        idx_labels_neg            = idx_labels_neg - s_raise_label;
+        % Point to correct position in neg cluster structure
+        
+        cluster_pvals             = [cluster_pvals, ...
+            stats.negclusters(idx_labels_neg).prob];
+    end
+    
+    
+    
+    %% Plot multipanel figure for each cluster found inside channel group
+    %  --------------------------------------------------------------------
+    
+    significant_clusters = unique(cluster_labels(:))';
+    significant_clusters(significant_clusters == 0) = [];
+    
+    if numel(cluster_pvals) ~= numel(significant_clusters)
         % Checkpoint
-        error('Mask and p value array do not correspond')
+        error('Something went wrong')
     end
     
-    % [p_fdr, pcorr] = fdr(stats.prob(:), 0.05, 'parametric')
     
-    subplot(1, 5, 5)
-    v_times = PM.cfg_seldat.latency(1) * ...
-        PM.Info.TrialParameters.s_fs : 1/PM.s_tstep/2 : ...
-        PM.cfg_seldat.latency(2) * ...
-        PM.Info.TrialParameters.s_fs;
-    v_times = v_times ./ PM.Info.TrialParameters.s_fs;
-    
-    TF_selective    = NaN(dimensions);
-    %        TF_selective(cluster_pvals == p_clusters(i_clust)) = ...
-    %          TF_difference(cluster_pvals == p_clusters(i_clust));
-    TF_selective(cluster_pvals ~= Inf) = ...
-        TF_difference(cluster_pvals ~= Inf);
-    
-    figSign = pcolor(v_times, v_frequencies, TF_selective);
-    shading interp
-    colorbar;
-    % set(gca, 'clim', limitsTF)
-    ylabel('Distance from spindle peak (Hz)')
-    xlabel('Time (s)')
-    
-    % figSign = imagesc(flipud(...
-    %     squeeze(nanmean(...
-    %     true_labels(idx_clustchans, :, :), 1))), [0, 1]);
-    
-    
-    % Put p value of cluster as title
-    % -------------------------------
-    
-    pVal = max(cluster_pvals(cluster_pvals ~= Inf));
-    pVal = round(pVal, 4);
-    if pVal < 0.001
-        str_p = 'p < 0.001';
-    else
-        str_convert = num2str(pVal(1));
-        if numel(str_convert) < 6
-            idx_end = numel(str_convert);
-        else
-            idx_end = 6;
+    for i_clust = significant_clusters
+        
+        
+        if cluster_pvals(i_clust) >= s_thrld
+            % Not "significant enough"
+            continue
         end
-        str_p = char(strcat('p <=', {' '}, str_convert(1:idx_end)));
+        
+        
+        true_labels = NaN(size(cluster_labels));
+        true_labels(cluster_labels == i_clust) = 1;
+        
+        % Find channels belonging to cluster
+        % ----------------------------------
+        % Channels belonging to clusters should be converted to 1, the rest
+        % is NaN
+        idx_clustchans = nanmean(nanmean(true_labels, 3), 2);
+        idx_clustchans = find(idx_clustchans == 1);
+        true_labels    = true_labels(idx_clustchans, :, :);
+        
+        
+        
+        %% Plot topographic distribution of channels and current cluster
+        %  ----------------------------------------------------------------
+        
+        % We will generate a 5 panel plot:
+        % 1. Channels belonging to current cluster
+        % 2. The TF averaged over cluster channels for vehicle condition
+        %    with average wave form of time series
+        % 3. The TF averaged over cluster channels for odor cue condition
+        %    with average wave form of time series
+        % 4. The difference between the TF of conditions
+        % 5. Only the section of the TF that belongs to the cluster
+        
+        
+        figure('units','normalized','outerposition', [0 0 1 0.3]);
+        colororder({'k', 'r'})
+        
+        
+        % Plot all channels as small dots and overlay bigger size
+        % electrodes for channels belonging to cluster
+        % -------------------------------------------------------
+        
+        subplot(1, 5, 1)
+        no_results = zeros(numel(cluster_chanlocs), 1);
+        topoplot(no_results, cluster_chanlocs, ...
+            'style', 'blank', ...
+            'electrodes', 'pts', ...
+            'shading', 'interp', ...
+            'headcolor', [0, 0, 0], ...
+            'plotchans', idx_defchans, ...
+            'conv', 'on', ...
+            'emarker', {'.', [0, 0, 0], 5, 1}, ...
+            'plotrad', max(max([cluster_chanlocs.radius]),0.5));
+        hold on
+        topoplot(no_results, cluster_chanlocs, ...
+            'style', 'blank', ...
+            'electrodes', 'pts', ...
+            'shading', 'interp', ...
+            'headcolor', [0, 0, 0], ...
+            'conv', 'off', ...
+            'plotchans', idx_defchans(idx_clustchans), ...
+            'emarker', {'.', [0.1, 0.1, 0.1], 20, 1}, ...
+            'plotrad', max(max([cluster_chanlocs.radius]), 0.5));
+        hold off
+        
+        title(strrep(str_cluster, '_', ' '))
+        
+        
+        
+        %% Plot parameters for time-frequency and wave form
+        %  ----------------------------------------------------------------
+        TF_Cluster.OdorOn = ...
+            TF_Chans.OdorOn.powspctrm(:, idx_clustchans, :, :);
+        
+        TF_Cluster.ShamOn = ...
+            TF_Chans.ShamOn.powspctrm(:, idx_clustchans, :, :);
+        
+        TF_Cluster.OdorOn = mean(TF_Cluster.OdorOn, 1);
+        TF_Cluster.OdorOn = mean(TF_Cluster.OdorOn, 2);
+        TF_Cluster.OdorOn = squeeze(TF_Cluster.OdorOn);
+        
+        TF_Cluster.ShamOn = mean(TF_Cluster.ShamOn, 1);
+        TF_Cluster.ShamOn = mean(TF_Cluster.ShamOn, 2);
+        TF_Cluster.ShamOn = squeeze(TF_Cluster.ShamOn);
+        
+        minVal = min([TF_Cluster.OdorOn(:); TF_Cluster.ShamOn(:)]);
+        maxVal = max([TF_Cluster.OdorOn(:); TF_Cluster.ShamOn(:)]);
+        
+        limitsTF = [- max(abs(minVal), abs(maxVal)), ...
+            max(abs(minVal), abs(maxVal))];
+        
+        average_WFCluster.ShamOn = squeeze(mean(mean(...
+            WF_subject.ShamOn(:, idx_defchans(idx_clustchans), :), 2), 1));
+        average_WFCluster.OdorOn = squeeze(mean(mean(...
+            WF_subject.OdorOn(:, idx_defchans(idx_clustchans), :), 2), 1));
+        
+        minVal = min([average_WFCluster.ShamOn(:); ...
+            average_WFCluster.OdorOn(:)]);
+        maxVal = max([average_WFCluster.ShamOn(:); ...
+            average_WFCluster.OdorOn(:)]);
+        
+        limitsWF = [- max(abs(minVal), abs(maxVal)), ...
+            max(abs(minVal), abs(maxVal))];
+        
+        % There must be a more efficient way to build the freq vector...
+        v_frequencies = 1:dimensions(2);
+        v_frequencies = (max(v_frequencies) - v_frequencies) / ...
+            (max(v_frequencies) - min(v_frequencies));
+        v_frequencies = v_frequencies * PM.FrRange;
+        v_frequencies = v_frequencies - (PM.FrRange / 2);
+        v_frequencies = flip(v_frequencies);
+        
+        v_times_TF = PM.cfg_seldat.latency(1) * ...
+            PM.Info.TrialParameters.s_fs : 1/PM.s_tstep/2 : ...
+            PM.cfg_seldat.latency(2) * ...
+            PM.Info.TrialParameters.s_fs;
+        v_times_TF = v_times_TF ./ PM.Info.TrialParameters.s_fs;
+        
+        v_times_WF = PM.cfg_seldat.latency(1) * ...
+                PM.Info.TrialParameters.s_fs  + 1 : 1 : ...
+                PM.cfg_seldat.latency(2) * ...
+                PM.Info.TrialParameters.s_fs;
+        v_times_WF = v_times_WF ./ PM.Info.TrialParameters.s_fs;
+        
+        
+        i_plot = 2;
+        for condition = PM_stats.Conditions
+                        
+            subplot(1, 5, i_plot)
+            
+            
+            % Time frequency plot
+            % -------------------
+                        
+            yyaxis left
+            pcolor(v_times_TF, v_frequencies, TF_Cluster.(char(condition)));
+            shading interp
+            colorbar;
+            colormap parula
+            set(gca, 'clim', limitsTF)
+            ylabel('Distance from spindle peak (Hz)')
+            xlabel('Time (s)')
+            
+            str_title = char(extractBefore(condition, 'On'));
+            str_title = strrep(str_title, 'Sham', 'Vehicle');
+            title(str_title)
+            
+            hold on
+            
+            
+            % Wave form plot
+            % --------------
+            
+            yyaxis right
+            
+            WF_meanClust.(char(condition)) = mean(WF_subject.(...
+                char(condition))(:, idx_clustchans, :), 2);
+            plot(v_times_WF, average_WFCluster.(char(condition)), ...
+                'Color',        'r', ...
+                'LineWidth',    2)
+            ylim(limitsWF)
+            
+            i_plot = i_plot + 1;
+        end
+        
+        
+        
+        %% Plot difference between the two conditions' TF
+        %  ----------------------------------------------------------------
+        
+        TF_difference   = ...
+            TF_Chans.OdorOn.powspctrm(:, idx_clustchans, :, :) - ...
+            TF_Chans.ShamOn.powspctrm(:, idx_clustchans, :, :);
+        TF_difference   = squeeze(mean(TF_difference, 1)); % Avg over subj
+        
+        TF_clustDiff    = squeeze(mean(TF_difference, 1)); % Avg over cluster
+        
+        minVal = min(TF_clustDiff(:));
+        maxVal = max(TF_clustDiff(:));
+        
+        limitsTF = [- max(abs(minVal), abs(maxVal)), ...
+            max(abs(minVal), abs(maxVal))];
+        
+        
+        subplot(1, 5, 4)
+        
+        figDiff = pcolor(v_times_TF, v_frequencies, TF_clustDiff);
+        shading interp
+        colorbar;
+        set(gca, 'clim', limitsTF)
+        ylabel('Distance from spindle peak (Hz)')
+        xlabel('Time (s)')
+        title('Odor - Vehicle')
+        
+        
+        
+        %% Plot time-frequencies of significant difference (cluster)
+        %  ----------------------------------------------------------------
+        
+        subplot(1, 5, 5)
+
+        TF_selective    = NaN(numel(idx_clustchans), ...
+            dimensions(2), dimensions(3));
+        TF_selective(true_labels == 1) = TF_difference(true_labels == 1);
+        TF_selective = squeeze(nanmean(TF_selective, 1));
+        
+        figSign = pcolor(v_times_TF, v_frequencies, TF_selective);
+        shading interp
+        colorbar;
+        set(gca, 'clim', limitsTF)
+        ylabel('Distance from spindle peak (Hz)')
+        xlabel('Time (s)')
+        
+        % figSign = imagesc(flipud(...
+        %     squeeze(nanmean(...
+        %     true_labels(idx_clustchans, :, :), 1))), [0, 1]);
+        
+        
+        % Put p value of cluster as title
+        % -------------------------------
+        
+        pVal = cluster_pvals(i_clust);
+        pVal = round(pVal, 4);
+        if pVal < 0.001
+            str_p = 'p < 0.001';
+        else
+            str_convert = num2str(pVal(1));
+            if numel(str_convert) < 6
+                idx_end = numel(str_convert);
+            else
+                idx_end = 6;
+            end
+            str_p = char(strcat('p =', {' '}, str_convert(1:idx_end)));
+        end
+        title(str_p)
+        
+        saveas(gcf, [str_folderOut, filesep, ...
+            char(PM_stats.Grp_subj), 'Subjects_', ...
+            str_cluster, '_', num2str(i_clust), '_Cluster.png']);
+        
+        close
+        
     end
-    title(str_p)
     
-    saveas(gcf, [str_folderOut, filesep, char(PM_stats.Grp_subj), ...
-        'Subjects_', str_cluster, '_Cluster.png']);
     
-    close
+    %% Save statistical output
+    %  --------------------------------------------------------------------
+    
+    PM.Stats        = PM_stats;
+    PM.Cfgs.neighb  = cfg_neighb;
+    PM.Cfgs.stats   = cfg_stats;
+    save([str_folderOut, filesep, ...
+        'PermutationStats_', str_cluster, '_', ...
+        char(PM_stats.Grp_subj), 'Subjects.mat'], ...
+        'PM', 'stats', '-v7')
     
 end
-
