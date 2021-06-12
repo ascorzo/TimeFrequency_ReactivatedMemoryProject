@@ -46,7 +46,7 @@ PM.cfg_Tf.output        = 'pow';
 PM.cfg_Tf.width         = PM.cycles;
 PM.cfg_Tf.keeptrials    = 'yes';
 %       - Data window selection
-PM.cfg_seldat.latency   = [-2.25 1.75]; % [-2 2]
+PM.cfg_seldat.latency   = [-2.25 1.75]; % [-2 2], [-2.25 1.75]
 %       - Baseline parameters
 PM.cfg_Bas.baseline      = PM.cfg_seldat.latency;
 % Purposely choosing the whole window as baseline as we must assume that
@@ -55,9 +55,9 @@ PM.cfg_Bas.baseline      = PM.cfg_seldat.latency;
 % effects.
 PM.cfg_Bas.baselinetype  = 'zscore';
 %       - File paths
-filepath = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
+filepath = ['D:\germanStudyData\datasetsSETS\Ori_PlaceboNight\', ...
            'preProcessing\EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-           '05-Mar-2021_Cue\SO_timeSeries\'];
+           '06-Mar-2021_Placebo\SO_timeSeries\'];
 % filepath = ['/mnt/disk1/sleep/Datasets/CueD_SO_TimeSeires/'];
 savepath = strcat(filepath, 'TF_matrices');
 peakpath = ['D:\Gits\SO_Spindle_Detection_Coupling\', ...
@@ -182,11 +182,11 @@ for i_subj = 1:numel(files)
         PM.peakFr        = mean([spindle_max.(PM.Spindleband)]);
                                 % Wavelet-based TF has different
                                 % resolutions for different frequency bands
-                                % and we might biais the outcome of TF by
+                                % and we might biais the outcome by
                                 % centering the TF matrices around
                                 % subjects' individual spindle fr peaks. We
-                                % verify this here by centering around the
-                                % grand average of spindle peaks
+                                % circumvent this here by centering around 
+                                % the grand average of spindle peaks
     end
     
     v_freqs          = ...
@@ -238,14 +238,14 @@ for i_subj = 1:numel(files)
                                     SOseries.PM.s_timeWindow / 2;
                                  % 'all', Extended before and after to deal 
                                  % with border effect of wavelet
-            PM.cfg_Tf.feedback = 'off'; % Speed up
+            PM.cfg_Tf.feedback  = 'off'; % Speed up
             data_TF             = ft_freqanalysis(PM.cfg_Tf, data_raw);
             
             % Select time of interest removing borders
-            data_TF_bas         = ft_selectdata(PM.cfg_seldat, data_TF);
+            data_TF_sel         = ft_selectdata(PM.cfg_seldat, data_TF);
             
             % Baseline correction
-            data_TF_norm        = ft_freqbaseline(PM.cfg_Bas, data_TF_bas);
+            data_TF_norm        = ft_freqbaseline(PM.cfg_Bas, data_TF_sel);
             
             
             % Store results in channel structure
