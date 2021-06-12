@@ -52,31 +52,20 @@ for subj = 1:numel(filesOdor)
     %           Combine Mean of channels by clusters
     %----------------------------------------------------------------------
     
-    % for cluster = 1:numel(clusters)
-    %     [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Cue.label);
-    %     Time_Freq_OdorD_clust.(clusters{cluster})(subj,:,:) = ...
-    %         squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
+    for cluster = 1:numel(clusters)
+        [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Cue.label);
+        Time_Freq_OdorD_clust.(clusters{cluster})(subj,:,:) = ...
+            squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
         
-    %     [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Vehicle.label);
-    %     Time_Freq_VehicleD_clust.(clusters{cluster})(subj,:,:) = ...
-    %         squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
+        [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Vehicle.label);
+        Time_Freq_VehicleD_clust.(clusters{cluster})(subj,:,:) = ...
+            squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
         
-    % end
-
-    cfg = [];
-    cfg.avgoverchan = 'yes';
-
-    Time_Freq_OdorD_Mean = ft_selectdata(cfg, Time_Freq_Cue);
-    Time_Freq_VehicleD_Mean= ft_selectdata(cfg, Time_Freq_Vehicle);
-
-    Time_Freq_OdorD_All(subj,:,:) = Time_Freq_OdorD_Mean.powspctrm;
-    Time_Freq_VehicleD_All(subj,:,:) = Time_Freq_VehicleD_Mean.powspctrm;
-        
+    end
      
 end
 
-%save('Time_Freq_Clust_ToPlot_DNight','Time_Freq_OdorD_clust','Time_Freq_VehicleD_clust')
-save('Time_Freq_MeanAllchans_ToPlot_DNight','Time_Freq_OdorD_All','Time_Freq_VehicleD_All')
+save('Time_Freq_Clust_ToPlot_DNight','Time_Freq_OdorD_clust','Time_Freq_VehicleD_clust')
 
 %--------------------------------------------------------------------------
 % For Motor Associated Odor Night
@@ -114,30 +103,20 @@ for subj = 1:numel(filesOdor)
     %           Combine Mean of channels by clusters
     %----------------------------------------------------------------------
     
-    % for cluster = 1:numel(clusters)
-    %     [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Cue.label);
-    %     Time_Freq_OdorM_clust.(clusters{cluster})(subj,:,:) = ...
-    %         squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
+    for cluster = 1:numel(clusters)
+        [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Cue.label);
+        Time_Freq_OdorM_clust.(clusters{cluster})(subj,:,:) = ...
+            squeeze(mean(Time_Freq_Cue.powspctrm(ind2,:,:),1));
         
-    %     [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Vehicle.label);
-    %     Time_Freq_VehicleM_clust.(clusters{cluster})(subj,:,:) = ...
-    %         squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
+        [~,~,ind2] = intersect(Clust.(clusters{cluster}),Time_Freq_Vehicle.label);
+        Time_Freq_VehicleM_clust.(clusters{cluster})(subj,:,:) = ...
+            squeeze(mean(Time_Freq_Vehicle.powspctrm(ind2,:,:),1));
         
-    % end
-
-    cfg = [];
-    cfg.avgoverchan = 'yes';
-
-    Time_Freq_OdorM_Mean = ft_selectdata(cfg, Time_Freq_Cue);
-    Time_Freq_VehicleM_Mean= ft_selectdata(cfg, Time_Freq_Vehicle);
-
-    Time_Freq_OdorM_All(subj,:,:) = Time_Freq_OdorM_Mean.powspctrm;
-    Time_Freq_VehicleM_All(subj,:,:) = Time_Freq_VehicleM_Mean.powspctrm;
+    end
      
 end
 
-%save('Time_Freq_Clust_ToPlot_MNight','Time_Freq_OdorM_clust','Time_Freq_VehicleM_clust')
-save('Time_Freq_MeanAllchans_ToPlot_MNight','Time_Freq_OdorM_All','Time_Freq_VehicleM_All')
+save('Time_Freq_Clust_ToPlot_MNight','Time_Freq_OdorM_clust','Time_Freq_VehicleM_clust')
 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
