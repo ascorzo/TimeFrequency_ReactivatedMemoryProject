@@ -7,26 +7,26 @@ clusters = fieldnames(Clust);
 
 for cluster = 1:numel(clusters)
     
-    for subj = 1:numel(cf_Generalization.(clusters{cluster}))
-        figure
-        %F = Time_Freq_Odor.freq;
-        mv_plot_2D(cf_Generalization.(clusters{cluster}){subj}, 'x', F, 'y', F)
-        xlabel('Test Frequency [Hz]'), ylabel('Train Frequency [Hz]')
-        l = title(strcat('Subj_',num2str(subj),{' '},...
-            'Frequency generalization',{' '},...
-            clusters{cluster},{' '},'Cluster'));
-        set(l, 'Interpreter', 'none')
-        colorbar('off')
-        colorbar
-        caxis([min(cf_Generalization.(clusters{cluster}){subj}(:)),...
-            max(cf_Generalization.(clusters{cluster}){subj}(:))])
-        
-        saveas(gcf,strcat(...
-            'C:\Users\lanan\Desktop\Temp\Figures\OdorMvsVehicleGeneralization\',...
-            'Subj_',num2str(subj),'_',clusters{cluster},'.png'))
-        
-        close all
-    end
+%     for subj = 1:numel(cf_Generalization.(clusters{cluster}))
+%         figure
+%         %F = Time_Freq_Odor.freq;
+%         mv_plot_2D(cf_Generalization.(clusters{cluster}){subj}, 'x', F, 'y', F)
+%         xlabel('Test Frequency [Hz]'), ylabel('Train Frequency [Hz]')
+%         l = title(strcat('Subj_',num2str(subj),{' '},...
+%             'Frequency generalization',{' '},...
+%             clusters{cluster},{' '},'Cluster'));
+%         set(l, 'Interpreter', 'none')
+%         colorbar('off')
+%         colorbar
+%         caxis([min(cf_Generalization.(clusters{cluster}){subj}(:)),...
+%             max(cf_Generalization.(clusters{cluster}){subj}(:))])
+%         
+% %         saveas(gcf,strcat(...
+% %             'C:\Users\lanan\Desktop\Temp\Figures\OdorMvsVehicleGeneralization\',...
+% %             'Subj_',num2str(subj),'_',clusters{cluster},'.png'))
+% %         
+% %         close all
+%     end
     %
     result_average_Generalization.(clusters{cluster}) = ...
         mv_combine_results(resultGeneralization.(clusters{cluster}), 'average');
@@ -34,17 +34,20 @@ for cluster = 1:numel(clusters)
     figure
     %F = Time_Freq_Odor.freq;
     mv_plot_2D(result_average_Generalization.(clusters{cluster}).perf{1}, 'x', F, 'y', F)
-    xlabel('Test Frequency'), ylabel('Train Frequency')
+    xlabel('Test Frequency (Hz)'), ylabel('Train Frequency (Hz)')
     l = title(strcat('Average_',...
         'Frequency generalization',{' '},...
         clusters{cluster},{' '},'Cluster'));    set(l, 'Interpreter', 'none')
     colorbar('off')
-    colorbar
+    a = colorbar;
+    a.Label.String = 'AUC';
     caxis([min(result_average_Generalization.(clusters{cluster}).perf{1}(:)),...
         max(result_average_Generalization.(clusters{cluster}).perf{1}(:))])
+
+    
     
     saveas(gcf,strcat(...
-        'C:\Users\lanan\Desktop\Temp\Figures\OdorMvsVehicleGeneralization\',...
+        'G:\Mi unidad\2021\AnalysisTemp\Figures\Odor_DvsM_Generalization\',...
         clusters{cluster},'Average.png'))
     close all
     
@@ -60,26 +63,26 @@ for cluster = 1:numel(clusters)
             cf_Generalization.(clusters{cluster}){subj};
         
     end
-    
-    for subj = 1:numel(cf_Generalization_threshold.(clusters{cluster}))
-        figure
-        %    F = Time_Freq_Odor.freq;
-        mv_plot_2D(cf_Generalization_threshold.(clusters{cluster}){subj}, 'x', F, 'y', F)
-        xlabel('Test Frequency [Hz]'), ylabel('Train Frequency [Hz]')
-        l = title(strcat('Subj_',num2str(subj),{' '},...
-            'Frequency generalization',{' '},...
-            clusters{cluster},{' '},'Cluster'));        set(l, 'Interpreter', 'none')
-        colorbar('off')
-        colorbar
-        caxis([min(cf_Generalization_threshold.(clusters{cluster}){subj}(:)),...
-            max(cf_Generalization_threshold.(clusters{cluster}){subj}(:))])
-        
-        saveas(gcf,strcat(...
-            'C:\Users\lanan\Desktop\Temp\Figures\OdorMvsVehicleGeneralization\AboveThreshold\',...
-            'Subj',num2str(subj),'_',clusters{cluster},'.png'))
-        
-        close all
-    end
+%     
+%     for subj = 1:numel(cf_Generalization_threshold.(clusters{cluster}))
+%         figure
+%         %    F = Time_Freq_Odor.freq;
+%         mv_plot_2D(cf_Generalization_threshold.(clusters{cluster}){subj}, 'x', F, 'y', F)
+%         xlabel('Test Frequency [Hz]'), ylabel('Train Frequency [Hz]')
+%         l = title(strcat('Subj_',num2str(subj),{' '},...
+%             'Frequency generalization',{' '},...
+%             clusters{cluster},{' '},'Cluster'));        set(l, 'Interpreter', 'none')
+%         colorbar('off')
+%         colorbar
+%         caxis([min(cf_Generalization_threshold.(clusters{cluster}){subj}(:)),...
+%             max(cf_Generalization_threshold.(clusters{cluster}){subj}(:))])
+%         
+% %         saveas(gcf,strcat(...
+% %             'C:\Users\lanan\Desktop\Temp\Figures\OdorMvsVehicleGeneralization\AboveThreshold\',...
+% %             'Subj',num2str(subj),'_',clusters{cluster},'.png'))
+% %         
+% %         close all
+%     end
     
     result_average_Generalization.(clusters{cluster}) = ...
         mv_combine_results(resultGeneralization.(clusters{cluster}), 'average');
@@ -89,20 +92,21 @@ for cluster = 1:numel(clusters)
         result_average_Generalization.(clusters{cluster}).perf{1}.*...
         (result_average_Generalization.(clusters{cluster}).perf{1}>=0.55);
     
-    figure
-    % F = Time_Freq_Odor.freq;
-    mv_plot_2D(averageThreshold.(clusters{cluster}), 'x', F, 'y', F)
-    xlabel('Test Frequency'), ylabel('Train Frequency')
-    l = title(strcat('Average_',...
-        'Frequency generalization',{' '},...
-        clusters{cluster},{' '},'Cluster'));    set(l, 'Interpreter', 'none')
-    colorbar('off')
-    colorbar
-    caxis([0 0.55])
+%     figure
+%     % F = Time_Freq_Odor.freq;
+%     mv_plot_2D(averageThreshold.(clusters{cluster}), 'x', F, 'y', F)
+%     xlabel('Test Frequency'), ylabel('Train Frequency')
+%     l = title(strcat('Average_',...
+%         'Frequency generalization',{' '},...
+%         clusters{cluster},{' '},'Cluster'));    set(l, 'Interpreter', 'none')
+%     colorbar('off')
+%     a = colorbar;
+%     a.Label.String = 'AUC';
+%     caxis([0 0.55])
     
-    saveas(gcf,strcat(...
-        'C:\Users\lanan\Desktop\Temp\Figures\OdorMvsVehicleGeneralization\AboveThreshold\',...
-        clusters{cluster},'Average.png'))
-    close all
+%     saveas(gcf,strcat(...
+%         'C:\Users\lanan\Desktop\Temp\Figures\OdorMvsVehicleGeneralization\AboveThreshold\',...
+%         clusters{cluster},'Average.png'))
+%     close all
     
 end

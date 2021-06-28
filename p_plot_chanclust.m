@@ -1,0 +1,29 @@
+% plot clusters of channels
+
+p_clustersOfInterest
+
+load('G:\Mi unidad\2021\AnalysisTemp\reducedChanlocs.mat');
+eeglab nogui
+
+clusters = fieldnames(Clust);
+
+for cluster = 1:numel(clusters)
+    
+    [~,idx_clusters] = intersect({reducedchanlocs.labels},Clust.(clusters{cluster}));
+    no_results = zeros(numel(reducedchanlocs), 1);
+    
+    topoplot(no_results, reducedchanlocs, ...
+        'style', 'blank', ...
+        'electrodes', 'pts', ...
+        'shading', 'interp', ...
+        'headcolor', [0, 0, 0], ...
+        'conv', 'off', ...
+        'plotchans', idx_clusters, ...
+        'emarker', {'.', [0.1, 0.1, 0.1], 20, 1});%, ...'plotrad', 0.519);
+%     l = title(clusters{cluster});
+%     set(l, 'Interpreter', 'none')
+    saveas(gcf,strcat(...
+        'G:\Mi unidad\2021\AnalysisTemp\Figures\Chanclusts\',...
+        clusters{cluster},'.png'))
+    close all
+end
