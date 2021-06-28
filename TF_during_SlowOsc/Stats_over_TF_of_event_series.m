@@ -21,9 +21,9 @@
 % 3. Parameters
 %       - File paths
 SOseriespath        = ['D:\germanStudyData\datasetsSETS\', ...
-                         'Ori_PlaceboNight\preProcessing\', ...
+                         'Ori_CueNight\preProcessing\', ...
                          'EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-                         '06-Mar-2021_Placebo\SO_timeSeries\'];
+                         '12-Jun-2021_Cue\SO_timeSeries\'];
 seriespath          = [SOseriespath, '\TF_matrices\'];
 % SOseriespath contains datasets with spindle latencies
 str_folderOut       = [cd, filesep, 'Clusters'];
@@ -51,6 +51,11 @@ fieldtrippath       = 'D:\MATLAB\fieldtrip-20200831';
 % fieldtrippath       = '/home/sleep/Documents/MATLAB/fieldtrip-20200831';
 eeglabpath          = 'D:\MATLAB\eeglab2019_1';
 % eeglabpath          = '/home/sleep/Documents/MATLAB/eeglab2019_1';
+%       - path to channel clustering function: All this function does is
+%         create cell arrays of electrode labels belonging to a group. The
+%         repository containing the function can be found at
+%         https://github.com/davidmarcelbaum/EEG_channels
+chanclusterpath     = 'D:\Gits\EEG_channels';
 
 
 
@@ -68,6 +73,9 @@ if ~exist('dummy_loaded', 'var') || dummy_loaded == 0
 end
 
 % Define channels to go through
+if ~strcmp(PM_stats.ClustOI, 'all')
+    warning('Make sure only desired channels are part of the selected cluster')
+end
 Cluster = dummyFile.PM.Clust.(PM_stats.ClustOI)';
 
 % TF_dimensions = trials by channels by freqs by times
@@ -234,15 +242,15 @@ save([cd, filesep, 'Night.mat'], 'Night', '-v7')
 % warning('Next lines of code are there to combine nights ...')
 % clearvars TF_subject SS_latencies WF_subject
 % 
-NightD = load('NightD.mat');
-NightM = load('NightM.mat');
-
-SS_latencies.OdorOn = NightD.Night.SS_latencies.OdorOn;
-SS_latencies.ShamOn = NightM.Night.SS_latencies.OdorOn;
-WF_subject.OdorOn   = NightD.Night.WF_subject.OdorOn;
-WF_subject.ShamOn   = NightM.Night.WF_subject.OdorOn;
-TF_subject.OdorOn   = NightD.Night.TF_subject.OdorOn;
-TF_subject.ShamOn   = NightM.Night.TF_subject.OdorOn;
+% NightD = load('NightD.mat');
+% NightM = load('NightM.mat');
+% 
+% SS_latencies.OdorOn = NightD.Night.SS_latencies.OdorOn;
+% SS_latencies.ShamOn = NightM.Night.SS_latencies.OdorOn;
+% WF_subject.OdorOn   = NightD.Night.WF_subject.OdorOn;
+% WF_subject.ShamOn   = NightM.Night.WF_subject.OdorOn;
+% TF_subject.OdorOn   = NightD.Night.TF_subject.OdorOn;
+% TF_subject.ShamOn   = NightM.Night.TF_subject.OdorOn;
 % =========================================================================
 
 
@@ -291,43 +299,9 @@ SS_latencies.ShamOn = SS_latencies.ShamOn(v_kept_subj);
 
 % Clusters of interest
 % --------------------
-PM.Clust.all = dummyFile.PM.Clust.all;
-PM.Clust.left_frontal = {...
-    'E15', 'E16', 'E11', 'E18', 'E19', 'E22', 'E23', 'E24', 'E26', ...
-    'E27', 'E33', 'E38'};
-PM.Clust.right_frontal = {...
-    'E15', 'E16', 'E11', 'E10', 'E4', 'E9', 'E3', 'E124', 'E2', ...
-    'E123', 'E122', 'E121'};
-PM.Clust.frontal = {...
-    'E3', 'E4', 'E9', 'E10', 'E11', 'E15', 'E16', 'E18', 'E19', ...
-    'E22', 'E23', 'E24', 'E124'};
-PM.Clust.left_central = {...
-    'E6', 'E7', 'E13', 'E30', 'E31', 'E37', 'E54', 'E55'};
-PM.Clust.right_central = {...
-    'E6', 'E55', 'E112', 'E106', 'E105', 'E80', 'E87', 'E79'};
-PM.Clust.central = {...
-    'E6', 'E7', 'E13', 'E30', 'E31', 'E37', 'E54', 'E55', 'E79', ...
-    'E80', 'E87', 'E105', 'E106', 'E112'};
-PM.Clust.left_temporal = {...
-    'E46', 'E51', 'E45', 'E50', 'E58', 'E56', 'E63'};
-PM.Clust.right_temporal = {...
-    'E108', 'E102', 'E101', 'E97', 'E96', 'E99', 'E107'};
-PM.Clust.left_parietal = {...
-    'E53', 'E61', 'E62', 'E72', 'E67', 'E52', 'E60', 'E59', 'E66', ...
-    'E65', 'E64', 'E68'};
-PM.Clust.right_parietal = {...
-    'E62', 'E72', 'E78', 'E77', 'E86', 'E85', 'E84', 'E92', 'E91', ...
-    'E90', 'E95', 'E94'};
-PM.Clust.parietal = {...
-    'E52', 'E61', 'E62', 'E59', 'E60', 'E67', 'E66', 'E72', 'E78', ...
-    'E77', 'E86', 'E85', 'E84', 'E92', 'E91', 'E53'};
-PM.Clust.left_occipital = {...
-    'E71', 'E70', 'E75', 'E74', 'E69', 'E73'};
-PM.Clust.right_occipital = {...
-    'E75', 'E76', 'E82', 'E83', 'E88', 'E89'};
-PM.Clust.occipital = {...
-    'E71', 'E70', 'E74', 'E69', 'E73', 'E75', 'E76', 'E83', 'E82', ...
-    'E89', 'E88'};
+addpath(chanclusterpath)
+PM.Clust        = f_chan_clusters;
+PM.Clust.all    = dummyFile.PM.Clust.all;
 PM.Clust.pseudo = [];
 
 Clusters = fieldnames(PM.Clust);
@@ -385,11 +359,26 @@ for i_defined_clust = 1:numel(Clusters)
     
     str_cluster     = char(Clusters(i_defined_clust));
     
+    % Since our change in electrode rejection, some clusters such as
+    % temporal are listing channels in the PM.Clust structure that are
+    % not available anymore. This generates issues when powspctr for
+    % example is only including 5 channels in case of left_temporal but
+    % assigning the 7 channels listed in PM.Clust to the
+    % TF_Chans.(...).label structure. We correct this here:
+    Clust2Correct = PM.Clust.(str_cluster);
+    if ~isempty(Clust2Correct)
+        Clust2Correct = Clust2Correct(...
+            ismember(Clust2Correct, dummyFile.PM.Clust.all));
+        PM.Clust.(str_cluster) = Clust2Correct;
+    end
+    
     
     if ~strcmp(str_cluster, 'pseudo')
         
         idx_defchans    = ...
             find(ismember(dummyFile.PM.Clust.all, PM.Clust.(str_cluster)));
+        
+        
         
         clust_sensors   = sensors;
         clust_sensors.chanpos = ...
@@ -584,8 +573,18 @@ for i_defined_clust = 1:numel(Clusters)
     end
     cfg_stats.neighbours            = ft_prepare_neighbours(cfg_neighb);
     
+    
+    % ---------------------------------------------------------------------
+    %                             /!\/!\/!\ 
+    % Main function to perform statistics: If you get an error saying could
+    % not determine critical cluster value or such, always check first that
+    % dimensions and numbers of channels in labels etc correspond to the
+    % rest of the structure for TF_Chans. Most of the time, if everything
+    % is set correctly in the cfg_stats, the error comes from
+    % inconsistencies in the TF_Chans strucure...
     stats                           = ft_freqstatistics(cfg_stats, ...
                                         TF_Chans.OdorOn, TF_Chans.ShamOn);
+    % ---------------------------------------------------------------------
     
     
     
@@ -639,7 +638,7 @@ for i_defined_clust = 1:numel(Clusters)
     cluster_pvals   = [];
     
     % ---------------------------------------------------------------------
-    %                           /!\ /!\ /!\
+    %                             /!\ /!\ /!\
     % Here, better circumvent the use of stats.mask since we will be
     % limited for cluster labels according to set alpha during permutation
     % analysis. Only cluster with p values lower than set alpha would be
