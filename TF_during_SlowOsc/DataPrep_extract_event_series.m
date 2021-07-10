@@ -24,15 +24,15 @@
 
 % 3. Parameters:
 %    - File paths
-filePath_CONTINUOUS = ['D:\germanStudyData\datasetsSETS\Ori_PlaceboNight\', ...
+filePath_CONTINUOUS = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
                         'preProcessing\NREM'];
-filePath_TRIALS     = ['D:\germanStudyData\datasetsSETS\Ori_PlaceboNight\', ...
+filePath_TRIALS     = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
                         'preProcessing\TRIALS'];
-eventfilePath       = ['D:\germanStudyData\datasetsSETS\Ori_PlaceboNight\', ...
+eventfilePath       = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
                         'preProcessing\EEGLABFilt_Mastoids_Off_On_', ...
-                        '200Hz_Oct_NEW\13-Jun-2021_Placebo\'];
-% eventFile           = '12-Jun-2021_17-08-46_AllData.mat';
-eventFile           = '13-Jun-2021_15-33-48_AllData.mat';
+                        '200Hz_Oct_NEW\12-Jun-2021_Cue\'];
+eventFile           = '12-Jun-2021_17-08-46_AllData.mat';
+% eventFile           = '13-Jun-2021_15-33-48_AllData.mat';
 %    - Channels to include
 chanOfInterest      = 'all';
 %    - Conditions to include
@@ -44,8 +44,9 @@ PM.SOlocations      = [2, 4];
 %    - Time stamp to center time window around: Can be based on angles from
 %      hilbert transform or time stamps of the delta band time series
 %      ({'timeseries', 3} or {'angles', -90} for example)
-PM.SOcenter      = {'angles', 0}; % (0 is pos. peak, -90 = inflection)
-% PM.SOcenter      = {'timeseries', 3};
+% PM.SOcenter        = {'angles', 0}; % (0 is pos. peak, -90 = inflection)
+PM.SOcenter        = {'timeseries', 3};
+% PM.SOcenter         = {'timeseries', 6};
 % 1) = To which time bin corresponds that particular event
 % 2) = startTime
 % 3) = midTime (SO: down-up zero crossing)
@@ -61,24 +62,27 @@ PM.SOcenter      = {'angles', 0}; % (0 is pos. peak, -90 = inflection)
 % 13)= Frequency
 %    - Time stamp of spindle to couple to SO
 PM.SSCoupling       = 6;
+%    - Allowed range during odor stimulation (seconds)
+PM.allowed_range    = 7.5;
 %    - Various parameters
-% fileNames           = {...
-%     'RC_051_sleep','RC_091_sleep','RC_121_sleep','RC_131_sleep',...
-%     'RC_141_sleep','RC_161_sleep','RC_171_sleep','RC_201_sleep',...
-%     'RC_241_sleep','RC_251_sleep','RC_261_sleep','RC_281_sleep',...
-%     'RC_291_sleep','RC_301_sleep',...
-%     'RC_392_sleep','RC_412_sleep','RC_442_sleep','RC_452_sleep',...
-%     'RC_462_sleep','RC_472_sleep','RC_482_sleep','RC_492_sleep',...
-%     'RC_512_sleep'};
 fileNames           = {...
-    'RC_052_sleep','RC_092_sleep','RC_122_sleep','RC_132_sleep',...
-    'RC_142_sleep','RC_162_sleep','RC_172_sleep','RC_202_sleep',...
-    'RC_242_sleep','RC_252_sleep','RC_262_sleep','RC_282_sleep',...
-    'RC_292_sleep','RC_302_sleep',...
-    'RC_391_sleep','RC_411_sleep','RC_441_sleep','RC_451_sleep',...
-    'RC_461_sleep','RC_471_sleep','RC_481_sleep','RC_491_sleep',...
-    'RC_511_sleep'};
-saveFolder            = [eventfilePath, 'SO_timeSeries', filesep];
+    'RC_051_sleep','RC_091_sleep','RC_121_sleep','RC_131_sleep',...
+    'RC_141_sleep','RC_161_sleep','RC_171_sleep','RC_201_sleep',...
+    'RC_241_sleep','RC_251_sleep','RC_261_sleep','RC_281_sleep',...
+    'RC_291_sleep','RC_301_sleep',...
+    'RC_392_sleep','RC_412_sleep','RC_442_sleep','RC_452_sleep',...
+    'RC_462_sleep','RC_472_sleep','RC_482_sleep','RC_492_sleep',...
+    'RC_512_sleep'};
+% fileNames           = {...
+%     'RC_052_sleep','RC_092_sleep','RC_122_sleep','RC_132_sleep',...
+%     'RC_142_sleep','RC_162_sleep','RC_172_sleep','RC_202_sleep',...
+%     'RC_242_sleep','RC_252_sleep','RC_262_sleep','RC_282_sleep',...
+%     'RC_292_sleep','RC_302_sleep',...
+%     'RC_391_sleep','RC_411_sleep','RC_441_sleep','RC_451_sleep',...
+%     'RC_461_sleep','RC_471_sleep','RC_481_sleep','RC_491_sleep',...
+%     'RC_511_sleep'};
+% saveFolder            = [eventfilePath, 'SO_timeSeries', filesep];
+saveFolder            = [eventfilePath, 'SS_timeSeries', filesep];
 PM.stimulation_seq    = 'OFF_ON';
 
 % -------------------------------------------------------------------------
@@ -262,7 +266,9 @@ for i_subj = 1:numel(fileNames)
                 
         for condition = PM.Conditions
                         
-            SO_events = OverallSlowOsc.(...
+%             SO_events = OverallSlowOsc.(...
+%                 channel).(char(condition))(:, i_subj);
+            SO_events = OverallSpindles.(...
                 channel).(char(condition))(:, i_subj);
             
             % Important to reset here! Otherwise, by working directly with
@@ -308,6 +314,16 @@ for i_subj = 1:numel(fileNames)
                     % Time of SO occurence in the trial (in samples)
                     startTime = SO_events{trial}(SO, PM.SOlocations(1));
                     endTime   = SO_events{trial}(SO, PM.SOlocations(2));
+                    
+                    
+                    % Just to filter out trial chunks
+                    % -------------------------------
+                    accepted_range = PM.allowed_range;
+                    
+                    if endTime > accepted_range * Info.TrialParameters.s_fs
+                        continue
+                    end
+                    
                     
                     if strcmp(PM.SOcenter(1), 'timeseries')
                         
@@ -494,25 +510,30 @@ for i_subj = 1:numel(fileNames)
             %  ------------------------------------------------------------
         
             clearvars EEGWholeOUT outFT
-            % Epoch the data around center point of slow osc.
-            EEGWholeOUT = pop_epoch(EEGWholeIN, {'SO_Cent'}, ...
-                [-PM.s_timeWindow/2 PM.s_timeWindow/2]);
             
-            % Reject huge trailing data that will not be used
-            if isfield(EEGWholeOUT, 'rejecteddata')
-                EEGWholeOUT = rmfield(EEGWholeOUT, 'rejecteddata');
+            if ~isempty(OriginalCentTime)
+                % Epoch the data around center point of slow osc.
+                EEGWholeOUT = pop_epoch(EEGWholeIN, {'SO_Cent'}, ...
+                    [-PM.s_timeWindow/2 PM.s_timeWindow/2]);
+                
+                % Reject huge trailing data that will not be used
+                if isfield(EEGWholeOUT, 'rejecteddata')
+                    EEGWholeOUT = rmfield(EEGWholeOUT, 'rejecteddata');
+                end
+                if isfield(EEGWholeOUT, 'rejectedchanlocs')
+                    EEGWholeOUT = rmfield(EEGWholeOUT, 'rejectedchanlocs');
+                end
+                
+                
+                
+                %% Transform EEG structure to Fieldtrip
+                %  ------------------------------------------------------------
+                
+                outFT = eeglab2fieldtrip(EEGWholeOUT, 'raw');
+                SO_timeSeries.(channel).(char(condition)) = outFT;
+            else
+                SO_timeSeries.(channel).(char(condition)) = struct();
             end
-            if isfield(EEGWholeOUT, 'rejectedchanlocs')
-                EEGWholeOUT = rmfield(EEGWholeOUT, 'rejectedchanlocs');
-            end
-            
-            
-            
-            %% Transform EEG structure to Fieldtrip
-            %  ------------------------------------------------------------
-            
-            outFT = eeglab2fieldtrip(EEGWholeOUT, 'raw');
-            SO_timeSeries.(channel).(char(condition)) = outFT;
             
             
             

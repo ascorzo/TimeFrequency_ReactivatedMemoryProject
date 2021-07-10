@@ -290,6 +290,9 @@ TF_subject.ShamOn.powspctrm = ...
 SS_latencies.OdorOn = SS_latencies.OdorOn(v_kept_subj);
 SS_latencies.ShamOn = SS_latencies.ShamOn(v_kept_subj);
 
+WF_subject.ShamOn   = WF_subject.ShamOn(v_kept_subj, :, :);
+WF_subject.OdorOn   = WF_subject.OdorOn(v_kept_subj, :, :);
+
 
 
 % Here, we have data input defined as repetitions x channels x
