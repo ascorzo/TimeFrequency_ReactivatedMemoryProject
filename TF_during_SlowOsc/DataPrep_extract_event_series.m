@@ -45,8 +45,7 @@ PM.SOlocations      = [2, 4];
 %      hilbert transform or time stamps of the delta band time series
 %      ({'timeseries', 3} or {'angles', -90} for example)
 % PM.SOcenter        = {'angles', 0}; % (0 is pos. peak, -90 = inflection)
-PM.SOcenter        = {'timeseries', 3};
-% PM.SOcenter         = {'timeseries', 6};
+PM.SOcenter        = {'timeseries', 7};
 % 1) = To which time bin corresponds that particular event
 % 2) = startTime
 % 3) = midTime (SO: down-up zero crossing)
@@ -82,7 +81,7 @@ fileNames           = {...
 %     'RC_461_sleep','RC_471_sleep','RC_481_sleep','RC_491_sleep',...
 %     'RC_511_sleep'};
 % saveFolder            = [eventfilePath, 'SO_timeSeries', filesep];
-saveFolder            = [eventfilePath, 'SS_timeSeries', filesep];
+saveFolder            = [eventfilePath, 'SO_timeSeries_MinTime_7.5s', filesep];
 PM.stimulation_seq    = 'OFF_ON';
 
 % -------------------------------------------------------------------------
@@ -266,10 +265,10 @@ for i_subj = 1:numel(fileNames)
                 
         for condition = PM.Conditions
                         
-%             SO_events = OverallSlowOsc.(...
-%                 channel).(char(condition))(:, i_subj);
-            SO_events = OverallSpindles.(...
+            SO_events = OverallSlowOsc.(...
                 channel).(char(condition))(:, i_subj);
+%             SO_events = OverallSpindles.(...
+%                 channel).(char(condition))(:, i_subj);
             
             % Important to reset here! Otherwise, by working directly with
             % EEGWholeNATIVE, leftover time stamps from previous condition 
@@ -533,6 +532,7 @@ for i_subj = 1:numel(fileNames)
                 SO_timeSeries.(channel).(char(condition)) = outFT;
             else
                 SO_timeSeries.(channel).(char(condition)) = struct();
+                EEGWholeOUT.lst_changes = [];
             end
             
             
