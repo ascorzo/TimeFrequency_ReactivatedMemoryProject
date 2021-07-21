@@ -27,6 +27,7 @@ filesVehicle = dir(strcat(filepath,'*_Vehicle.mat'));
 p_clustersOfInterest
 clusters = fieldnames(Clust);
 
+
 for subj = 1:numel(filesOdor)
     
   
@@ -148,13 +149,14 @@ Time_Freq = Time_Freq_Odor;
 % Time_Freq.time = -1:0.05:5;
 % Time_Freq.freq = 0.5:0.05:20;
 
-SpindleBand     = [10 18];
-DeltaBand       = [0.5 2];
+SpindleBand     = [12 16];
+DeltaBand       = [1 4];
 Around_2_5      = [2 8];
 ThetaBand       = [4 8];
-BetaBand        = [18 30];
+SWBand          = [0.5 2];
+%BetaBand       = [18 30];
 time            = Time_Freq.time;
-subjects = 1:23;%numel(filesOdor);
+subjects        = 1:23; %numel(filesOdor);
 
 
 SpindleIdx = find(Time_Freq.freq>=SpindleBand(1) &...
@@ -163,12 +165,12 @@ DeltaIdx = find(Time_Freq.freq>=DeltaBand(1) &...
     Time_Freq.freq<=DeltaBand(2));
 ThetaIdx = find(Time_Freq.freq>=ThetaBand(1) &...
     Time_Freq.freq<=ThetaBand(2));
-BetaIdx = find(Time_Freq.freq>=BetaBand(1) &...
-    Time_Freq.freq<=BetaBand(2));
 Around_2_5Idx = find(Time_Freq.freq>=Around_2_5(1) &...
     Time_Freq.freq<=Around_2_5(2));
+SWIdx = find(Time_Freq.freq>=SWBand(1) &...
+    Time_Freq.freq<=SWBand(2));
 
-
+%clusters = {'All'};
 %--------------------------------------------------------------------------
 % For Declarative Associated Odor Night
 %--------------------------------------------------------------------------
@@ -177,14 +179,14 @@ for cluster = 1:numel(clusters)
     v_Spindle_OdorD.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorD_clust.(clusters{cluster})(subjects,SpindleIdx,:),2));
     v_Delta_OdorD.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorD_clust.(clusters{cluster})(subjects,DeltaIdx,:),2));
     v_Theta_OdorD.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorD_clust.(clusters{cluster})(subjects,ThetaIdx,:),2));
-    v_Beta_OdorD.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorD_clust.(clusters{cluster})(subjects,BetaIdx,:),2));
+    v_SW_OdorD.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorD_clust.(clusters{cluster})(subjects,SWIdx,:),2));
     v_Around_2_5_OdorD.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorD_clust.(clusters{cluster})(subjects,Around_2_5Idx,:),2));
 
     % -----------------For Vehicle----------------------------------
     v_Spindle_VehicleD.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleD_clust.(clusters{cluster})(subjects,SpindleIdx,:),2));
     v_Delta_VehicleD.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleD_clust.(clusters{cluster})(subjects,DeltaIdx,:),2));
     v_Theta_VehicleD.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleD_clust.(clusters{cluster})(subjects,ThetaIdx,:),2));
-    v_Beta_VehicleD.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleD_clust.(clusters{cluster})(subjects,BetaIdx,:),2));
+    v_SW_VehicleD.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleD_clust.(clusters{cluster})(subjects,SWIdx,:),2));
     v_Around_2_5_VehicleD.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleD_clust.(clusters{cluster})(subjects,Around_2_5Idx,:),2));
 
 end
@@ -198,14 +200,14 @@ for cluster = 1:numel(clusters)
     v_Spindle_OdorM.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorM_clust.(clusters{cluster})(subjects,SpindleIdx,:),2));
     v_Delta_OdorM.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorM_clust.(clusters{cluster})(subjects,DeltaIdx,:),2));
     v_Theta_OdorM.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorM_clust.(clusters{cluster})(subjects,ThetaIdx,:),2));
-    v_Beta_OdorM.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorM_clust.(clusters{cluster})(subjects,BetaIdx,:),2));
+    v_SW_OdorM.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorM_clust.(clusters{cluster})(subjects,SWIdx,:),2));
     v_Around_2_5_OdorM.(clusters{cluster}) = squeeze(mean(Time_Freq_OdorM_clust.(clusters{cluster})(subjects,Around_2_5Idx,:),2));
 
     % -----------------For Vehicle----------------------------------
     v_Spindle_VehicleM.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleM_clust.(clusters{cluster})(subjects,SpindleIdx,:),2));
     v_Delta_VehicleM.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleM_clust.(clusters{cluster})(subjects,DeltaIdx,:),2));
     v_Theta_VehicleM.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleM_clust.(clusters{cluster})(subjects,ThetaIdx,:),2));
-    v_Beta_VehicleM.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleM_clust.(clusters{cluster})(subjects,BetaIdx,:),2));
+    v_SW_VehicleM.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleM_clust.(clusters{cluster})(subjects,SWIdx,:),2));
     v_Around_2_5_VehicleM.(clusters{cluster}) = squeeze(mean(Time_Freq_VehicleM_clust.(clusters{cluster})(subjects,Around_2_5Idx,:),2));
 
 end
@@ -373,37 +375,4 @@ for cluster = 1:numel(clusters)
     saveas(gcf,strcat(clusters{cluster},'.png'))
 
 end
-
-%     v_time = Time_Freq_Odor.time ;
-%     ValidTimeOdorD = v_time(~isnan(Time_Freq_OdorD_clust.(clusters{cluster})(1,1,:)));
-%     ValidTimeVehicleD = v_time(~isnan(Time_Freq_VehicleD_clust.(clusters{cluster})(1,1,:)));
-%     
-%     ValidTime = intersect(ValidTimeOdorD,ValidTimeVehicleD);
-%     start_sample = ceil((ValidTime(1)-v_time(1))/s_tstep)+1;
-%     end_sample = floor((ValidTime(end)-v_time(1))/s_tstep);
-
-%     count = count+1;
-%     subplot(total_subplots,1,count)
-%     f_nonParametricTest('Beta',...
-%         ' ',' ','Odor D','Vehicle D',...
-%         v_Beta_OdorD.(clusters{cluster}),...
-%         v_Beta_VehicleD.(clusters{cluster}),...
-%         v_time,'-b',start_sample,end_sample);
-%     
-%     count = count+1;
-%     subplot(total_subplots,1,count)
-%     f_nonParametricTest('Spindle',...
-%         ' ',' ','Odor D','Vehicle D',...
-%         v_Spindle_OdorD.(clusters{cluster}),...
-%         v_Spindle_VehicleD.(clusters{cluster}),...
-%         v_time,'-b',start_sample,end_sample);
-%     
-%     count = count+1;
-%     subplot(total_subplots,1,count)
-%     f_nonParametricTest('Theta',...
-%         ' ',' ','Odor D','Vehicle D',...
-%         v_Theta_OdorD.(clusters{cluster}),...
-%         v_Theta_VehicleD.(clusters{cluster}),...
-%         v_time,'-b',start_sample,end_sample);
-%     
 

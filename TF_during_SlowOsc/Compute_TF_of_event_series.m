@@ -27,6 +27,7 @@
 PM.Conditions           = {'ShamOn', 'OdorOn'};
 % Off periods ignored since baseline done during TF
 PM.ClustOI              = 'all';
+% PM.ClustOI              = 'frontal';
 % See Clust list below. Can be 'all' and should be left 'all' since
 % channels of interest can be redefined later in other scripts
 PM.Spindleband          = 'fast';
@@ -55,9 +56,9 @@ PM.cfg_Bas.baseline      = PM.cfg_seldat.latency;
 % effects.
 PM.cfg_Bas.baselinetype  = 'zscore';
 %       - File paths
-filepath = ['D:\germanStudyData\datasetsSETS\Ori_PlaceboNight\', ...
+filepath = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
            'preProcessing\EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-           '06-Mar-2021_Placebo\SO_timeSeries\'];
+           '12-Jun-2021_Cue\SO_timeSeries_Upstate_15s\'];
 % filepath = ['/mnt/disk1/sleep/Datasets/CueD_SO_TimeSeires/'];
 savepath = strcat(filepath, 'TF_matrices');
 peakpath = ['D:\Gits\SO_Spindle_Detection_Coupling\', ...
@@ -68,6 +69,11 @@ peakpath = ['D:\Gits\SO_Spindle_Detection_Coupling\', ...
 %       - paths to toolboxes
 fieldtrippath       = 'D:\MATLAB\fieldtrip-20200831';
 % fieldtrippath       = '/home/sleep/Documents/MATLAB/fieldtrip-20200831';
+%       - path to f_chan_clusters function: All this function does is
+%         create cell arrays of electrode labels belonging to a group. The
+%         repository containing the function can be found at
+%         https://github.com/davidmarcelbaum/EEG_channels
+chanclusterpath     = 'D:\Gits\EEG_channels';
 
 
 
@@ -101,42 +107,8 @@ end
 
 % Clusters of interest
 % --------------------
-PM.Clust.left_frontal = {...
-    'E15', 'E16', 'E11', 'E18', 'E19', 'E22', 'E23', 'E24', 'E26', ...
-    'E27', 'E33', 'E38'};
-PM.Clust.right_frontal = {...
-    'E15', 'E16', 'E11', 'E10', 'E4', 'E9', 'E3', 'E124', 'E2', ...
-    'E123', 'E122', 'E121'};
-PM.Clust.frontal = {...
-    'E3', 'E4', 'E9', 'E10', 'E11', 'E15', 'E16', 'E18', 'E19', ...
-    'E22', 'E23', 'E24', 'E124'};
-PM.Clust.left_central = {...
-    'E6', 'E7', 'E13', 'E30', 'E31', 'E37', 'E54', 'E55'};
-PM.Clust.right_central = {...
-    'E6', 'E55', 'E112', 'E106', 'E105', 'E80', 'E87', 'E79'};
-PM.Clust.central = {...
-    'E6', 'E7', 'E13', 'E30', 'E31', 'E37', 'E54', 'E55', 'E79', ...
-    'E80', 'E87', 'E105', 'E106', 'E112'};
-PM.Clust.left_temporal = {...
-    'E46', 'E51', 'E45', 'E50', 'E58', 'E56', 'E63'};
-PM.Clust.right_temporal = {...
-    'E108', 'E102', 'E101', 'E97', 'E96', 'E99', 'E107'};
-PM.Clust.left_parietal = {...
-    'E53', 'E61', 'E62', 'E72', 'E67', 'E52', 'E60', 'E59', 'E66', ...
-    'E65', 'E64', 'E68'};
-PM.Clust.right_parietal = {...
-    'E62', 'E72', 'E78', 'E77', 'E86', 'E85', 'E84', 'E92', 'E91', ...
-    'E90', 'E95', 'E94'};
-PM.Clust.parietal = {...
-    'E52', 'E61', 'E62', 'E59', 'E60', 'E67', 'E66', 'E72', 'E78', ...
-    'E77', 'E86', 'E85', 'E84', 'E92', 'E91', 'E53'};
-PM.Clust.left_occipital = {...
-    'E71', 'E70', 'E75', 'E74', 'E69', 'E73'};
-PM.Clust.right_occipital = {...
-    'E75', 'E76', 'E82', 'E83', 'E88', 'E89'};
-PM.Clust.occipital = {...
-    'E71', 'E70', 'E74', 'E69', 'E73', 'E75', 'E76', 'E83', 'E82', ...
-    'E89', 'E88'};
+addpath(chanclusterpath)
+PM.Clust = f_chan_clusters;
 
 if ~strcmp(PM.ClustOI, 'all')
     Cluster = PM.Clust.(PM.ClustOI);
@@ -204,7 +176,7 @@ for i_subj = 1:numel(files)
         TF_condition_restr  = struct();
         
         % Used for determining the size of power spectrum matrix when
-        % ctenating TF matrices
+        % catenating TF matrices
         numTrials           = NaN(1, numel(Cluster));
         
         
@@ -249,10 +221,15 @@ for i_subj = 1:numel(files)
             
             
             % Store results in channel structure
+            % -------------------------------------------------------------
+            % You have the option to command the line out in order to
+            % preserve TF matrices of all trials.
             % Without meaning, script gave OOM errors after some time since
             % TF_condition will be around 14GB! We have no choice but to 
             % mean the events' TF matrices at this stage already.
-            data_TF_norm.powspctrm  = mean(data_TF_norm.powspctrm, 1);
+%             data_TF_norm.powspctrm  = mean(data_TF_norm.powspctrm, 1);
+            % -------------------------------------------------------------
+            
             TF_condition.(channel)  = data_TF_norm;
             
             

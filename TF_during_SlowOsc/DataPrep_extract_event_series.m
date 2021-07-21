@@ -30,9 +30,9 @@ filePath_TRIALS     = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
                         'preProcessing\TRIALS'];
 eventfilePath       = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
                         'preProcessing\EEGLABFilt_Mastoids_Off_On_', ...
-                        '200Hz_Oct_NEW\05-Mar-2021_Cue\'];
-eventFile           = '05-Mar-2021_22-23-41_AllData.mat';
-% eventFile           = '06-Mar-2021_18-08-41_AllData.mat';
+                        '200Hz_Oct_NEW\12-Jun-2021_Cue\'];
+eventFile           = '12-Jun-2021_17-08-46_AllData.mat';
+% eventFile           = '13-Jun-2021_15-33-48_AllData.mat';
 %    - Channels to include
 chanOfInterest      = 'all';
 %    - Conditions to include
@@ -44,7 +44,8 @@ PM.SOlocations      = [2, 4];
 %    - Time stamp to center time window around: Can be based on angles from
 %      hilbert transform or time stamps of the delta band time series
 %      ({'timeseries', 3} or {'angles', -90} for example)
-PM.SOcenter      = {'angles', 0}; % (0 is pos. peak, -90 = inflection)
+% PM.SOcenter        = {'angles', 0}; % (0 is pos. peak, -90 = inflection)
+PM.SOcenter        = {'timeseries', 7};
 % 1) = To which time bin corresponds that particular event
 % 2) = startTime
 % 3) = midTime (SO: down-up zero crossing)
@@ -60,6 +61,8 @@ PM.SOcenter      = {'angles', 0}; % (0 is pos. peak, -90 = inflection)
 % 13)= Frequency
 %    - Time stamp of spindle to couple to SO
 PM.SSCoupling       = 6;
+%    - Allowed range during odor stimulation (seconds)
+PM.allowed_range    = 7.5;
 %    - Various parameters
 fileNames           = {...
     'RC_051_sleep','RC_091_sleep','RC_121_sleep','RC_131_sleep',...
@@ -77,7 +80,8 @@ fileNames           = {...
 %     'RC_391_sleep','RC_411_sleep','RC_441_sleep','RC_451_sleep',...
 %     'RC_461_sleep','RC_471_sleep','RC_481_sleep','RC_491_sleep',...
 %     'RC_511_sleep'};
-saveFolder            = [eventfilePath, 'SO_timeSeries', filesep];
+% saveFolder            = [eventfilePath, 'SO_timeSeries', filesep];
+saveFolder            = [eventfilePath, 'SO_timeSeries_MinTime_7.5s', filesep];
 PM.stimulation_seq    = 'OFF_ON';
 
 % -------------------------------------------------------------------------
@@ -166,7 +170,7 @@ for i_subj = 1:numel(fileNames)
         dataType    = '.set';
         [EEGTrialCue] = f_load_data(...
             strcat(char(fileNames_TRIALS(i_subj)), ...
-            '_', PM.stimulation_seq, '_Odor',...
+            '_', PM.stimulation_seq, '_Odor', ...
             dataType), filePath_TRIALS, dataType);
         
         dataType    = '.set';
@@ -194,7 +198,7 @@ for i_subj = 1:numel(fileNames)
             find(~strcmp({EEGTrialCue.chanlocs.labels}, channel));
         idx_chan2rejVehicle = ...
             find(~strcmp({EEGTrialVehicle.chanlocs.labels}, channel));
-
+        
         
         if any(~ismember(idx_chan2rejWhole, idx_chan2rejCue)) || ...
                 any(~ismember(idx_chan2rejWhole, idx_chan2rejVehicle))
@@ -202,7 +206,7 @@ for i_subj = 1:numel(fileNames)
             error('Incompatible datasets')
         end
         
-        [EEGWholeIN]        = ...
+        [EEGWholeNative]    = ...
             pop_select( EEGWhole, 'nochannel', idx_chan2rejWhole);
         [EEGTrialCueIN]     = ...
             pop_select( EEGTrialCue, 'nochannel', idx_chan2rejCue);
@@ -220,19 +224,19 @@ for i_subj = 1:numel(fileNames)
         % Triggers will be trial midpoints Off [-15s 0s] and On [0s 15s]
         [~, ~, Trig_OI_Cue]     = intersect(...
             {EEGTrialCueIN.event.mffkey_gidx}, ...
-            {EEGWholeIN.event.mffkey_gidx});
+            {EEGWholeNative.event.mffkey_gidx});
         
         [~, ~, Trig_OI_Vehicle] = intersect(...
             {EEGTrialVehicleIN.event.mffkey_gidx}, ...
-            {EEGWholeIN.event.mffkey_gidx});
+            {EEGWholeNative.event.mffkey_gidx});
         
         Trig_OI_Cue     = sort(Trig_OI_Cue);
         Trig_OI_Vehicle = sort(Trig_OI_Vehicle);
         
         
         % Find latency of period onsets in the original file (samples)
-        Latencies.OdorOn   = [EEGWholeIN.event(Trig_OI_Cue).latency];
-        Latencies.ShamOn   = [EEGWholeIN.event(Trig_OI_Vehicle).latency];
+        Latencies.OdorOn   = [EEGWholeNative.event(Trig_OI_Cue).latency];
+        Latencies.ShamOn   = [EEGWholeNative.event(Trig_OI_Vehicle).latency];
         
         Latencies.OdorOff  = Latencies.OdorOn - ...
             Info.TrialParameters.s_TimeBeforeZero * ...
@@ -263,6 +267,15 @@ for i_subj = 1:numel(fileNames)
                         
             SO_events = OverallSlowOsc.(...
                 channel).(char(condition))(:, i_subj);
+%             SO_events = OverallSpindles.(...
+%                 channel).(char(condition))(:, i_subj);
+            
+            % Important to reset here! Otherwise, by working directly with
+            % EEGWholeNATIVE, leftover time stamps from previous condition 
+            % loops will be taken into account as well, thus epoching the 
+            % EEG set into epochs belonging to current condition but also 
+            % to previous ones.
+            EEGWholeIN = EEGWholeNative; 
             
             
             % We will also extract relative latencies of spindles according
@@ -300,6 +313,16 @@ for i_subj = 1:numel(fileNames)
                     % Time of SO occurence in the trial (in samples)
                     startTime = SO_events{trial}(SO, PM.SOlocations(1));
                     endTime   = SO_events{trial}(SO, PM.SOlocations(2));
+                    
+                    
+                    % Just to filter out trial chunks
+                    % -------------------------------
+                    accepted_range = PM.allowed_range;
+                    
+                    if endTime > accepted_range * Info.TrialParameters.s_fs
+                        continue
+                    end
+                    
                     
                     if strcmp(PM.SOcenter(1), 'timeseries')
                         
@@ -486,21 +509,31 @@ for i_subj = 1:numel(fileNames)
             %  ------------------------------------------------------------
         
             clearvars EEGWholeOUT outFT
-            % Epoch the data around center point of slow osc.
-            EEGWholeOUT = pop_epoch(EEGWholeIN, {'SO_Cent'}, ...
-                [-PM.s_timeWindow/2 PM.s_timeWindow/2]);
             
-            % Reject huge trailing data that will not be used
-            EEGWholeOUT = rmfield(EEGWholeOUT, 'rejecteddata');
-            EEGWholeOUT = rmfield(EEGWholeOUT, 'rejectedchanlocs');
-            
-            
-            
-            %% Transform EEG structure to Fieldtrip
-            %  ------------------------------------------------------------
-            
-            outFT = eeglab2fieldtrip(EEGWholeOUT, 'raw');
-            SO_timeSeries.(channel).(char(condition)) = outFT;
+            if ~isempty(OriginalCentTime)
+                % Epoch the data around center point of slow osc.
+                EEGWholeOUT = pop_epoch(EEGWholeIN, {'SO_Cent'}, ...
+                    [-PM.s_timeWindow/2 PM.s_timeWindow/2]);
+                
+                % Reject huge trailing data that will not be used
+                if isfield(EEGWholeOUT, 'rejecteddata')
+                    EEGWholeOUT = rmfield(EEGWholeOUT, 'rejecteddata');
+                end
+                if isfield(EEGWholeOUT, 'rejectedchanlocs')
+                    EEGWholeOUT = rmfield(EEGWholeOUT, 'rejectedchanlocs');
+                end
+                
+                
+                
+                %% Transform EEG structure to Fieldtrip
+                %  ------------------------------------------------------------
+                
+                outFT = eeglab2fieldtrip(EEGWholeOUT, 'raw');
+                SO_timeSeries.(channel).(char(condition)) = outFT;
+            else
+                SO_timeSeries.(channel).(char(condition)) = struct();
+                EEGWholeOUT.lst_changes = [];
+            end
             
             
             
