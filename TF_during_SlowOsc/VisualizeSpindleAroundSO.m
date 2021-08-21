@@ -8,15 +8,19 @@
 SOseriespath            = ['D:\germanStudyData\datasetsSETS\', ...
                             'Ori_CueNight\preProcessing\', ...
                             'EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-                            '05-Mar-2021_Cue\SO_timeSeries\'];
-TFseriespath            = ['D:\germanStudyData\datasetsSETS\', ...
-                            'Ori_CueNight\preProcessing\', ...
-                            'EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-                            '05-Mar-2021_Cue\SO_timeSeries\TF_matrices\'];
+                            '12-Jun-2021_Cue\SO_timeSeries_Upstate_15s\'];
+% SOseriespath            = ['D:\germanStudyData\datasetsSETS\', ...
+%                             'Ori_PlaceboNight\preProcessing\', ...
+%                             'EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
+%                             '13-Jun-2021_Placebo\SO_timeSeries_Upstate_15s\'];
+TFseriespath            = [SOseriespath, '\TF_matrices\'];
+Channelpath             = 'D:\Gits\EEG_channels';
 %       - General
 PM.Conditions           = {'ShamOn', 'OdorOn'};
 % Off periods ignored since baseline done during TF
 PM.ClustOI              = 'central';
+%       - Center frequency to filter spindle band
+centerFr                = 13.7947; % Avg of all subjets
 %       - Data window selection
 PM.cfg_seldat.latency   = [-2 2];
 
@@ -44,46 +48,11 @@ PM.cfg_seldat.latency   = [-2 2];
 
 filesSOseries = dir(strcat(SOseriespath,'*.mat'));
 filesTFseries = dir(strcat(TFseriespath,'*.mat'));
+addpath(Channelpath)
 
 % Clusters of interest
 % --------------------
-PM.Clust.left_frontal = {...
-    'E15', 'E16', 'E11', 'E18', 'E19', 'E22', 'E23', 'E24', 'E26', ...
-    'E27', 'E33', 'E38'};
-PM.Clust.right_frontal = {...
-    'E15', 'E16', 'E11', 'E10', 'E4', 'E9', 'E3', 'E124', 'E2', ...
-    'E123', 'E122', 'E121'};
-PM.Clust.frontal = {...
-    'E3', 'E4', 'E9', 'E10', 'E11', 'E15', 'E16', 'E18', 'E19', ...
-    'E22', 'E23', 'E24', 'E124'};
-PM.Clust.left_central = {...
-    'E6', 'E7', 'E13', 'E30', 'E31', 'E37', 'E54', 'E55'};
-PM.Clust.right_central = {...
-    'E6', 'E55', 'E112', 'E106', 'E105', 'E80', 'E87', 'E79'};
-PM.Clust.central = {...
-    'E6', 'E7', 'E13', 'E30', 'E31', 'E37', 'E54', 'E55', 'E79', ...
-    'E80', 'E87', 'E105', 'E106', 'E112'};
-PM.Clust.left_temporal = {...
-    'E46', 'E51', 'E45', 'E50', 'E58', 'E56', 'E63'};
-PM.Clust.right_temporal = {...
-    'E108', 'E102', 'E101', 'E97', 'E96', 'E99', 'E107'};
-PM.Clust.left_parietal = {...
-    'E53', 'E61', 'E62', 'E72', 'E67', 'E52', 'E60', 'E59', 'E66', ...
-    'E65', 'E64', 'E68'};
-PM.Clust.right_parietal = {...
-    'E62', 'E72', 'E78', 'E77', 'E86', 'E85', 'E84', 'E92', 'E91', ...
-    'E90', 'E95', 'E94'};
-PM.Clust.parietal = {...
-    'E52', 'E61', 'E62', 'E59', 'E60', 'E67', 'E66', 'E72', 'E78', ...
-    'E77', 'E86', 'E85', 'E84', 'E92', 'E91', 'E53'};
-PM.Clust.left_occipital = {...
-    'E71', 'E70', 'E75', 'E74', 'E69', 'E73'};
-PM.Clust.right_occipital = {...
-    'E75', 'E76', 'E82', 'E83', 'E88', 'E89'};
-PM.Clust.occipital = {...
-    'E71', 'E70', 'E74', 'E69', 'E73', 'E75', 'E76', 'E83', 'E82', ...
-    'E89', 'E88'};
-
+PM.Clust = f_chan_clusters;
 
 
 %% Fruitloops
@@ -177,7 +146,26 @@ for i_subj = 1:numel(filesSOseries)
                 SOseries.PM.Info.TrialParameters.s_fs);
             
             for i_trl = 1:numel(data_raw.trial)
-                SO_wave_trl(i_trl, :) = data_raw.trial{i_trl};
+                
+%                 signal      = data_raw.trial{i_trl};
+%                 min_freq    = centerFr - 1.5;
+%                 max_freq    = centerFr + 1.5;
+%                 srate       = SOseries.PM.Info.TrialParameters.s_fs;
+%                 
+%                 [FilteredEEGEnvelope, FilteredEEG, ~] = ...
+%                     f_fir2(signal, srate, min_freq, max_freq);
+%                 SO_wave_trl(i_trl, :) = [FilteredEEG', NaN];
+                
+
+                signal      = double(data_raw.trial{i_trl});
+                filt_order  = SOseries.PM.Info.SOparameters.butter_order;
+                min_freq    = SOseries.PM.Info.SOparameters.HighPassFr;
+                max_freq    = SOseries.PM.Info.SOparameters.LowPassFr;
+                srate       = SOseries.PM.Info.TrialParameters.s_fs;
+                
+                FilteredEEG = f_filter_deltaband(signal, filt_order, ...
+                    srate, max_freq, min_freq);
+                SO_wave_trl(i_trl, :) = FilteredEEG;
             end
             
             % -------------------------------------------------------------
@@ -185,7 +173,7 @@ for i_subj = 1:numel(filesSOseries)
             % which had extended times at both orders in order to
             % circumvent TF border effects. We need to strip these borders
             % from the wave form time series here.
-            SO_wave_wholeWindow = mean(SO_wave_trl, 1);
+            SO_wave_wholeWindow = nanmean(SO_wave_trl, 1);
             
             v_wave_times_whole = ...
                 - length(SO_wave_wholeWindow) / 2 + 1 : 1 : ...
@@ -279,6 +267,19 @@ all_Lats.Supersubject.Sham = all_Lats.Sham(:);
 all_Lats.Supersubject.Odor = all_Lats.Odor(:);
 
 
+% Combine conditions
+% ------------------
+conditions_TF(:, :, 1) = average_TF.Sham;
+conditions_TF(:, :, 2) = average_TF.Odor;
+
+all_Lats.Condition     = [all_Lats.Sham; all_Lats.Odor];
+
+all_Lats.Supersubject.Cond = [all_Lats.Sham(:); all_Lats.Odor(:)];
+average_TF.Cond            = mean(conditions_TF, 3);
+
+average_WF.Cond        = mean([average_WF.Sham; average_WF.Odor], 1);
+
+
 % Prepare plot parameters
 % -----------------------
 num_freqs     = size(average_TF.Sham, 1);
@@ -294,111 +295,116 @@ v_frequencies = flip(v_frequencies);
 v_times_TF    = 1:num_times;
 v_times_TF    = v_times_TF - (num_times / 2);
 
-v_times_WF    = TFseries.PM.cfg_seldat.latency(1) * ...
-                  TFseries.PM.Info.TrialParameters.s_fs  + 1 : 1 : ...
-                  TFseries.PM.cfg_seldat.latency(2) * ...
-                  TFseries.PM.Info.TrialParameters.s_fs;
+v_times_WF    = -2 * TFseries.PM.Info.TrialParameters.s_fs  + 1 : 1 : ...
+                  2 * TFseries.PM.Info.TrialParameters.s_fs;
+              
+upscale_times = numel(v_times_WF) / num_times;
+
+v_times_TF    = v_times_TF * upscale_times;
 
 minTF         = min([average_TF.Sham(:); average_TF.Odor(:)]);
 maxTF         = max([average_TF.Sham(:); average_TF.Odor(:)]);
 limitsTF      = [-max([abs(minTF), abs(maxTF)]), ...
                     max([abs(minTF), abs(maxTF)])];
 
-minWF         = min([average_WF.Sham(:); average_WF.Odor(:)]);
-maxWF         = max([average_WF.Sham(:); average_WF.Odor(:)]);
-limitsWF      = [-max([abs(minWF), abs(maxWF)]), ...
-                    max([abs(minWF), abs(maxWF)])];
+% minWF         = min([average_WF.Sham(:); average_WF.Odor(:)]);
+% maxWF         = max([average_WF.Sham(:); average_WF.Odor(:)]);
+minWF         = min(average_WF.Cond(:));
+maxWF         = max(average_WF.Cond(:));
+limitsWF      = [-max([abs(minWF), abs(maxWF)])-5, ...
+                    max([abs(minWF), abs(maxWF)])+5];
+limitsFR      = [min(v_frequencies), max(v_frequencies)];
                 
 % Scatter plot: x are latencies, y are "jittered" values around 0
-Yodor = rand(numel(all_Lats.Supersubject.Odor), 1) * ...
-    2*limitsWF(2) - limitsWF(2);
-Ysham = rand(numel(all_Lats.Supersubject.Sham), 1) * ...
-    2*limitsWF(2) - limitsWF(2);
+% Yodor = rand(numel(all_Lats.Supersubject.Odor), 1) * ...
+%     2*limitsWF(2) - limitsWF(2);
+% Ysham = rand(numel(all_Lats.Supersubject.Sham), 1) * ...
+%     2*limitsWF(2) - limitsWF(2);
+% Ycond = rand(numel(all_Lats.Supersubject.Cond), 1) * ...
+%     2*limitsWF(2) - limitsWF(2);
+Ycond = rand(numel(all_Lats.Supersubject.Cond), 1) * ...
+    2*limitsFR(2) - limitsFR(2);
 
-figure
 
 
-% Time-frequency Sham
-% -------------------
-subplot(2, 2, 1)
+figure('Units', 'Normalized', 'Position', [0 0 0.5 0.5])
+
+
+% Time-frequency Conditions
+% -------------------------
+subplot(2, 1, 1)
 
 yyaxis left
-pcolor(v_times_TF, v_frequencies, average_TF.Sham);
+pcolor(v_times_TF-50, v_frequencies, average_TF.Cond);
 shading interp
-colorbar;
+colorbar('Location', 'WestOutside')
 set(gca, 'clim', limitsTF)
 ylabel('Distance from spindle peak (Hz)')
 xlabel('Time (samples)')
+xlim([-350, 250])
 
 hold on
 
-% Wave form Sham
-% --------------
 yyaxis right
-plot(v_times_WF, average_WF.Sham, ...
+plot(v_times_WF, average_WF.Cond, ...
     'Color',        [1, 0, 0], ...
     'LineWidth',    2)
 ylim(limitsWF)
 
+xlim([-350, 250])
+xticks([])
+ylabel('Amplitude (uv)')
+
+
 % Overlay spindle latencies from supersubject
 % -------------------------------------------
-scatter(all_Lats.Supersubject.Sham, Ysham, 0.5, '.', 'k')
+% scatter(all_Lats.Supersubject.Cond, Ycond, 0.5, '.', 'k')
 
-title('Vehicle')
 
 % Spindle latencies Sham
 % ----------------------
-subplot(2, 2, 3)
+subplot(2, 1, 2)
 
-yyaxis left
-yticks([])
-yyaxis right
-boxplot(all_Lats.Sham, 'Orientation', 'horizontal', ...
-    'OutlierSize', 2, 'Symbol', '.')
-xlim([-400, 400])
-xlabel('Spindle latencies (samples)')
-yticklabels({filesSOseries.name})
-
-
-% Time-frequency Odor
-% -------------------
-subplot(2, 2, 2)
-
-yyaxis left
-pcolor(v_times_TF, v_frequencies, average_TF.Odor);
-shading interp
-colorbar;
-set(gca, 'clim', limitsTF)
-ylabel('Distance from spindle peak (Hz)')
-xlabel('Time (samples)')
+y_subjects = -11.5:1:11.5;
+y_subjects = y_subjects * 3 + 12;
 
 hold on
+for i_subj = 1:size(all_Lats.Condition, 2)
+    
+    spindle_num = numel(all_Lats.Condition(:, i_subj));
+    
+    jitterSpan = 25;
+    jitterVals = randi([-jitterSpan, jitterSpan], ...
+        1, spindle_num);
+    jitterVals = jitterVals ./ 200;
+    
+    y_sub = y_subjects(i_subj);
+    
+%     scatter(all_Lats.Condition(:, i_subj), ...
+%         repmat(i_subj, 1, spindle_num)+jitterVals, 0.5, '.', 'k')
+    scatter(all_Lats.Condition(:, i_subj), ...
+        repmat(y_sub, 1, spindle_num)+jitterVals, 0.5, '.', 'k')
+    
+end
+% boxplot(all_Lats.Condition, 'Orientation', 'horizontal', ...
+%     'OutlierSize', 2, 'Symbol', '.', 'PlotStyle', 'compact', ...
+%     'BoxStyle', 'outline', 'Colors', [0, 0, 1], 'MedianStyle', 'line', ...
+%     'Jitter', 0)
+ylim([0, size(all_Lats.Condition, 2)+1])
+% yticklabels({filesSOseries.name})
+% hold on
 
-% Wave form Odor
-% --------------
-yyaxis right
-plot(v_times_WF, average_WF.Odor, ...
-    'Color',        [1, 0, 0], ...
-    'LineWidth',    2)
-ylim(limitsWF)
+% % Wave form Conditions
+% % --------------------
+% yyaxis right
+% ylabel('Amplitude (uv)')
+% plot(v_times_WF, average_WF.Cond, ...
+%     'Color',        [0, 0, 0], ...
+%     'LineWidth',    2)
+% ylim(limitsWF)
 
-% Overlay spindle latencies from supersubject
-% -------------------------------------------
-scatter(all_Lats.Supersubject.Odor, Yodor, 0.5, '.', 'k')
-
-title('Cue')
-
-
-% Spindle latencies Odor
-% ----------------------
-subplot(2, 2, 4)
-
-yyaxis left
-yticks([])
-yyaxis right
-boxplot(all_Lats.Odor, 'Orientation', 'horizontal', ...
-    'OutlierSize', 2, 'Symbol', '.')
-xlim([-400, 400])
-xlabel('Spindle latencies (samples)')
-yticklabels({filesSOseries.name})
+xlim([-350, 250])
+% xticks([])
+ylabel('Subjects')
+% xlabel('Spindle latencies (samples)')
 

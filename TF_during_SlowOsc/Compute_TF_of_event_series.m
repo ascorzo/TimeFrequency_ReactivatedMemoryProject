@@ -37,17 +37,17 @@ PM.FrCenter             = 'mean'; % Whether to center around
                                             % subject's "individual" or 
                                             % "mean" peak of all subjects
 %       - Time frequency parameters
-PM.s_tstep              = 0.05; % FASTER!
+PM.s_tstep              = 0.05; % 0.05
 % Probably a good idea to have highest time resolution possible since the
 % shift in prefered angles of spindles during SO is rather small.
-PM.s_fstep              = 0.05; % 0.005
+PM.s_fstep              = 0.05; % 0.05
 PM.cycles               = 12;
 PM.cfg_Tf.method        = 'wavelet';
 PM.cfg_Tf.output        = 'pow';
 PM.cfg_Tf.width         = PM.cycles;
 PM.cfg_Tf.keeptrials    = 'yes';
 %       - Data window selection
-PM.cfg_seldat.latency   = [-2.25 1.75]; % [-2 2], [-2.25 1.75]
+PM.cfg_seldat.latency   = [-2 2]; % [-2 2], [-2.25 1.75]
 %       - Baseline parameters
 PM.cfg_Bas.baseline      = PM.cfg_seldat.latency;
 % Purposely choosing the whole window as baseline as we must assume that
@@ -58,7 +58,7 @@ PM.cfg_Bas.baselinetype  = 'zscore';
 %       - File paths
 filepath = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
            'preProcessing\EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-           '12-Jun-2021_Cue\SO_timeSeries_Upstate_15s\'];
+           '12-Jun-2021_Cue\SO_timeSeries\'];
 % filepath = ['/mnt/disk1/sleep/Datasets/CueD_SO_TimeSeires/'];
 savepath = strcat(filepath, 'TF_matrices');
 peakpath = ['D:\Gits\SO_Spindle_Detection_Coupling\', ...

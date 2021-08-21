@@ -45,7 +45,7 @@ PM.SOlocations      = [2, 4];
 %      hilbert transform or time stamps of the delta band time series
 %      ({'timeseries', 3} or {'angles', -90} for example)
 % PM.SOcenter        = {'angles', 0}; % (0 is pos. peak, -90 = inflection)
-PM.SOcenter        = {'timeseries', 7};
+PM.SOcenter        = {'timeseries', 3};
 % 1) = To which time bin corresponds that particular event
 % 2) = startTime
 % 3) = midTime (SO: down-up zero crossing)
@@ -62,7 +62,7 @@ PM.SOcenter        = {'timeseries', 7};
 %    - Time stamp of spindle to couple to SO
 PM.SSCoupling       = 6;
 %    - Allowed range during odor stimulation (seconds)
-PM.allowed_range    = 7.5;
+PM.allowed_range    = 15;
 %    - Various parameters
 fileNames           = {...
     'RC_051_sleep','RC_091_sleep','RC_121_sleep','RC_131_sleep',...
@@ -80,8 +80,7 @@ fileNames           = {...
 %     'RC_391_sleep','RC_411_sleep','RC_441_sleep','RC_451_sleep',...
 %     'RC_461_sleep','RC_471_sleep','RC_481_sleep','RC_491_sleep',...
 %     'RC_511_sleep'};
-% saveFolder            = [eventfilePath, 'SO_timeSeries', filesep];
-saveFolder            = [eventfilePath, 'SO_timeSeries_MinTime_7.5s', filesep];
+saveFolder            = [eventfilePath, 'SO_timeSeries', filesep];
 PM.stimulation_seq    = 'OFF_ON';
 
 % -------------------------------------------------------------------------
