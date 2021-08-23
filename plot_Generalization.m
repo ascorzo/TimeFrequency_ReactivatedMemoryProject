@@ -1,6 +1,8 @@
 addpath('C:\Users\lanan\Documents\MATLAB\MVPA-Light\startup\')
 startup_MVPA_Light
 
+F = Time_Freq_Odor.freq;
+
 for subj = 1:numel(cf_Generalization)
     
     figure
@@ -14,7 +16,7 @@ for subj = 1:numel(cf_Generalization)
         max(cf_Generalization{subj}(:))])
     
     saveas(gcf,strcat(...
-        'C:\Users\lanan\Desktop\Temp\Figures\OdorDvsVehicleGeneralization\',...
+        'G:\Mi unidad\2021\AnalysisTemp\Figures\Odor_DvsM_Generalization\AroundCero\',...
         'Subj',num2str(subj),'.png'))
     
     close all
@@ -25,7 +27,7 @@ result_average_Generalization = mv_combine_results(resultGeneralization, 'averag
 figure
 %F = Time_Freq_Odor.freq;
 mv_plot_2D(result_average_Generalization.perf{1}, 'x', F, 'y', F)
-xlabel('Test Frequency'), ylabel('Train Frequency')
+xlabel('Test Frequency (Hz)'), ylabel('Train Frequency (Hz)')
 title('Frequency generalization using channels x time as features')
 colorbar('off')
 colorbar
@@ -33,89 +35,193 @@ caxis([min(result_average_Generalization.perf{1}(:)),...
         max(result_average_Generalization.perf{1}(:))])
 
 saveas(gcf,strcat(...
-        'C:\Users\lanan\Desktop\Temp\Figures\OdorDvsVehicleGeneralization\',...
-        'Avegare.png'))
-close all
-
-
-%% Plot Above threshold
-
-s_threshold = 0.6;
-clim = [0 1];
-
-for subj = 1:numel(cf_Generalization)   
-    cf_Generalization_threshold{subj}=...
-        (cf_Generalization{subj}>=s_threshold).*cf_Generalization{subj};
-     
-end
-
-for subj = 1:numel(cf_Generalization_threshold)
-    figure
-%    F = Time_Freq_Odor.freq;
-    mv_plot_2D(cf_Generalization_threshold{subj}, 'x', F, 'y', F)
-    xlabel('Test Frequency [Hz]'), ylabel('Train Frequency [Hz]')
-    title('Frequency generalization using channels-x-times as features')
-    colorbar('off')
-    colorbar
-    caxis([min(cf_Generalization_threshold{subj}(:)),...
-        max(cf_Generalization_threshold{subj}(:))])
-    
-    saveas(gcf,strcat(...
-        'C:\Users\lanan\Desktop\Temp\Figures\OdorDvsVehicleGeneralization\AboveThreshold\',...
-        'Subj',num2str(subj),'.png'))
-    
-    close all
-end
-
-result_average_Generalization = mv_combine_results(resultGeneralization, 'average');
-
-
-averageThreshold = result_average_Generalization.perf{1}.*...
-    (result_average_Generalization.perf{1}>=0.55);
-
-figure
-% F = Time_Freq_Odor.freq;
-mv_plot_2D(averageThreshold, 'x', F, 'y', F)
-xlabel('Test Frequency'), ylabel('Train Frequency')
-title('Frequency generalization using channels x time as features')
-colorbar('off')
-colorbar
-caxis([0 0.55])
-
-saveas(gcf,strcat(...
-        'C:\Users\lanan\Desktop\Temp\Figures\OdorDvsVehicleGeneralization\AboveThreshold\',...
+        'G:\Mi unidad\2021\AnalysisTemp\Figures\Odor_DvsM_Generalization\AroundCero\',...
         'Avegare.png'))
 close all
 
 
 %% statistics
 
-cfg_stat = [];
-cfg_stat.metric          = 'auc';
-cfg_stat.test            = 'permutation';
-cfg_stat.correctm        = 'cluster';  % correction method is cluster
-cfg_stat.n_permutations  = 100;
+defaultSubj = load('G:\Mi unidad\2021\AnalysisTemp\RC_512_sleepTF_DN_Odor.mat');
 
-cfg_stat.clusterstatistic = 'maxsum';
-cfg_stat.alpha           = 0.05; % use standard significance threshold of 5%
+cfg             = [];
+cfg.trials      = 1;
+cfg.channel     = 'all';
+cfg.avgoverchan = 'yes';
+defaultSubj     = ft_selectdata(cfg, defaultSubj.Time_Freq_Odor);
 
-cfg_stat.design          = 'within';
+filename     = 'G:\Mi unidad\2021\AnalysisTemp\dummyfile.set';
+sensors      = ft_read_sens(filename);
 
-cfg_stat.statistic       = 'wilcoxon';
-cfg_stat.null            = 0.5;
+sensors.chanpos = sensors.chanpos(1,:);
+sensors.chantype = sensors.chantype(1,:);
+sensors.chanunit = sensors.chanunit(1,:);
+sensors.elecpos = sensors.elecpos(1,:);
+sensors.label = sensors.label(1,:);
 
 
-cfg_stat.clustercritval  = 1.65;
-% z-val = 1.65 corresponds to uncorrected p-value = 0.1
-% z-val = 1.96 corresponds to uncorrected p-value = 0.05
-% z-val = 2.58 corresponds to uncorrected p-value = 0.01
+%%
 
-stat_level2 = mv_statistics(cfg_stat, resultGeneralization);
+Generalization_DNight = load('G:\Mi unidad\2021\AnalysisTemp\OdorDvsVehicle_FreqGeneralization_[-1,5].mat');
+Generalization_MNight = load('G:\Mi unidad\2021\AnalysisTemp\OdorMvsVehicle_FreqGeneralization_[-1,5].mat');
+
+F = TF_D_Generalization{1}.freq;
+% completar para D Night
+for subj = 1:numel(Generalization_DNight.cf_Generalization)
+    TF_D_Generalization{subj}             = defaultSubj;
+    TF_D_Generalization{subj}.time        = TF_D_Generalization{subj}.freq;
+    TF_D_Generalization{subj}.powspctrm   = TF_D_Generalization{subj}.powspctrm(:,:,:,1:numel(F));
+    TF_D_Generalization{subj}.powspctrm(1,1,:,:)   = Generalization_DNight.cf_Generalization{subj}; 
+end
+
+% completar para M Night
+for subj = 1:numel(Generalization_MNight.cf_Generalization)
+    TF_M_Generalization{subj}             = defaultSubj;
+    TF_M_Generalization{subj}.time        = TF_M_Generalization{subj}.freq;
+    TF_M_Generalization{subj}.powspctrm   = TF_M_Generalization{subj}.powspctrm(:,:,:,1:numel(F));
+    TF_M_Generalization{subj}.powspctrm(1,1,:,:)   = Generalization_MNight.cf_Generalization{subj}; 
+end
+
+cfg                     = [];
+cfg.latency             = 'all';
+cfg.frequency           = 'all';
+cfg.channel             = 'all';
+cfg.correctm            = 'cluster';
+cfg.method              = 'montecarlo';
+cfg.statistic           = 'depsamplesT';     % use actvsblT for activation against baseline
+cfg.clusterstatistic    = 'maxsum';            % statistic used to decide cluster significance (sum of t-values within a cluster)
+
+cfg.tail                = 0;
+cfg.clustertail         = cfg.tail;
+cfg.alpha               = 0.025;
+cfg.numrandomization    = 1000;             
+cfg.clusteralpha        = 0.05;              % threshold over which a triplet is chosen, e.g. .01 / .02 / .05
+cfg.uvar                = 1;                 % condition (uvar would be the subjects)
+cfg.ivar                = 2;
+
+cfg_neighb.method       = 'distance';
+cfg_neighb.channel      = 'all';
+cfg_neighb.elec         = sensors; 
+cfg.neighbours          = ft_prepare_neighbours(cfg_neighb);
+
+% Design the statistical contrast
+design                  = [];
+design(1,:)             = [1:length(TF_D_Generalization) 1:length(TF_M_Generalization)];        % conditions, eg:   1 1 1 1 2 2 2 2
+design(2,:)             = [ones(1,length(TF_D_Generalization)) ones(1,length(TF_M_Generalization))*2];        % conditions, eg:   1 1 1 1 2 2 2 2
+cfg.design              = design;
+
+stats1                  = ft_freqstatistics(cfg, TF_D_Generalization{:}, TF_M_Generalization{:});
+
+
+
+%% plot supersubject
+
+addpath('C:\Users\lanan\Documents\MATLAB\MVPA-Light\startup\')
+startup_MVPA_Light
+
+F = Time_Freq_Odor.freq;
+
+    % Odor D vs Vehicle
+load('G:\Mi unidad\2021\AnalysisTemp\OdorDvsVehicle_FreqGeneralization_[-1,5]_SuperSubj.mat')
 
 figure
-mv_plot_2D(stat_level2.mask_with_cluster_numbers, 'x', F, 'y', F)
-xlabel('Test Frequency'), ylabel('Train Frequency')
-title('Cluster permutation')
+%F = Time_Freq_Odor.freq;
+mv_plot_2D(resultGeneralization.perf, 'x', F, 'y', F)
+xlabel('Test Frequency (Hz)'), ylabel('Train Frequency (Hz)')
+title('Frequency generalization Odor D vs Vehicle')
 colorbar('off')
 colorbar
+caxis([min(resultGeneralization.perf(:)),...
+        max(resultGeneralization.perf(:))])
+    
+saveas(gcf,strcat(...
+        'G:\Mi unidad\2021\AnalysisTemp\Figures\OdorDvsVehicleGeneralization\AroundCero\',...
+        'SuperSubject.png'))
+close all
+
+    % Odor M vs Vehicle
+    
+load('G:\Mi unidad\2021\AnalysisTemp\OdorMvsVehicle_FreqGeneralization_[-1,5]_SuperSubj.mat')
+
+figure
+%F = Time_Freq_Odor.freq;
+mv_plot_2D(resultGeneralization.perf, 'x', F, 'y', F)
+xlabel('Test Frequency (Hz)'), ylabel('Train Frequency (Hz)')
+title('Frequency generalization Odor M vs Vehicle')
+colorbar('off')
+colorbar
+caxis([min(resultGeneralization.perf(:)),...
+        max(resultGeneralization.perf(:))])
+saveas(gcf,strcat(...
+        'G:\Mi unidad\2021\AnalysisTemp\Figures\OdorMvsVehicleGeneralization\AroundCero\',...
+        'SuperSubject.png'))
+close all
+
+% Odor D vs Odor M
+load('G:\Mi unidad\2021\AnalysisTemp\OdorDvsOdorM_FreqGeneralization_[-1,5]_SuperSubj.mat')
+
+figure
+%F = Time_Freq_Odor.freq;
+mv_plot_2D(resultGeneralization.perf, 'x', F, 'y', F)
+xlabel('Test Frequency (Hz)'), ylabel('Train Frequency (Hz)')
+title('Frequency generalization Odor D vs Odor M')
+colorbar('off')
+colorbar
+caxis([min(resultGeneralization.perf(:)),...
+        max(resultGeneralization.perf(:))])
+saveas(gcf,strcat(...
+        'G:\Mi unidad\2021\AnalysisTemp\Figures\Odor_DvsM_Generalization\AroundCero\',...
+        'SuperSubject.png'))
+close all
+
+
+%% plot supersubject Above threshold
+
+addpath('C:\Users\lanan\Documents\MATLAB\MVPA-Light\startup\')
+startup_MVPA_Light
+
+F = Time_Freq_Odor.freq;
+
+    % Odor D vs Vehicle
+load('G:\Mi unidad\2021\AnalysisTemp\OdorDvsVehicle_FreqGeneralization_[-1,5]_SuperSubj.mat')
+
+figure
+%F = Time_Freq_Odor.freq;
+mv_plot_2D(resultGeneralization.perf>=0.54, 'x', F, 'y', F)
+xlabel('Test Frequency (Hz)'), ylabel('Train Frequency (Hz)')
+title('Frequency generalization Odor D vs Vehicle')
+colorbar('off')
+colorbar
+caxis([min(resultGeneralization.perf(:)),...
+        max(resultGeneralization.perf(:))])
+    
+
+
+    % Odor M vs Vehicle
+    
+load('G:\Mi unidad\2021\AnalysisTemp\OdorMvsVehicle_FreqGeneralization_[-1,5]_SuperSubj.mat')
+
+figure
+%F = Time_Freq_Odor.freq;
+mv_plot_2D(resultGeneralization.perf>=0.54, 'x', F, 'y', F)
+xlabel('Test Frequency (Hz)'), ylabel('Train Frequency (Hz)')
+title('Frequency generalization Odor M vs Vehicle')
+colorbar('off')
+colorbar
+caxis([min(resultGeneralization.perf(:)),...
+        max(resultGeneralization.perf(:))])
+
+
+% Odor D vs Odor M
+load('G:\Mi unidad\2021\AnalysisTemp\OdorDvsOdorM_FreqGeneralization_[-1,5]_SuperSubj.mat')
+
+figure
+%F = Time_Freq_Odor.freq;
+mv_plot_2D(resultGeneralization.perf>=0.54, 'x', F, 'y', F)
+xlabel('Test Frequency (Hz)'), ylabel('Train Frequency (Hz)')
+title('Frequency generalization Odor D vs Odor M')
+colorbar('off')
+colorbar
+caxis([min(resultGeneralization.perf(:)),...
+        max(resultGeneralization.perf(:))])
 

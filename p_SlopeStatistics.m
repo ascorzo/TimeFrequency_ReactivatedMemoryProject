@@ -1,3 +1,5 @@
+addpath('C:\Users\lanan\Documents\MATLAB\fieldtrip-20190828\')
+ft_defaults
 
 Subj = Time_Freq_Odor;
 Subj = rmfield(Subj,'freq');
@@ -69,7 +71,7 @@ stat_DiffDvsM = ft_timelockstatistics(cfg, AllThetaSlopes_DiffD{:}, AllThetaSlop
 
 %%
 
-load('G:\Mi unidad\2021\AnalysisTemp\reducedChanlocs.mat');
+load('G:\Mi unidad\2021\AnalysisTemp\Using\reducedChanlocs.mat');
 eeglab nogui
 
 figure
