@@ -25,8 +25,17 @@ yaxis = [nanmean(nanmean([c1;c2]))-7*nanstd(nanstd([c1;c2])), nanmean(nanmean([c
 figure1 = grupo;
 %figure%('visible',display_fig,'position', [0, 0, 1000, 500]); hold on;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-p1 = shadedErrorBar(Xt,mean(data1,1),std(data1,[],1)/sqrt(size(data1,1)),'lineprops', color1);hold on;
-p2 = shadedErrorBar(Xt,mean(data2,1),std(data2,[],1)/sqrt(size(data2,1)),'lineprops', color2);hold on;
+if strcmp(color1,'-r') || strcmp(color1,'-b') || strcmp(color1,'-k')
+    p1 = shadedErrorBar(Xt,mean(data1,1),std(data1,[],1)/sqrt(size(data1,1)),'lineprops', color1);hold on;
+else
+    p1 = shadedErrorBar(Xt,mean(data1,1),std(data1,[],1)/sqrt(size(data1,1)),'lineprops',{'color',color1});hold on;
+end
+
+if strcmp(color2,'-r') || strcmp(color2,'-b') || strcmp(color2,'-k')
+    p2 = shadedErrorBar(Xt,mean(data2,1),std(data2,[],1)/sqrt(size(data2,1)),'lineprops', color2);hold on;
+else
+    p2 = shadedErrorBar(Xt,mean(data2,1),std(data2,[],1)/sqrt(size(data2,1)),'lineprops',{'color',color2});hold on;
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 xlabel([xMeassure])%,'FontSize',12,'FontWeight','bold')
 ylabel([yMeassure])%,'FontSize',12,'FontWeight','bold')

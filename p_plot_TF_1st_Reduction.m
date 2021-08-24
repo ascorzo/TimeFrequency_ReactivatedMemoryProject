@@ -1,3 +1,5 @@
+addpath('C:\Users\lanan\Documents\Github\TimeFrequency_ReactivatedMemoryProject\')
+
 p_clustersOfInterest
 clusters = fieldnames(Clust);
 clusters{length(clusters)+1}  = 'all';
@@ -109,7 +111,7 @@ for cluster = 1:numel(clusters)
     y_lims                  = [];
     x_lims_parcial          = [-5 25];
     time_parcial            = Time_Freq_Parms.time;
-    total_subplots_row      = 6;
+    total_subplots_row      = 5;
     total_subplots_column   = 2;
     count                   = 1;
     frequencies             = Time_Freq_Parms.freq;
@@ -121,10 +123,10 @@ for cluster = 1:numel(clusters)
     TF_OdorM = squeeze(mean(Time_Freq_OdorM_clust.(clusters{cluster}),1));
     TF_VehicleM = squeeze(mean(Time_Freq_VehicleM_clust.(clusters{cluster}),1));
     
-    bottom_TF  = min([min(TF_OdorD(:)),min(TF_VehicleD(:)),...
-        min(TF_OdorM(:)),min(TF_VehicleM(:))])*0.6;
-    top_TF     = max([max(TF_OdorD(:)),max(TF_VehicleD(:)),...
-        max(TF_OdorM(:)),max(TF_VehicleM(:))])*0.6;
+    bottom_TF  = min([min(TF_OdorD-TF_VehicleD),...
+        min(TF_OdorM- TF_VehicleM)])*0.6;
+    top_TF     = max([max(TF_OdorD(:)- TF_VehicleD(:)),...
+        max(TF_OdorM-TF_VehicleM)])*0.6;
     
     % -- ylims Spindles
     bottom_Spindles  = min([min(v_Spindle_OdorD.(clusters{cluster})(:)),...
@@ -170,64 +172,67 @@ for cluster = 1:numel(clusters)
     start_sample = 1;
     end_sample = length(time_parcial);
     
+    
+    %-------------
+    zmin = bottom_TF;
+    zmax = top_TF;
+    s_step                      = (zmax-zmin)/1000;
+    mapStep                     = 0:s_step:1-s_step;
+    
+    red                         = [];
+    blue                        = [];
+    for i = 1:numel(mapStep)
+        s_color                 = s_step*i-s_step;
+        red(end+1:end+i, :)     = repmat([1, s_color, s_color], i, 1);
+        blue(end+1:end+i, :)    = repmat([s_color, s_color, 1], i, 1);
+    end
+    s_color                     = s_step*i;
+    red(end+1:end+i, :)         = repmat([1, s_color, s_color], i, 1);
+    blue(end+1:end+i, :)        = repmat([s_color, s_color, 1], i, 1);
+    
+    s_filling                   = round(1 * size(red, 1));
+    filling                     = repmat([1, 1, 1], s_filling, 1);
+    
+    custommap                   = [blue; filling; red(end:-1:1, :)];
+    
+   
 
     %----------------------------------------------------------------------
     % Plot TF Odor
     %----------------------------------------------------------------------
     
     % -- D Night ----
-    tf(count) = subplot(total_subplots_row,total_subplots_column,1);
-    f_ImageMatrix(TF_OdorD,time_parcial,frequencies,y_lims)
+    tf(count) = subplot(total_subplots_row,total_subplots_column,count);
+    f_ImageMatrix(TF_OdorD-TF_VehicleD,time_parcial,frequencies,y_lims)
     xlim(v_xlim)
-    ylabel('Frequency(Hz)','position',[-7.724637712257495,-7.696978993229502,1])
-    colormap(parula)
+    ylabel('Frequency(Hz)')
+    colormap(custommap)
     caxis manual
     caxis([bottom_TF top_TF]);
-    title('Odor D')
+    title('Odor D - Vehicle')
     xlabel('')
     
+    % -- M Night ----
     
     count = count+1;
-    tf(count) = subplot(total_subplots_row,total_subplots_column,3);
-    f_ImageMatrix(TF_VehicleD,time_parcial,frequencies,y_lims)
+    tf(count) = subplot(total_subplots_row,total_subplots_column,count);
+    f_ImageMatrix(TF_OdorM-TF_VehicleM,time_parcial,frequencies,y_lims)
     xlim(v_xlim)
-    colormap(parula)
+    colormap(custommap)
     caxis manual
     caxis([bottom_TF top_TF]);
-    title('Vehicle')
+    title('Odor M - Vehicle')
     xlabel('')
-    
-    % -- M Night ----  
-    
-    tf(count) = subplot(total_subplots_row,total_subplots_column,2);
-    f_ImageMatrix(TF_OdorM,time_parcial,frequencies,y_lims)
-    xlim(v_xlim)
-    colormap(parula)
-    caxis manual
-    caxis([bottom_TF top_TF]);
-    title('Odor M')
-    xlabel('')
-    
-    
-    count = count+1;
-    tf(count) = subplot(total_subplots_row,total_subplots_column,4);
-    f_ImageMatrix(TF_VehicleM,time_parcial,frequencies,y_lims)
-    xlim(v_xlim)
-    colormap(parula)
-    caxis manual
-    caxis([bottom_TF top_TF]);
-    title('Vehicle')
-    xlabel('')
-    a = colorbar('Position',...
-    [0.923139158749658,0.659827213822894,0.011812297561022,0.23110151187905]);
+    a = colorbar('Position',[0.928478964586473,0.778617710514844,0.012297734442653,0.112311010815339]);
     a.Label.String = 'Zscore';
-      
+    
+    
     %----------------------------------------------------------------------
     % Plot Spindle Power
     %----------------------------------------------------------------------
     % -- D Night ----
     count = count+1;
-    tf(count) = subplot(total_subplots_row,total_subplots_column,5);
+    tf(count) = subplot(total_subplots_row,total_subplots_column,count);
     f_nonParametricTest(strcat('Spindle (',...
         num2str(SpindleBand(1)),'-',num2str(SpindleBand(2)),' Hz)'),...
         'Time(s)',' ','Odor D','Vehicle',...
@@ -242,7 +247,7 @@ for cluster = 1:numel(clusters)
     
     % -- M Night ----
     count = count+1;
-    tf(count) = subplot(total_subplots_row,total_subplots_column,6);
+    tf(count) = subplot(total_subplots_row,total_subplots_column,count);
     f_nonParametricTest(strcat('Spindle (',...
         num2str(SpindleBand(1)),'-',num2str(SpindleBand(2)),' Hz)'),...
         'Time(s)',' ','Odor M','Vehicle',...
@@ -255,12 +260,13 @@ for cluster = 1:numel(clusters)
     xlabel('')
     xticks([-5 0 5 10 15 20 25])
     
+    
     %----------------------------------------------------------------------
     % Plot Theta Power
     %----------------------------------------------------------------------
     % -- D Night ----
     count = count+1;
-    tf(count) = subplot(total_subplots_row,total_subplots_column,7);
+    tf(count) = subplot(total_subplots_row,total_subplots_column,count);
     f_nonParametricTest(strcat('Theta (',...
         num2str(ThetaBand(1)),'-',num2str(ThetaBand(2)),' Hz)'),...
         'Time(s)',' ','Odor D','Vehicle',...
@@ -272,11 +278,11 @@ for cluster = 1:numel(clusters)
     ylim([bottom_Theta top_Theta])
     xlabel('')
     xticks([-5 0 5 10 15 20 25])
-    ylabel('Zscore','position',[-7.724637728843142,-0.18949351753476,-1])
+    ylabel('Zscore','position',[-8.333333381017056,-0.118067079381196,-1])
     
     % -- M Night ----
     count = count+1;
-    tf(count) = subplot(total_subplots_row,total_subplots_column,8);
+    tf(count) = subplot(total_subplots_row,total_subplots_column,count);
     f_nonParametricTest(strcat('Theta (',...
         num2str(ThetaBand(1)),'-',num2str(ThetaBand(2)),' Hz)'),...
         'Time(s)',' ','Odor M','Vehicle',...
@@ -294,7 +300,7 @@ for cluster = 1:numel(clusters)
     %----------------------------------------------------------------------
     % -- D Night ----
     count = count+1;
-    tf(count) = subplot(total_subplots_row,total_subplots_column,9);
+    tf(count) = subplot(total_subplots_row,total_subplots_column,count);
     f_nonParametricTest(strcat('Delta (',...
         num2str(DeltaBand(1)),'-',num2str(DeltaBand(2)),' Hz)'),...
         'Time(s)',' ','Odor D','Vehicle',...
@@ -309,7 +315,7 @@ for cluster = 1:numel(clusters)
     
     % -- M Night ----
     count = count+1;
-    tf(count) = subplot(total_subplots_row,total_subplots_column,10);
+    tf(count) = subplot(total_subplots_row,total_subplots_column,count);
     f_nonParametricTest(strcat('Delta (',...
         num2str(DeltaBand(1)),'-',num2str(DeltaBand(2)),' Hz)'),...
         'Time(s)',' ','Odor M','Vehicle',...
@@ -327,7 +333,7 @@ for cluster = 1:numel(clusters)
     %----------------------------------------------------------------------
     % -- D Night ----
     count = count+1;
-    tf(count) = subplot(total_subplots_row,total_subplots_column,11);
+    tf(count) = subplot(total_subplots_row,total_subplots_column,count);
     f_nonParametricTest(strcat('SW (',...
         num2str(SWBand(1)),'-',num2str(SWBand(2)),' Hz)'),...
         'Time(s)',' ','Odor D','Vehicle',...
@@ -343,7 +349,7 @@ for cluster = 1:numel(clusters)
     
     % -- M Night ----
     count = count+1;
-    tf(count) = subplot(total_subplots_row,total_subplots_column,12);
+    tf(count) = subplot(total_subplots_row,total_subplots_column,count);
     f_nonParametricTest(strcat('SW (',...
         num2str(SWBand(1)),'-',num2str(SWBand(2)),' Hz)'),...
         'Time(s)',' ','Odor M','Vehicle',...
@@ -365,8 +371,8 @@ for cluster = 1:numel(clusters)
     l = sgtitle(clusters{cluster});
     set(l, 'Interpreter', 'none')
     
-%     savepath = 'G:\Mi unidad\2021\AnalysisTemp\Figures\TF_Publication\';
-%     saveas(gcf,strcat(savepath,clusters{cluster},'.png'))
-%     close all
+    savepath = 'G:\Mi unidad\2021\AnalysisTemp\Figures\TF_Publication\1st_Reduction\';
+    saveas(gcf,strcat(savepath,clusters{cluster},'.png'))
+    close all
 end
 
