@@ -39,7 +39,7 @@ SWBand          = [0.5 2];
 filename     = 'C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospital\Thesis_Publication\Using\dummyfile.set';
 sensors = ft_read_sens(filename);
 
-load('D:\Thesis_Publication\Using\reducedChanlocs.mat');
+load('D:\Thesis_Publication\Using\reducedChanlocs_2.mat');
 
 eeglab nogui
 
@@ -50,6 +50,10 @@ for band = 1:numel(bands)
     cfg.avgoverrpt      = 'yes';
     cfg.avgovertime     = 'yes';
     cfg.avgoverfreq     = 'yes'; 
+    cfg.channel         = {'all','-E49', '-E48', '-E17', '-E128', '-E32', ...
+                             '-E1', '-E125', '-E119', '-E113', '-E56', ...
+                             '-E63', '-E68', '-E73', '-E81', '-E88', ...
+                             '-E94', '-E99', '-E107'};
     
     % select frequency band
     if strcmp(bands(band),'Spindle')
@@ -100,7 +104,7 @@ for band = 1:numel(bands)
             Sel_Time_Freq_Odor{subj}.time = 1;
             Sel_Time_Freq_Vehi{subj}.time = 1;
         end
-
+        
         % define the parameters for the statistical comparison
         cfg = [];
         cfg.parameter           = 'powspctrm';
@@ -126,34 +130,41 @@ for band = 1:numel(bands)
         stat_OdorvsVehicle      = ft_timelockstatistics(cfg, ...
             Sel_Time_Freq_Odor{:}, Sel_Time_Freq_Vehi{:});   % don't forget the {:}!
         
+        
+        figure
+        confidence = 1-stat_OdorvsVehicle.prob;
+        topoplot(confidence,...
+            reducedchanlocs,...
+            'conv', 'on', ...
+            'whitebk','on',...
+            'electrodes','on','colormap',parula);
+        a = colorbar;
+        a.Label.String = 'Confidence';
+        
+        caxis([0.9 1])
+        hold on
+        no_results = zeros(numel(reducedchanlocs), 1);
+        idx_clusters = find((stat_OdorvsVehicle.prob <= 0.05));
+        topoplot(no_results, reducedchanlocs, ...
+            'style', 'blank', ...
+            'electrodes', 'pts', ...
+            'shading', 'interp', ...
+            'headcolor', [0, 0, 0], ...
+            'plotchans', idx_clusters, ...
+            'hcolor','none',...
+            'whitebk','on',...
+            'emarker', {'.', [0.1, 0.1, 0.1], 20, 1});
+        
+        Text = strcat(bands(band),'[',num2str(latency),']','s');
+        title({'Odor D vs Vehicle';Text{1}})
+        
+        filename_save = strcat('DNight_',bands(band),'Toi',num2str(toi));
+        saveas(gcf,strcat(filename_save{1},'.png'))
+        
+        hold off
+        
+        close all
+        
     end
-    
-    
-    figure
-    confidence = 1-stat_OdorvsVehicle.prob;
-    topoplot(confidence,...
-        reducedchanlocs,...
-        'conv', 'on', ...
-        'whitebk','on',...
-        'electrodes','on','colormap',parula);
-    a = colorbar;
-    a.Label.String = 'Confidence';
-    
-    caxis([0.9 1])
-    hold on
-    no_results = zeros(numel(reducedchanlocs), 1);
-    idx_clusters = find((stat_OdorvsVehicle.prob <= 0.05));
-    topoplot(no_results, reducedchanlocs, ...
-        'style', 'blank', ...
-        'electrodes', 'pts', ...
-        'shading', 'interp', ...
-        'headcolor', [0, 0, 0], ...
-        'plotchans', idx_clusters, ...
-        'hcolor','none',...
-        'whitebk','on',...
-        'emarker', {'.', [0.1, 0.1, 0.1], 20, 1});
-    title({'Odor D vs Vehicle';...
-        strcat(bands(band),{' '},'[',num2str(latency),']','s')})
-    hold off
     
 end
