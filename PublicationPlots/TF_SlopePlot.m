@@ -660,8 +660,9 @@ for cluster = 1:numel(clusters)
     total_subplots_column   = 3;
     count                   = 1;
     frequencies             = D_Night.Time_Freq_Odor_Slope{1}.freq;
-    v_xlim                  = [-5 20];
-    v_xticks                = [-5 0 5 10 15 20 25];
+    v_xlim                  = [-5 5];
+    v_xticks                = [-5 -4 -3 -2 -1 0 1 2 3 4 5];
+    %v_xticks                = [-5 0 5 10 15 20 25];
     
     
     TF_OdorD = squeeze(mean(Slope_OdorD_clust.(clusters{cluster}),1));
@@ -739,6 +740,7 @@ for cluster = 1:numel(clusters)
     caxis manual
     caxis([-max_TF max_TF]);
     title('Odor M')
+    xticks(v_xticks)
     xlabel('')
     hold on 
     plot([0,15],[0.25,0.25],'k','LineWidth',3);
@@ -756,6 +758,7 @@ for cluster = 1:numel(clusters)
     caxis([-max_TF max_TF]);
     title('Vehicle')
     xlabel('Time (s)')
+    xticks(v_xticks)
     hold on 
     plot([0,15],[0.25,0.25],'k','LineWidth',3);
     hold off
@@ -773,6 +776,7 @@ for cluster = 1:numel(clusters)
     caxis([-max_TF max_TF]);
     title('Odor D')
     xlabel('')
+    xticks(v_xticks)
     hold on 
     plot([0,15],[0.25,0.25],'k','LineWidth',3);
     hold off
@@ -790,6 +794,7 @@ for cluster = 1:numel(clusters)
     caxis([-max_TF max_TF]);
     title('Vehicle')
     xlabel('Time (s)')
+    xticks(v_xticks)
     hold on 
     plot([0,15],[0.25,0.25],'k','LineWidth',3);
     hold off
@@ -834,7 +839,7 @@ for cluster = 1:numel(clusters)
     xlim(v_xlim)
     ylim([bottom_Spindles top_Spindles])
     xlabel('')
-    xticks([-5 0 5 10 15 20 25])
+    xticks(v_xticks)
     hold on 
     plot([0,15],[bottom_Spindles,bottom_Spindles],'k','LineWidth',3);
     hold off
@@ -853,7 +858,7 @@ for cluster = 1:numel(clusters)
     xlim(v_xlim)
     ylim([bottom_Spindles top_Spindles])
     xlabel('')
-    xticks([-5 0 5 10 15 20 25])
+    xticks(v_xticks)
     hold on 
     plot([0,15],[bottom_Spindles,bottom_Spindles],'k','LineWidth',3);
     hold off
@@ -871,7 +876,7 @@ for cluster = 1:numel(clusters)
     xlim(v_xlim)
     ylim([bottom_Spindles top_Spindles])
     xlabel('')
-    xticks([-5 0 5 10 15 20 25])
+    xticks(v_xticks)
     
     hold on 
     plot([0,15],[bottom_Spindles,bottom_Spindles],'k','LineWidth',3);
@@ -893,7 +898,7 @@ for cluster = 1:numel(clusters)
     xlim(v_xlim)
     ylim([bottom_Theta top_Theta])
     xlabel('')
-    xticks([-5 0 5 10 15 20 25])
+    xticks(v_xticks)
     ylabel('Power (Z)','position',[-9.497365001570415,-0.116481838204675,-1])
     hold on 
     plot([0,15],[bottom_Theta,bottom_Theta],'k','LineWidth',3);
@@ -912,7 +917,7 @@ for cluster = 1:numel(clusters)
     xlim(v_xlim)
     ylim([bottom_Theta top_Theta])
     xlabel('')
-    xticks([-5 0 5 10 15 20 25])
+    xticks(v_xticks)
     hold on 
     plot([0,15],[bottom_Theta,bottom_Theta],'k','LineWidth',3);
     hold off
@@ -930,7 +935,7 @@ for cluster = 1:numel(clusters)
     xlim(v_xlim)
     ylim([bottom_Theta top_Theta])
     xlabel('')
-    xticks([-5 0 5 10 15 20 25])
+    xticks(v_xticks)
     hold on 
     plot([0,15],[bottom_Theta,bottom_Theta],'k','LineWidth',3);
     hold off
@@ -951,7 +956,7 @@ for cluster = 1:numel(clusters)
     xlim(v_xlim)
     ylim([bottom_Delta top_Delta])
     xlabel('')
-    xticks([-5 0 5 10 15 20 25])
+    xticks(v_xticks)
     hold on 
     plot([0,15],[bottom_Delta,bottom_Delta],'k','LineWidth',3);
     hold off
@@ -969,7 +974,7 @@ for cluster = 1:numel(clusters)
     xlim(v_xlim)
     ylim([bottom_Delta top_Delta])
     xlabel('')
-    xticks([-5 0 5 10 15 20 25])
+    xticks(v_xticks)
     hold on 
     plot([0,15],[bottom_Delta,bottom_Delta],'k','LineWidth',3);
     hold off
@@ -987,7 +992,7 @@ for cluster = 1:numel(clusters)
     xlim(v_xlim)
     ylim([bottom_Delta top_Delta])
     xlabel('')
-    xticks([-5 0 5 10 15 20 25])
+    xticks(v_xticks)
     hold on 
     plot([0,15],[bottom_Delta,bottom_Delta],'k','LineWidth',3);
     hold off
@@ -1009,7 +1014,7 @@ for cluster = 1:numel(clusters)
     legend('Position',...
         [0.265927658827671,0.038916064881278,0.085110747295877,0.040631750283952],...
         'AutoUpdate','off');
-    xticks([-5 0 5 10 15 20 25]) 
+    xticks(v_xticks) 
     hold on 
     plot([0,15],[bottom_SW,bottom_SW],'k','LineWidth',3);
     
@@ -1027,7 +1032,7 @@ for cluster = 1:numel(clusters)
     legend('Position',...
         [0.545970189311835,0.041075892258916,0.085110747295877,0.040631750283952],...
         'AutoUpdate','off');
-    xticks([-5 0 5 10 15 20 25])
+    xticks(v_xticks)
     hold on 
     plot([0,15],[bottom_SW,bottom_SW],'k','LineWidth',3);
     
@@ -1046,7 +1051,7 @@ for cluster = 1:numel(clusters)
         'AutoUpdate','off');
     xlim(v_xlim)
     ylim([bottom_SW top_SW])
-    xticks([-5 0 5 10 15 20 25])
+    xticks(v_xticks)
     hold on 
     plot([0,15],[bottom_SW,bottom_SW],'k','LineWidth',3);
     
