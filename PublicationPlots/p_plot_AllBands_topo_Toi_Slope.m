@@ -37,9 +37,7 @@ eeglab nogui
 
 %%
 for band = 1:numel(bands)
-    
-    
-    
+    cfg = [];
     % select frequency band
     if strcmp(bands(band),'Spindle')
         cfg.frequency = SpindleBand;
@@ -60,7 +58,7 @@ for band = 1:numel(bands)
     % select Time of interest
     
     for toi = 1:size(Toi.(bands{band}),1)
-        cfg = [];
+        
         cfg.avgovertime     = 'yes';
         cfg.avgoverfreq     = 'yes';
         cfg.channel         = {'all','-E49', '-E48', '-E17', '-E128', '-E32', ...
@@ -148,17 +146,32 @@ for band = 1:numel(bands)
         
         
         % Plot odor D vs Vehicle
+        for subj = 1:numel(Sel_Time_Freq_OdorD)
+            Difference(subj,:) = Sel_Time_Freq_OdorD{subj}.powspctrm -...
+                Sel_Time_Freq_VehicleD{subj}.powspctrm;
+        end
+        
+        Diff = mean(Difference,1);
+        
         figure
         confidence = 1-stat_OdorDvsVehicle.prob;
-        topoplot(confidence,...
+        
+        lim = max(abs(Diff));
+        topoplot(Diff,...
             reducedchanlocs,...
             'conv', 'on', ...
             'whitebk','on',...
-            'electrodes','on','colormap',parula);
+            'electrodes','on',...
+            'colormap',parula,...
+            'maplimits',[-lim lim]);%if plotting difference
         a = colorbar;
-        a.Label.String = 'Confidence';
+        a.Label.String = 'OdorD - Vehicle';
+      
         
-        caxis([0.9 1])
+        %caxis([0.9 1]) %if plotting confidence
+
+        
+        
         hold on
         no_results = zeros(numel(reducedchanlocs), 1);
         idx_clusters = find((stat_OdorDvsVehicle.prob <= 0.05));
@@ -184,16 +197,29 @@ for band = 1:numel(bands)
         
         % Plot odor M vs Vehicle
         figure
+        for subj = 1:numel(Sel_Time_Freq_OdorM)
+            Difference(subj,:) = Sel_Time_Freq_OdorM{subj}.powspctrm -...
+                Sel_Time_Freq_VehicleM{subj}.powspctrm;
+        end
+        
+        Diff = mean(Difference,1);
+        
         confidence = 1-stat_OdorMvsVehicle.prob;
-        topoplot(confidence,...
+        lim = max(abs(Diff));
+        topoplot(Diff,...
             reducedchanlocs,...
             'conv', 'on', ...
             'whitebk','on',...
-            'electrodes','on','colormap',parula);
+            'electrodes','on',...
+            'colormap',parula,...
+            'maplimits',[-lim lim]);%if plotting difference
         a = colorbar;
-        a.Label.String = 'Confidence';
         
-        caxis([0.9 1])
+        a.Label.String = 'Odor M - Vehicle';
+        
+        %caxis([0.9 1]) %if plotting confidence
+
+        
         hold on
         no_results = zeros(numel(reducedchanlocs), 1);
         idx_clusters = find((stat_OdorMvsVehicle.prob <= 0.05));
@@ -217,16 +243,30 @@ for band = 1:numel(bands)
         
         % Plot odor D vs Odor M
         figure
+        
+        for subj = 1:numel(Sel_Time_Freq_OdorD)
+            Difference(subj,:) = Sel_Time_Freq_OdorD{subj}.powspctrm -...
+                Sel_Time_Freq_OdorM{subj}.powspctrm;
+        end
+        
+        Diff = mean(Difference,1);
+        
         confidence = 1-stat_OdorDvsOdorM.prob;
-        topoplot(confidence,...
+        lim = max(abs(Diff));
+        topoplot(Diff,...
             reducedchanlocs,...
             'conv', 'on', ...
             'whitebk','on',...
-            'electrodes','on','colormap',parula);
+            'electrodes','on',...
+            'colormap',parula,...
+            'maplimits',[-lim lim]);%if plotting difference
         a = colorbar;
-        a.Label.String = 'Confidence';
         
-        caxis([0.9 1])
+        a.Label.String = 'Odor D - Odor M';
+        
+        %caxis([0.9 1]) %if plotting confidence
+
+        
         hold on
         no_results = zeros(numel(reducedchanlocs), 1);
         idx_clusters = find((stat_OdorDvsOdorM.prob <= 0.05));
@@ -249,7 +289,9 @@ for band = 1:numel(bands)
         saveas(gcf,strcat(filename_save{1},'.png'))
         hold off
         
-        clear stat_OdorDvsVehicle stat_OdorMvsVehicle stat_OdorDvsOdorM Sel_Time_Freq_OdorM Sel_Time_Freq_OdorD Sel_Time_Freq_VehicleM Sel_Time_Freq_VehicleD
+        clear stat_OdorDvsVehicle stat_OdorMvsVehicle stat_OdorDvsOdorM 
+        clear Sel_Time_Freq_OdorM Sel_Time_Freq_OdorD 
+        clear Sel_Time_Freq_VehicleM Sel_Time_Freq_VehicleD
         close all
     end
     

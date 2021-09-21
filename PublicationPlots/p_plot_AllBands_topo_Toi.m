@@ -49,7 +49,7 @@ eeglab nogui
 %%
 for band = 1:numel(bands)
     
-    
+    cfg = [];
     
     % select frequency band
     if strcmp(bands(band),'Spindle')
@@ -71,7 +71,7 @@ for band = 1:numel(bands)
     % select Time of interest
     
     for toi = 1:size(Toi.(bands{band}),1)
-        cfg = [];
+        
         cfg.avgoverrpt      = 'yes';
         cfg.avgovertime     = 'yes';
         cfg.avgoverfreq     = 'yes';
