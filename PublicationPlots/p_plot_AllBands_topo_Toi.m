@@ -1,11 +1,14 @@
-% plot topo of toi all bands for TF
-addpath('C:\Users\asanch24\Documents\MATLAB\fieldtrip-20190828\')
+% plot topo of toi all bands
+% addpath('C:\Users\asanch24\Documents\MATLAB\fieldtrip-20190828\') %Windows
+addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828') %server
 ft_defaults
 
 
-%filepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/';
-filepathD = 'D:\TF_Calculation_90SecTrial\DNight\';
-filepathM = 'D:\TF_Calculation_90SecTrial\MNight\';
+filepathD = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/'; %server
+filepathM = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/MNight/'; %server
+
+% filepathD = 'D:\TF_Calculation_90SecTrial\DNight\'; %Windows
+% filepathM = 'D:\TF_Calculation_90SecTrial\MNight\'; %Windows
 
 filesOdorD = dir(strcat(filepathD,'*_Odor.mat'));
 filesVehicleD = dir(strcat(filepathD,'*_Vehicle.mat'));
@@ -39,12 +42,19 @@ DeltaBand       = [1 4];
 ThetaBand       = [4 8];
 SWBand          = [0.5 2];
 
-filename     = 'C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospital\Thesis_Publication\Using\dummyfile.set';
+%filename     = 'C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospital\Thesis_Publication\Using\dummyfile.set'; %windows
+filename     = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/dummyfile.set'; %server
+
+
+
 sensors = ft_read_sens(filename);
 
-load('D:\Thesis_Publication\Using\reducedChanlocs_2.mat');
+%load('D:\Thesis_Publication\Using\reducedChanlocs_2.mat'); %windows
+load('/mnt/disk1/andrea/German_Study/Time_Frequency_FT/reducedchanlocs_2.mat'); %server
 
-eeglab nogui
+%eeglab nogui %windows
+
+addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1'))
 
 %%
 for band = 1:numel(bands)
