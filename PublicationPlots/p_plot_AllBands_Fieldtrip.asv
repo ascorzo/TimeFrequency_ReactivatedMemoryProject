@@ -4,11 +4,11 @@ p_clustersOfInterest
 clusters = fieldnames(Clust);
 clusters{length(clusters)+1}  = 'all';
 
-filepathD = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/'; %server
-filepathM = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/MNight/'; %server
+% filepathD = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/'; %server
+% filepathM = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/MNight/'; %server
 
-% filepathD = 'D:\TF_Calculation_90SecTrial\DNight\'; %Windows
-% filepathM = 'D:\TF_Calculation_90SecTrial\MNight\'; %Windows
+filepathD = 'D:\TF_Calculation_90SecTrial\DNight\'; %Windows
+filepathM = 'D:\TF_Calculation_90SecTrial\MNight\'; %Windows
 
 filesOdorD = dir(strcat(filepathD,'*_Odor.mat'));
 filesVehicleD = dir(strcat(filepathD,'*_Vehicle.mat'));
@@ -19,13 +19,15 @@ filesVehicleM = dir(strcat(filepathM,'*_Vehicle.mat'));
 
 %%
 
-bands = fieldnames(Toi);
+bands = {'SW';'Delta';'Theta';'Spindle'};
 
 SpindleBand     = [12 16];
 DeltaBand       = [1 4];
 ThetaBand       = [4 8];
 SWBand          = [0.5 2];
 
+load('D:\Thesis_Publication\Using\Time_Freq_Parms')
+Time_Series_OdorD =[];
 %--------------------------------------------------------------------------
 % Analysis by bands
 %--------------------------------------------------------------------------
@@ -49,62 +51,55 @@ for band = 1:numel(bands)
     if strcmp(bands(band),'SW')
         cfg.frequency = SWBand;
     end
-cfg = [];
-cfg.frequency = SpindleBand;
-cfg.avgoverrpt      = 'yes';
-cfg.avgoverfreq     = 'yes';
-cfg.channel         = {'all','-E49', '-E48', '-E17', '-E128', '-E32', ...
-    '-E1', '-E125', '-E119', '-E113', '-E56', ...
-    '-E63', '-E68', '-E73', '-E81', '-E88', ...
-    '-E94', '-E99', '-E107'};
-
-for subj = 1:numel(filesOdorD)
     
-    disp(strcat('Sujeto: ',num2str(subj)))
+    cfg.avgoverrpt      = 'yes';
+    cfg.avgoverfreq     = 'yes';
+    cfg.channel         = {'all','-E49', '-E48', '-E17', '-E128', '-E32', ...
+        '-E1', '-E125', '-E119', '-E113', '-E56', ...
+        '-E63', '-E68', '-E73', '-E81', '-E88', ...
+        '-E94', '-E99', '-E107'};
     
-    % For D Night
-    DNight.Odor = load(strcat(filepathD,filesOdorD(subj).name));
-    DNight.Vehicle = load(strcat(filepathD,filesVehicleD(subj).name));
+    Time_Series_OdorD.(bands{band}) = Time_Freq_Parms;
     
-    Time_Freq_OdorD = rmfield(DNight.Odor.Time_Freq_Odor,  'trialinfo');
-    Time_Freq_VehicleD = rmfield(DNight.Vehicle.Time_Freq_Vehicle  ,  'trialinfo');
+    for subj = 1:numel(filesOdorD)
+        
+        disp(strcat('Sujeto: ',num2str(subj)))
+        
+        % For D Night
+        DNight.Odor = load(strcat(filepathD,filesOdorD(subj).name));
+        DNight.Vehicle = load(strcat(filepathD,filesVehicleD(subj).name));
+        
+        Time_Freq_OdorD = rmfield(DNight.Odor.Time_Freq_Odor,  'trialinfo');
+        Time_Freq_VehicleD = rmfield(DNight.Vehicle.Time_Freq_Vehicle  ,  'trialinfo');
+        
+        Sel_Freq_OdorD = ft_selectdata(cfg, Time_Freq_OdorD);
+        Sel_Freq_VehicleD = ft_selectdata(cfg, Time_Freq_VehicleD);
+        
+        Time_Series_OdorD.(bands{band}).trial{subj} = squeeze(Sel_Freq_OdorD.powspctrm);
+        Time_Series_VehicleD.(bands{band}).trial{subj} = squeeze(Sel_Freq_VehicleD.powspctrm);
+        
+        % For M Night
+        MNight.Odor = load(strcat(filepathM,filesOdorM(subj).name));
+        MNight.Vehicle = load(strcat(filepathM,filesVehicleM(subj).name));
+        
+        Time_Freq_OdorM = rmfield(MNight.Odor.Time_Freq_Odor,  'trialinfo');
+        Time_Freq_VehicleM = rmfield(MNight.Vehicle.Time_Freq_Vehicle  ,  'trialinfo');
+        
+        Sel_Freq_OdorM = ft_selectdata(cfg, Time_Freq_OdorM);
+        Sel_Freq_VehicleM = ft_selectdata(cfg, Time_Freq_VehicleM);
+        
+        Time_Series_OdorM.(bands{band}).trial{subj} = squeeze(Sel_Freq_OdorM.powspctrm);
+        Time_Series_VehicleM.(bands{band}).trial{subj} = squeeze(Sel_Freq_VehicleM.powspctrm);
+        
+    end
     
-    Sel_Time_Freq_OdorD{subj} = ft_selectdata(cfg, Time_Freq_OdorD);
-    Sel_Time_Freq_VehicleD{subj} = ft_selectdata(cfg, Time_Freq_VehicleD);
-    
-    Sel_Time_Freq_OdorD{subj}.powspctrm = squeeze(Sel_Time_Freq_OdorD{subj}.powspctrm);
-    Sel_Time_Freq_VehicleD{subj}.powspctrm = squeeze(Sel_Time_Freq_VehicleD{subj}.powspctrm);
-    
-    Sel_Time_Freq_OdorD{subj} = rmfield(Sel_Time_Freq_OdorD{subj},'freq');
-    Sel_Time_Freq_OdorD{subj} = rmfield(Sel_Time_Freq_OdorD{subj},'time');
-    
-    Sel_Time_Freq_VehicleD{subj} = rmfield(Sel_Time_Freq_VehicleD{subj},'freq');
-    Sel_Time_Freq_VehicleD{subj} = rmfield(Sel_Time_Freq_VehicleD{subj},'time');
-    
-    Sel_Time_Freq_OdorD{subj}.time = 1;
-    Sel_Time_Freq_VehicleD{subj}.time = 1;
-    
-    
-    % For M Night
-    MNight.Odor = load(strcat(filepathM,filesOdorM(subj).name));
-    MNight.Vehicle = load(strcat(filepathM,filesVehicleM(subj).name));
-    
-    Time_Freq_OdorM = rmfield(MNight.Odor.Time_Freq_Odor,  'trialinfo');
-    Time_Freq_VehicleM = rmfield(MNight.Vehicle.Time_Freq_Vehicle,  'trialinfo');
-    
-    Sel_Time_Freq_OdorM{subj} = ft_selectdata(cfg, Time_Freq_OdorM);
-    Sel_Time_Freq_VehicleM{subj} = ft_selectdata(cfg, Time_Freq_VehicleM);
-    
-    Sel_Time_Freq_OdorM{subj}.powspctrm = squeeze(Sel_Time_Freq_OdorM{subj}.powspctrm);
-    Sel_Time_Freq_VehicleM{subj}.powspctrm = squeeze(Sel_Time_Freq_VehicleM{subj}.powspctrm);
-    
-    Sel_Time_Freq_OdorM{subj} = rmfield(Sel_Time_Freq_OdorM{subj},'freq');
-    Sel_Time_Freq_OdorM{subj} = rmfield(Sel_Time_Freq_OdorM{subj},'time');
-    
-    Sel_Time_Freq_VehicleM{subj} = rmfield(Sel_Time_Freq_VehicleM{subj},'freq');
-    Sel_Time_Freq_VehicleM{subj} = rmfield(Sel_Time_Freq_VehicleM{subj},'time');
-    
-    Sel_Time_Freq_OdorM{subj}.time = 1;
-    Sel_Time_Freq_VehicleM{subj}.time = 1;
 end
+
+cfg = [];
+cfg.xlim = [-0.2 1.0];
+cfg.ylim = [-1e-13 3e-13];
+cfg.channel = 'MLC24';
+cfg.linewidth = 10;
+cfg.linecolor = 'g';
+figure; ft_singleplotER(cfg,avgFC);
 
