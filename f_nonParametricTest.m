@@ -10,10 +10,10 @@ method = 'param';
 perms = 10000;
 
 [stats, ~, pvals, ~] = statcond( data,'paired', paired,...
-    'method',method);%,'naccu',perms);
+    'method',method,'cluster','on');
 
-[~, pmask] = fdr(pvals(:),0.05,'nonParametric');
-%pmask = pvals;
+%[~, pmask] = fdr(pvals(:),0.05,'nonParametric');
+pmask = pvals<=0.05;
 cluster = 'on';
 
 grupo = ROI;

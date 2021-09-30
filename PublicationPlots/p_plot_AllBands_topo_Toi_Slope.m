@@ -17,13 +17,18 @@ MNight = load('C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospit
 % Theta: [-0.5 0.5],[-4.5 -3.5],[7 8],[10 12]
 % Spindles: [2 3]
 
-Toi.SW          = [-5 -3;-3 -1.5;-1.5 0.5;0.5 1;1 2];
-Toi.Delta       = [-5 -3;-3 -1.5;-1.5 0.5;0.5 1;1 2];
-Toi.Theta       = [-5 -3;-3 -1.5;-1.5 0.5;0.5 1;1 2];
+% Toi.SW          = [-5 -3;-3 -1.5;-1.5 0.5;0.5 1;1 2];
+% Toi.Delta       = [-5 -3;-3 -1.5;-1.5 0.5;0.5 1;1 2];
+% Toi.Theta       = [-5 -3;-3 -1.5;-1.5 0.5;0.5 1;1 2];
+
+Toi.SW          = [-1 0;0 1;1 2;2 3];
+Toi.Delta       = [-3 -1; -2 -1;-1 0;0 1;1 2;2 3];
+Toi.Theta       = [-5 -4;-3 -2;-1.5 -0.5;-1 0;0 1;1 2;2 3;3 4];
+Toi.Spindle     = [-4.5 -3.5;-3.5 -2.5;-2 -1;0 1];
 
 bands = fieldnames(Toi);
 
-SpindleBand     = [12 16];
+SpindleBand     = [12 20];
 DeltaBand       = [1 4];
 ThetaBand       = [4 8];
 SWBand          = [0.5 2];
@@ -55,12 +60,16 @@ for band = 1:numel(bands)
         cfg.frequency = SWBand;
     end
     
+    if strcmp(bands(band),'Spindle')
+        cfg.frequency = SpindleBand;
+    end
+    
     % select Time of interest
     
     for toi = 1:size(Toi.(bands{band}),1)
         
         cfg.avgovertime     = 'yes';
-        cfg.avgoverfreq     = 'yes';
+        %cfg.avgoverfreq     = 'yes';
         cfg.channel         = {'all','-E49', '-E48', '-E17', '-E128', '-E32', ...
             '-E1', '-E125', '-E119', '-E113', '-E56', ...
             '-E63', '-E68', '-E73', '-E81', '-E88', ...
@@ -80,8 +89,8 @@ for band = 1:numel(bands)
             Sel_Time_Freq_OdorD{subj} = ft_selectdata(cfg, SlopeOdor);
             Sel_Time_Freq_VehicleD{subj} = ft_selectdata(cfg, SlopeVehicle);
             
-            Sel_Time_Freq_OdorD{subj}.powspctrm = squeeze(Sel_Time_Freq_OdorD{subj}.powspctrm);
-            Sel_Time_Freq_VehicleD{subj}.powspctrm = squeeze(Sel_Time_Freq_VehicleD{subj}.powspctrm);
+            Sel_Time_Freq_OdorD{subj}.powspctrm = mean(Sel_Time_Freq_OdorD{subj}.powspctrm,2);
+            Sel_Time_Freq_VehicleD{subj}.powspctrm = mean(Sel_Time_Freq_VehicleD{subj}.powspctrm,2);
             
             Sel_Time_Freq_OdorD{subj} = rmfield(Sel_Time_Freq_OdorD{subj},'freq');
             Sel_Time_Freq_OdorD{subj} = rmfield(Sel_Time_Freq_OdorD{subj},'time');
@@ -100,8 +109,8 @@ for band = 1:numel(bands)
             Sel_Time_Freq_OdorM{subj} = ft_selectdata(cfg, SlopeOdor);
             Sel_Time_Freq_VehicleM{subj} = ft_selectdata(cfg, SlopeVehicle);
             
-            Sel_Time_Freq_OdorM{subj}.powspctrm = squeeze(Sel_Time_Freq_OdorM{subj}.powspctrm);
-            Sel_Time_Freq_VehicleM{subj}.powspctrm = squeeze(Sel_Time_Freq_VehicleM{subj}.powspctrm);
+            Sel_Time_Freq_OdorM{subj}.powspctrm = mean(Sel_Time_Freq_OdorM{subj}.powspctrm,2);
+            Sel_Time_Freq_VehicleM{subj}.powspctrm = mean(Sel_Time_Freq_VehicleM{subj}.powspctrm,2);
             
             Sel_Time_Freq_OdorM{subj} = rmfield(Sel_Time_Freq_OdorM{subj},'freq');
             Sel_Time_Freq_OdorM{subj} = rmfield(Sel_Time_Freq_OdorM{subj},'time');
@@ -194,6 +203,7 @@ for band = 1:numel(bands)
         saveas(gcf,strcat(filename_save{1},'.png'))
         
         hold off
+        close all
         
         % Plot odor M vs Vehicle
         figure
@@ -241,6 +251,7 @@ for band = 1:numel(bands)
         saveas(gcf,strcat(filename_save{1},'.png'))
         hold off
         
+        close all
         % Plot odor D vs Odor M
         figure
         
