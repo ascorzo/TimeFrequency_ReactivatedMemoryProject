@@ -1,4 +1,8 @@
 addpath('C:\Users\lanan\Documents\Github\TimeFrequency_ReactivatedMemoryProject\')
+addpath('C:\Users\asanch24\Documents\MATLAB\fieldtrip-20190828\')
+
+ft_defaults
+
 
 p_clustersOfInterest
 clusters = fieldnames(Clust);
@@ -69,33 +73,83 @@ for band = 1:numel(bands)
         DNight.Odor = load(strcat(filepathD,filesOdorD(subj).name));
         DNight.Vehicle = load(strcat(filepathD,filesVehicleD(subj).name));
         
-        Time_Freq_OdorD = rmfield(DNight.Odor.Time_Freq_Odor,  'trialinfo');
-        Time_Freq_VehicleD = rmfield(DNight.Vehicle.Time_Freq_Vehicle  ,  'trialinfo');
-        
         Sel_Freq_OdorD = ft_selectdata(cfg, Time_Freq_OdorD);
         Sel_Freq_VehicleD = ft_selectdata(cfg, Time_Freq_VehicleD);
         
-        Time_Series_OdorD.(bands{band}).trial{subj} = squeeze(Sel_Freq_OdorD.powspctrm)';
-        Time_Series_VehicleD.(bands{band}).trial{subj} = squeeze(Sel_Freq_VehicleD.powspctrm)';
+        OdorD_trial{1,subj} = squeeze(Sel_Freq_OdorD.powspctrm);
+        VehicleD_trial{1,subj} = squeeze(Sel_Freq_VehicleD.powspctrm);
+
         
         % For M Night
         MNight.Odor = load(strcat(filepathM,filesOdorM(subj).name));
         MNight.Vehicle = load(strcat(filepathM,filesVehicleM(subj).name));
         
-        Time_Freq_OdorM = rmfield(MNight.Odor.Time_Freq_Odor,  'trialinfo');
-        Time_Freq_VehicleM = rmfield(MNight.Vehicle.Time_Freq_Vehicle  ,  'trialinfo');
-        
         Sel_Freq_OdorM = ft_selectdata(cfg, Time_Freq_OdorM);
         Sel_Freq_VehicleM = ft_selectdata(cfg, Time_Freq_VehicleM);
         
-        Time_Series_OdorM.(bands{band}).trial{subj} = squeeze(Sel_Freq_OdorM.powspctrm)';
-        Time_Series_VehicleM.(bands{band}).trial{subj} = squeeze(Sel_Freq_VehicleM.powspctrm)';
+        OdorM_trial{1,subj} = squeeze(Sel_Freq_OdorM.powspctrm);
+        VehicleM_trial{1,subj} = squeeze(Sel_Freq_VehicleM.powspctrm);
         
+        time_all{1,subj} = Sel_Freq_OdorM.time;
     end
     
+    Sel_Freq_OdorD = rmfield(Sel_Freq_OdorD,'freq');
+%     Sel_Freq_OdorD = rmfield(Sel_Freq_OdorD, 'trialinfo');
+    Sel_Freq_OdorD = rmfield(Sel_Freq_OdorD,'powspctrm');
+    
+    Sel_Freq_VehicleD = rmfield(Sel_Freq_VehicleD,'freq');
+%     Sel_Freq_VehicleD = rmfield(Sel_Freq_VehicleD, 'trialinfo');
+    Sel_Freq_VehicleD = rmfield(Sel_Freq_VehicleD,'powspctrm');
+    
+    Sel_Freq_OdorD.dimord = 'chan_time';
+    Sel_Freq_VehicleD.dimord = 'chan_time';
+    
+    Sel_Freq_OdorD.time      = time_all;
+    Sel_Freq_VehicleD.time   = time_all;
+    
+    Time_Series_OdorD.(bands{band}) = Sel_Freq_OdorD;
+    Time_Series_VehicleD.(bands{band}) = Sel_Freq_VehicleD;
+    
+    Time_Series_OdorD.(bands{band}).trial = OdorD_trial;
+    Time_Series_VehicleD.(bands{band}).trial = VehicleD_trial;
+
+    %--- M Night---
+%     
+%     Sel_Freq_OdorM = rmfield(Sel_Freq_OdorM,'freq');
+% %     Sel_Freq_OdorM = rmfield(Sel_Freq_OdorM, 'trialinfo');
+%     Sel_Freq_OdorM = rmfield(Sel_Freq_OdorM,'powspctrm');
+%     
+%     Sel_Freq_VehicleM = rmfield(Sel_Freq_VehicleM,'freq');
+% %     Sel_Freq_VehicleM = rmfield(Sel_Freq_VehicleM, 'trialinfo');
+%     Sel_Freq_VehicleM = rmfield(Sel_Freq_VehicleM,'powspctrm');
+    
+    Sel_Freq_OdorM.dimord = 'chan_time';
+    Sel_Freq_VehicleM.dimord = 'chan_time';
+    
+    Sel_Freq_OdorM.time      = time_all;
+    Sel_Freq_VehicleM.time   = time_all;
+    
+    Time_Series_OdorM.(bands{band}) = Sel_Freq_OdorM;
+    Time_Series_VehicleM.(bands{band}) = Sel_Freq_VehicleM;
+    
+    Time_Series_OdorM.(bands{band}).trial = OdorM_trial;
+    Time_Series_VehicleM.(bands{band}).trial = VehicleM_trial;
+     
 end
+
+Nsub = subj;
+
+cfg                     = [];
+cfg.method              = 'stats'; % using a parametric test
+cfg.statistic           = 'ft_statfun_indepsamplesT'; % using independent samples
+cfg.design              = [ones(1,Nsub) 2*ones(1,Nsub)];
+cfg.ivar                = 1; % indicating that the independent variable is found in ...
+                             % first row of cfg.design
+
+stat_t = ft_timelockstatistics(cfg,Time_Series_OdorD.Spindle,...
+    Time_Series_OdorM.Spindle);
 
 cfg = [];
 cfg.channel = 'E2';
-figure; ft_singleplotER(cfg,Time_Series_OdorM.Delta);
-
+figure; ft_singleplotER(cfg,Time_Series_OdorD.Spindle);
+figure; ft_singleplotER(cfg,Time_Series_OdorM.Spindle);
