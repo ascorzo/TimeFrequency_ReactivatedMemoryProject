@@ -30,10 +30,10 @@ filesVehicleM = dir(strcat(filepathM,'*_Vehicle.mat'));
 % Theta: [-0.5 0.5],[-4.5 -3.5],[7 8],[10 12]
 % Spindles: [2 3]
 
-Toi.SW          = [-1 1;9 12;9.5 10.5;11 13;15 20];
-Toi.Delta       = [-0.5 0.5;3.5 4.5;7 8;9 11;15 20];
-Toi.Theta       = [-0.5 0.5;-4.5 -3.5;7 8;10 12];
-Toi.Spindle     = [2 3];
+% Toi.SW          = [-1 1;9 12;9.5 10.5;11 13;15 20];
+% Toi.Delta       = [-0.5 0.5;3.5 4.5;7 8;9 11;15 20];
+% Toi.Theta       = [-0.5 0.5;-4.5 -3.5;7 8;10 12];
+Toi.Spindle     = [2 3;-2 0;0 1];
 
 bands = fieldnames(Toi);
 
