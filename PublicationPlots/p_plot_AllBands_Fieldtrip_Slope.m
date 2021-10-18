@@ -5,8 +5,8 @@ addpath('C:\Users\asanch24\Documents\MATLAB\fieldtrip-20190828\') %Windows
 
 ft_defaults
 
-% DNight = load('C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospital\Thesis_Publication\TF_Slope\TF_DNight_TFSlope.mat');
-% MNight = load('C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospital\Thesis_Publication\TF_Slope\TF_MNight_TFSlope.mat');
+DNight = load('C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospital\Thesis_Publication\TF_Slope\TF_DNight_TFSlope.mat');
+MNight = load('C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospital\Thesis_Publication\TF_Slope\TF_MNight_TFSlope.mat');
 
 %%
 
@@ -19,6 +19,20 @@ SWBand          = [0.5 2];
 
 % load('D:\Thesis_Publication\Using\Time_Freq_Parms')
 Time_Series_OdorD =[];
+
+%% Set electrode layout
+
+cfg = [];
+cfg.layout = 'C:\Users\asanch24\Documents\Github\TimeFrequency_ReactivatedMemoryProject\GSN-HydroCel-128.mat';
+layout = ft_prepare_layout(cfg);
+
+
+%% customized colormap
+
+
+
+
+%%
 %--------------------------------------------------------------------------
 % Analysis by bands
 %--------------------------------------------------------------------------
@@ -31,7 +45,7 @@ for band = 1:numel(bands)
         cfg.frequency = SpindleBand;
     end
     
-    if strcmp(bands(band),'Theta')
+    if strcmp(bands(band),'Theta')   
         cfg.frequency = ThetaBand;
     end
     
@@ -134,11 +148,11 @@ Nsub = 23;
 
 
 
-for band = 1:numel(bands)
+for band = 1%:numel(bands)
     
     cfg                  = [];
     cfg.method           = 'montecarlo';
-    cfg.statistic        = 'indepsamplesT';
+    cfg.statistic        = 'depsamplesT';
     cfg.correctm         = 'cluster'; % correction
     cfg.clusteralpha     = 0.05;
     cfg.clusterstatistic = 'maxsum';
@@ -267,7 +281,7 @@ for band = 1:numel(bands)
         
         cfg = [];
         cfg.xlim = [j(k) j(k+1)];   % time interval of the subplot
-        cfg.zlim = [-2.5e-13 2.5e-13];
+%         cfg.zlim = [-2.5e-13 2.5e-13];
         % If a channel is in a to-be-plotted cluster, then
         % the element of pos_int with an index equal to that channel
         % number will be set to 1 (otherwise 0).
@@ -320,7 +334,7 @@ for band = 1:numel(bands)
         
         cfg = [];
         cfg.xlim = [j(k) j(k+1)];   % time interval of the subplot
-        cfg.zlim = [-2.5e-13 2.5e-13];
+%         cfg.zlim = [-2.5e-13 2.5e-13];
         % If a channel is in a to-be-plotted cluster, then
         % the element of pos_int with an index equal to that channel
         % number will be set to 1 (otherwise 0).
@@ -365,14 +379,13 @@ for band = 1:numel(bands)
     % This might not be the case, because ft_math might shuffle the order
     [i1,i2] = match_str(Time_Series_OdorM.(bands{band}).label, stat_OdorD_OdorM.label);
     
-    for k = 1:numel(j)-1
+    for k = 9%1:numel(j)-1
         %subplot(4,8,k);
         subplot(3,7,k);
 %         subplot(6,9,k);
         
         cfg = [];
         cfg.xlim = [j(k) j(k+1)];   % time interval of the subplot
-        cfg.zlim = [-2.5e-13 2.5e-13];
         % If a channel is in a to-be-plotted cluster, then
         % the element of pos_int with an index equal to that channel
         % number will be set to 1 (otherwise 0).
@@ -384,21 +397,51 @@ for band = 1:numel(bands)
         pos_int(i1) = all(pos_OdorD_OdorM(i2, m(k):m(k+1)), 2);
         neg_int(i1) = all(neg_OdorD_OdorM(i2, m(k):m(k+1)), 2);
         
-        if find(pos_int==1)
-            cfg.highlight   = 'on';
+        if sum((pos_int==1) + (neg_int==1))>0
+            cfg.highlight   = 'off';
             % Get the index of the to-be-highlighted channel
             cfg.highlightchannel = find(pos_int | neg_int);
         end
-        cfg.comment     = 'xlim';
-        cfg.commentpos  = 'title';
-        cfg.layout      = 'GSN-HydroCel-129.sfp';
         
         data = Diff_OdorDvsOdorM.(bands{band});
-        data.avg = data.trial;
+        data.avg                = data.trial;
+        data.mask               = stat_OdorD_OdorM;
+        data.mask(m(k):m(k+1))  = repmat(pos_int | neg_int,timestep*sampling_rate,);
+        
+        cfg.zlim            = 'maxabs';
+        cfg.parameter       = 'avg';
+        cfg.comment         = 'xlim';
+        cfg.commentpos      = 'title';
+        cfg.layout          = layout;
+        cfg.colormap        = 'parula';
+        cfg.maskparameter   = 'mask';
+        cfg.colorbar        = 'yes';
+        cfg.style           = 'straight';
+        
         ft_topoplotER(cfg, data);
+      
     end
     
     set(gcf,'position',[1,41,1920,963])
     filename_save = strcat('C:\Users\asanch24\Documents\Github\TimeFrequency_ReactivatedMemoryProject\PublicationPlots\DvsM_',bands{band});
     saveas(gcf,strcat(filename_save,'.png'))
+end
+
+
+%%
+
+dirlist  = dir('C:\Users\asanch24\Documents\Github\TimeFrequency_ReactivatedMemoryProject\GSN-HydroCel-128.mat');
+filename = {dirlist(~[dirlist.isdir]).name}';
+
+for i=1:length(filename)
+  cfg = [];
+  cfg.layout = filename{i};
+  layout = ft_prepare_layout(cfg);
+
+  figure
+  ft_plot_layout(layout);
+  title(filename{i}, 'Interpreter', 'none');
+
+  [p, f, x] = fileparts(filename{i});
+  print([lower(f) '.png'], '-dpng');
 end
