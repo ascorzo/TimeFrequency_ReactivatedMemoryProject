@@ -147,8 +147,8 @@ Nsub = 23;
 
 
 
-
-for band = 1%:numel(bands)
+%%
+for band = 1:numel(bands)
     
     cfg                  = [];
     cfg.method           = 'montecarlo';
@@ -157,7 +157,7 @@ for band = 1%:numel(bands)
     cfg.clusteralpha     = 0.05;
     cfg.clusterstatistic = 'maxsum';
     cfg.minnbchan        = 2;
-    cfg_neighb.elec      = 'GSN-HydroCel-129.sfp';%sensors;
+    cfg_neighb.elec      = 'GSN-HydroCel-128.sfp';%sensors;
     cfg_neighb.method    = 'distance';
     cfg.neighbours       = ft_prepare_neighbours(cfg_neighb);
     cfg.tail             = 0;
@@ -186,6 +186,9 @@ for band = 1%:numel(bands)
     stat_OdorD_OdorM = ft_timelockstatistics(cfg,Time_Series_OdorD.(bands{band}),...
         Time_Series_OdorM.(bands{band}));
     
+    band_stat_OdorD_VehicleD.(bands{band})=stat_OdorD_VehicleD;
+    band_stat_OdorM_VehicleM.(bands{band})=stat_OdorM_VehicleM;
+    band_stat_OdorD_OdorM.(bands{band})=stat_OdorD_OdorM;
     
     % Take the difference using ft_math subject per subject (data is organized
     % such that each subjects is a trial in the data)
@@ -298,15 +301,26 @@ for band = 1%:numel(bands)
             % Get the index of the to-be-highlighted channel
             cfg.highlightchannel = find(pos_int | neg_int);
         end
-        cfg.comment     = 'xlim';
-        cfg.commentpos  = 'title';
-        cfg.layout      = 'GSN-HydroCel-129.sfp';
         
         data = Diff_OdorDvsVehicleD.(bands{band});
         data.avg = data.trial;
+        data.mask               = stat_OdorD_VehicleD.mask;
+        
+        cfg.zlim            = [-max(max(abs(data.avg{1}))),...
+            max(max(abs(data.avg{1})))];
+        cfg.parameter       = 'avg';
+        cfg.comment         = 'xlim';
+        cfg.commentpos      = 'title';
+        cfg.layout          = layout;
+        cfg.colormap        = 'parula';
+%         cfg.maskparameter   = 'mask';
+%         cfg.colorbar        = 'yes';
+        cfg.style           = 'straight';
+        
+
         ft_topoplotER(cfg, data);
     end
-    
+    colorbar
     set(gcf,'position',[1,41,1920,963])
     filename_save = strcat('C:\Users\asanch24\Documents\Github\TimeFrequency_ReactivatedMemoryProject\PublicationPlots\DNight_',bands{band});
     saveas(gcf,strcat(filename_save,'.png'))
@@ -351,15 +365,27 @@ for band = 1%:numel(bands)
             % Get the index of the to-be-highlighted channel
             cfg.highlightchannel = find(pos_int | neg_int);
         end
-        cfg.comment     = 'xlim';
-        cfg.commentpos  = 'title';
-        cfg.layout      = 'GSN-HydroCel-129.sfp';
         
         data = Diff_OdorMvsVehicleM.(bands{band});
         data.avg = data.trial;
+        data.mask               = stat_OdorM_VehicleM.mask;
+        
+         cfg.zlim            = [-max(max(abs(data.avg{1}))),...
+            max(max(abs(data.avg{1})))];
+        cfg.parameter       = 'avg';
+        cfg.comment         = 'xlim';
+        cfg.commentpos      = 'title';
+        cfg.layout          = layout;
+        cfg.colormap        = 'parula';
+%         cfg.maskparameter   = 'mask';
+%         cfg.colorbar        = 'yes';
+        cfg.style           = 'straight';
+        
+
+        
         ft_topoplotER(cfg, data);
     end
-    
+    colorbar
     set(gcf,'position',[1,41,1920,963])
     filename_save = strcat('C:\Users\asanch24\Documents\Github\TimeFrequency_ReactivatedMemoryProject\PublicationPlots\MNight_',bands{band});
     saveas(gcf,strcat(filename_save,'.png'))
@@ -379,7 +405,7 @@ for band = 1%:numel(bands)
     % This might not be the case, because ft_math might shuffle the order
     [i1,i2] = match_str(Time_Series_OdorM.(bands{band}).label, stat_OdorD_OdorM.label);
     
-    for k = 9%1:numel(j)-1
+    for k = 1:numel(j)-1
         %subplot(4,8,k);
         subplot(3,7,k);
 %         subplot(6,9,k);
@@ -398,30 +424,30 @@ for band = 1%:numel(bands)
         neg_int(i1) = all(neg_OdorD_OdorM(i2, m(k):m(k+1)), 2);
         
         if sum((pos_int==1) + (neg_int==1))>0
-            cfg.highlight   = 'off';
+            cfg.highlight   = 'on';
             % Get the index of the to-be-highlighted channel
             cfg.highlightchannel = find(pos_int | neg_int);
         end
         
         data = Diff_OdorDvsOdorM.(bands{band});
         data.avg                = data.trial;
-        data.mask               = stat_OdorD_OdorM;
-        data.mask(m(k):m(k+1))  = repmat(pos_int | neg_int,timestep*sampling_rate,);
+        data.mask               = stat_OdorD_OdorM.mask;
         
-        cfg.zlim            = 'maxabs';
+         cfg.zlim            = [-max(max(abs(data.avg{1}))),...
+            max(max(abs(data.avg{1})))];
         cfg.parameter       = 'avg';
         cfg.comment         = 'xlim';
         cfg.commentpos      = 'title';
         cfg.layout          = layout;
         cfg.colormap        = 'parula';
-        cfg.maskparameter   = 'mask';
-        cfg.colorbar        = 'yes';
-        cfg.style           = 'straight';
+%         cfg.maskparameter   = 'mask';
+%         cfg.colorbar        = 'yes';
+%         cfg.style           = 'straight';
         
         ft_topoplotER(cfg, data);
       
     end
-    
+    colorbar
     set(gcf,'position',[1,41,1920,963])
     filename_save = strcat('C:\Users\asanch24\Documents\Github\TimeFrequency_ReactivatedMemoryProject\PublicationPlots\DvsM_',bands{band});
     saveas(gcf,strcat(filename_save,'.png'))
