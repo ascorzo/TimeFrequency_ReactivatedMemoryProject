@@ -1,7 +1,9 @@
-addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/')
+% addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/') %server
+addpath('C:\Users\asanch24\Documents\MATLAB\fieldtrip\') %Windows
 
 ft_defaults
-addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/qsub')
+% addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/qsub')%server
+addpath('C:\Users\asanch24\Documents\MATLAB\fieldtrip\qsub') %Windows
 ft_warning off
 
 %--------------------------------------------------------------------------
@@ -15,12 +17,14 @@ cfg_Tf                      = [];
 cfg_Tf.method               = 'wavelet';
 cfg_Tf.output               = 'pow';
 cfg_Tf.foi                  = 0.5:s_fstep:20; 
-cfg_Tf.width                = cycles;
+% cfg_Tf.width                = cycles;
+v_timeWindows               = 5:(-4.5/numel(cfg_Tf.foi)):0.5;
+cfg_Tf.t_ftimwin            = v_timeWindows;
 cfg_Tf.toi                  = -12:s_tstep:72; 
 % toi this is extended before and after to deal with border effect of wavelet
 cfg_Tf.keeptrials           = 'yes';
 
-
+warning off
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -28,13 +32,17 @@ cfg_Tf.keeptrials           = 'yes';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-filepath = '/mnt/disk1/andrea/German_Study/Data/PreProcessed/Epoched_90SecTrial_MastoidRef-Interp_NewEpochs/DNight/';
-savepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/';
+% filepath = '/mnt/disk1/andrea/German_Study/Data/PreProcessed/Epoched_90SecTrial_MastoidRef-Interp_NewEpochs/DNight/';%server
+% savepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/DNight/';%server
+
+
+filepath = 'D:\Thesis_Publication\Epoched_90SecTrial_MastoidRef-Interp_NewEpochs\DNight\';%Windows
+savepath = 'D:\TF_Calculation_90SecTrial_New\DNight\';%Windows
 
 files = dir(strcat(filepath,'*.set'));
 
 
-for subj = 1:numel(files)
+for subj = 1%numel(files)
     
     %______________________________________________________________________
     %
@@ -45,10 +53,16 @@ for subj = 1:numel(files)
     disp(strcat('Cue'))
     
     %--------- Load Data --------------------------------------------------
-    addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
+%     addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))%server
+    addpath(genpath('C:\Users\asanch24\Documents\MATLAB\eeglab2019_1\'))%Windows
     EEGOdor = pop_loadset(strcat(filepath,files(subj).name));
-    dataOdor = eeglab2fieldtrip(EEGOdor,'raw');
-    rmpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
+    rmpath(genpath('C:\Users\asanch24\Documents\MATLAB\eeglab2019_1\'))%Windows
+%     rmpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))%server
+
+    
+    addpath('C:\Users\asanch24\Documents\MATLAB\fieldtrip\external\eeglab\') %windows
+    dataOdor = eeglab2fieldtrip(EEGOdor,'raw','none');
+    
     
     
     %-----------Time-Frequency Calculation---------------------------------
@@ -95,8 +109,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-filepath = '/mnt/disk1/andrea/German_Study/Data/PreProcessed/Epoched_90SecTrial_MastoidRef-Interp_NewEpochs/MNight/';
-savepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/MNight/';
+% filepath = '/mnt/disk1/andrea/German_Study/Data/PreProcessed/Epoched_90SecTrial_MastoidRef-Interp_NewEpochs/MNight/';%server
+% savepath = '/mnt/disk1/andrea/German_Study/Time_Frequency_FT/TF_Calculation_90SecTrial/MNight/';%server
+
+filepath = 'D:\Thesis_Publication\Epoched_90SecTrial_MastoidRef-Interp_NewEpochs\MNight\';%Windows
+savepath = 'D:\TF_Calculation_90SecTrial_New\MNight\';%Windows
 
 files = dir(strcat(filepath,'*.set'));
 
@@ -112,12 +129,17 @@ for subj = 1:numel(files)
     disp(strcat('Cue'))
     
     %--------- Load Data --------------------------------------------------
-    addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
+%     addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))%server
+    addpath(genpath('C:\Users\asanch24\Documents\MATLAB\eeglab2019_1\'))%Windows
     EEGOdor = pop_loadset(strcat(filepath,files(subj).name));
-    dataOdor = eeglab2fieldtrip(EEGOdor,'raw');
-    rmpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
+    rmpath(genpath('C:\Users\asanch24\Documents\MATLAB\eeglab2019_1\'))%Windows
+%     rmpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))%server
+
     
+    addpath('C:\Users\asanch24\Documents\MATLAB\fieldtrip\external\eeglab\') %windows
+    dataOdor = eeglab2fieldtrip(EEGOdor,'raw','none');
     
+
     %-----------Time-Frequency Calculation---------------------------------
     
     Time_Freq_DA_Temp  = ft_freqanalysis(cfg_Tf, dataOdor);
@@ -155,4 +177,35 @@ for subj = 1:numel(files)
     save(strcat(savepath,files(subj).name(1:12),'TF_MN_Vehicle'),'Time_Freq_Vehicle','-v7.3')
 
 end
+
+
+%% Plot Individual TF
+
+figure
+y_lims                  = [];
+x_lims_parcial          = [-5 25];
+time_parcial            = Time_Freq_Odor.time;
+frequencies             = Time_Freq_Odor.freq;
+v_xlim                  = [-5 25];
+v_xticks                = [-5 0 5 10 15 20 25];
+
+TF = mean(Time_Freq_Odor.powspctrm,1);
+TF = squeeze(TF);
+TF = squeeze(mean(TF,1));
+max_TF = abs(TF);
+max_TF = max(max_TF(:));
+
+
+f_ImageMatrix(TF,time_parcial,frequencies,y_lims)
+xlim(v_xlim)
+ylim([0 20])
+colormap(parula)
+caxis manual
+caxis([-max_TF max_TF]);
+title('TF')
+xlabel('')
+hold on
+plot([0,15],[0.25,0.25],'k','LineWidth',3);
+hold off
+
 

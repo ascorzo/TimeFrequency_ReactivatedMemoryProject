@@ -20,7 +20,7 @@ cfg_Tf.method               = 'wavelet';
 cfg_Tf.output               = 'pow';
 cfg_Tf.foi                  = minfreq:s_fstep:maxfreq; 
 % cfg_Tf.width                = cycles;
-v_timeWindows = 5:(-4.5/numel(cfg_Tf.foi)):0.5;
+v_timeWindows               = 5:(-4.5/numel(cfg_Tf.foi)):0.5;
 cfg_Tf.t_ftimwin            = v_timeWindows;   
 cfg_Tf.toi                  = -11:s_tstep:66; 
 % toi this is extended before and after to deal with border effect of wavelet
