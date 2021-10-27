@@ -9,17 +9,32 @@ ft_warning off
 %--------------------------------------------------------------------------
 % Time frequency parameters
 %--------------------------------------------------------------------------
-s_tstep = 0.1; % try with 0.005
-s_fstep = 0.1; % 0.005
-cycles  = 12;
+s_tstep = 0.5; % try with 0.005
+s_fstep = 0.5; % 0.005
+% cycles  = 12;
+
+
 
 cfg_Tf                      = [];
 cfg_Tf.method               = 'wavelet';
 cfg_Tf.output               = 'pow';
-cfg_Tf.foi                  = 0.5:s_fstep:20; 
-% cfg_Tf.width                = cycles;
-v_timeWindows               = 5:(-4.5/numel(cfg_Tf.foi)):0.5;
-cfg_Tf.t_ftimwin            = v_timeWindows;
+cfg_Tf.foi                  = 0.5:s_fstep:20;
+
+
+% cycles = zeros(size(cfg_Tf.foi));
+% cycles(1:36) = 4; %frequencies until 4Hz
+% cycles(37:76) = 6; %frequencies from 4 to 8 Hz
+% cycles(77:116) = 8; %frequencies from 8 to 12 Hz
+% cycles(117:156) = 10; %frequencies from 12 to 16 Hz
+% cycles(157:196) = 12; %frequencies from 16 to 20 Hz
+
+
+cycles  = 4:8/numel(cfg_Tf.foi):12;
+cfg_Tf.width                = cycles;
+
+% v_timeWindows               = 5:(-4.5/numel(cfg_Tf.foi)):0.5;
+% cfg_Tf.t_ftimwin            = v_timeWindows;
+
 cfg_Tf.toi                  = -12:s_tstep:72; 
 % toi this is extended before and after to deal with border effect of wavelet
 cfg_Tf.keeptrials           = 'yes';
@@ -42,7 +57,7 @@ savepath = 'D:\TF_Calculation_90SecTrial_New\DNight\';%Windows
 files = dir(strcat(filepath,'*.set'));
 
 
-for subj = 1%numel(files)
+for subj = 1%:numel(files)
     
     %______________________________________________________________________
     %
@@ -118,7 +133,7 @@ savepath = 'D:\TF_Calculation_90SecTrial_New\MNight\';%Windows
 files = dir(strcat(filepath,'*.set'));
 
 
-for subj = 1:numel(files)
+for subj = 7:numel(files)
     
     %______________________________________________________________________
     %
