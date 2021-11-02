@@ -9,8 +9,8 @@ ft_warning off
 %--------------------------------------------------------------------------
 % Time frequency parameters
 %--------------------------------------------------------------------------
-s_tstep = 0.5; % try with 0.005
-s_fstep = 0.5; % 0.005
+s_tstep = 0.1; % try with 0.005
+s_fstep = 0.1; % 0.005
 % cycles  = 12;
 
 
@@ -29,8 +29,15 @@ cfg_Tf.foi                  = 0.5:s_fstep:20;
 % cycles(157:196) = 12; %frequencies from 16 to 20 Hz
 
 
-cycles  = 4:8/numel(cfg_Tf.foi):12;
-cfg_Tf.width                = cycles;
+cycles  = 1:numel(cfg_Tf.foi);
+
+sigmoidcycles = sigmoid(cycles,numel(cfg_Tf.foi)/3,0.05);
+sigmoidcycles = sigmoidcycles*8+4;
+
+plot(cfg_Tf.foi,sigmoidcycles)
+ylim([3 13])
+
+cfg_Tf.width                = sigmoidcycles;
 
 % v_timeWindows               = 5:(-4.5/numel(cfg_Tf.foi)):0.5;
 % cfg_Tf.t_ftimwin            = v_timeWindows;
@@ -108,13 +115,13 @@ for subj = 1%:numel(files)
     cfg.latency = [-5 30];
     Time_Freq_Odor = ft_selectdata(cfg, Time_Freq_Baseline);
     
-    cfg = [];
-    cfg.latency = [25 60];
-    Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Baseline);
-    Time_Freq_Vehicle.time = Time_Freq_Odor.time;
-
-    save(strcat(savepath,files(subj).name(1:12),'TF_DN_Odor'),'Time_Freq_Odor','-v7.3')
-    save(strcat(savepath,files(subj).name(1:12),'TF_DN_Vehicle'),'Time_Freq_Vehicle','-v7.3')
+%     cfg = [];
+%     cfg.latency = [25 60];
+%     Time_Freq_Vehicle = ft_selectdata(cfg, Time_Freq_Baseline);
+%     Time_Freq_Vehicle.time = Time_Freq_Odor.time;
+% 
+%     save(strcat(savepath,files(subj).name(1:12),'TF_DN_Odor'),'Time_Freq_Odor','-v7.3')
+%     save(strcat(savepath,files(subj).name(1:12),'TF_DN_Vehicle'),'Time_Freq_Vehicle','-v7.3')
 
 end
 
@@ -201,7 +208,7 @@ y_lims                  = [];
 x_lims_parcial          = [-5 25];
 time_parcial            = Time_Freq_Odor.time;
 frequencies             = Time_Freq_Odor.freq;
-v_xlim                  = [-5 25];
+v_xlim                  = [-5 5];
 v_xticks                = [-5 0 5 10 15 20 25];
 
 TF = mean(Time_Freq_Odor.powspctrm,1);
@@ -213,6 +220,7 @@ max_TF = max(max_TF(:));
 
 f_ImageMatrix(TF,time_parcial,frequencies,y_lims)
 xlim(v_xlim)
+
 ylim([0 20])
 colormap(parula)
 caxis manual
