@@ -5,8 +5,8 @@ addpath('C:\Users\asanch24\Documents\MATLAB\fieldtrip-20190828\') %Windows
 
 ft_defaults
 
-% DNight = load('C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospital\Thesis_Publication\TF_Slope\TF_DNight_TFSlope.mat');
-% MNight = load('C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospital\Thesis_Publication\TF_Slope\TF_MNight_TFSlope.mat');
+DNight = load('C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospital\Thesis_Publication\TF_Slope\TF_DNight_TFSlope.mat');
+MNight = load('C:\Users\asanch24\OneDrive - St. Jude Children''s Research Hospital\Thesis_Publication\TF_Slope\TF_MNight_TFSlope.mat');
 
 %%
 
@@ -19,6 +19,20 @@ SWBand          = [0.5 2];
 
 % load('D:\Thesis_Publication\Using\Time_Freq_Parms')
 Time_Series_OdorD =[];
+
+%% Set electrode layout
+
+cfg = [];
+cfg.layout = 'C:\Users\asanch24\Documents\Github\TimeFrequency_ReactivatedMemoryProject\GSN-HydroCel-128.mat';
+layout = ft_prepare_layout(cfg);
+
+
+%% customized colormap
+
+
+
+
+%%
 %--------------------------------------------------------------------------
 % Analysis by bands
 %--------------------------------------------------------------------------
@@ -31,7 +45,7 @@ for band = 1:numel(bands)
         cfg.frequency = SpindleBand;
     end
     
-    if strcmp(bands(band),'Theta')
+    if strcmp(bands(band),'Theta')   
         cfg.frequency = ThetaBand;
     end
     
@@ -133,17 +147,17 @@ Nsub = 23;
 
 
 
-
+%%
 for band = 1:numel(bands)
     
     cfg                  = [];
     cfg.method           = 'montecarlo';
-    cfg.statistic        = 'indepsamplesT';
+    cfg.statistic        = 'depsamplesT';
     cfg.correctm         = 'cluster'; % correction
     cfg.clusteralpha     = 0.05;
     cfg.clusterstatistic = 'maxsum';
     cfg.minnbchan        = 2;
-    cfg_neighb.elec      = 'GSN-HydroCel-129.sfp';%sensors;
+    cfg_neighb.elec      = 'GSN-HydroCel-128.sfp';%sensors;
     cfg_neighb.method    = 'distance';
     cfg.neighbours       = ft_prepare_neighbours(cfg_neighb);
     cfg.tail             = 0;
@@ -172,6 +186,9 @@ for band = 1:numel(bands)
     stat_OdorD_OdorM = ft_timelockstatistics(cfg,Time_Series_OdorD.(bands{band}),...
         Time_Series_OdorM.(bands{band}));
     
+    band_stat_OdorD_VehicleD.(bands{band})=stat_OdorD_VehicleD;
+    band_stat_OdorM_VehicleM.(bands{band})=stat_OdorM_VehicleM;
+    band_stat_OdorD_OdorM.(bands{band})=stat_OdorD_OdorM;
     
     % Take the difference using ft_math subject per subject (data is organized
     % such that each subjects is a trial in the data)
@@ -267,7 +284,7 @@ for band = 1:numel(bands)
         
         cfg = [];
         cfg.xlim = [j(k) j(k+1)];   % time interval of the subplot
-        cfg.zlim = [-2.5e-13 2.5e-13];
+%         cfg.zlim = [-2.5e-13 2.5e-13];
         % If a channel is in a to-be-plotted cluster, then
         % the element of pos_int with an index equal to that channel
         % number will be set to 1 (otherwise 0).
@@ -284,15 +301,26 @@ for band = 1:numel(bands)
             % Get the index of the to-be-highlighted channel
             cfg.highlightchannel = find(pos_int | neg_int);
         end
-        cfg.comment     = 'xlim';
-        cfg.commentpos  = 'title';
-        cfg.layout      = 'GSN-HydroCel-129.sfp';
         
         data = Diff_OdorDvsVehicleD.(bands{band});
         data.avg = data.trial;
+        data.mask               = stat_OdorD_VehicleD.mask;
+        
+        cfg.zlim            = [-max(max(abs(data.avg{1}))),...
+            max(max(abs(data.avg{1})))];
+        cfg.parameter       = 'avg';
+        cfg.comment         = 'xlim';
+        cfg.commentpos      = 'title';
+        cfg.layout          = layout;
+        cfg.colormap        = 'parula';
+%         cfg.maskparameter   = 'mask';
+%         cfg.colorbar        = 'yes';
+        cfg.style           = 'straight';
+        
+
         ft_topoplotER(cfg, data);
     end
-    
+    colorbar
     set(gcf,'position',[1,41,1920,963])
     filename_save = strcat('C:\Users\asanch24\Documents\Github\TimeFrequency_ReactivatedMemoryProject\PublicationPlots\DNight_',bands{band});
     saveas(gcf,strcat(filename_save,'.png'))
@@ -320,7 +348,7 @@ for band = 1:numel(bands)
         
         cfg = [];
         cfg.xlim = [j(k) j(k+1)];   % time interval of the subplot
-        cfg.zlim = [-2.5e-13 2.5e-13];
+%         cfg.zlim = [-2.5e-13 2.5e-13];
         % If a channel is in a to-be-plotted cluster, then
         % the element of pos_int with an index equal to that channel
         % number will be set to 1 (otherwise 0).
@@ -337,15 +365,27 @@ for band = 1:numel(bands)
             % Get the index of the to-be-highlighted channel
             cfg.highlightchannel = find(pos_int | neg_int);
         end
-        cfg.comment     = 'xlim';
-        cfg.commentpos  = 'title';
-        cfg.layout      = 'GSN-HydroCel-129.sfp';
         
         data = Diff_OdorMvsVehicleM.(bands{band});
         data.avg = data.trial;
+        data.mask               = stat_OdorM_VehicleM.mask;
+        
+         cfg.zlim            = [-max(max(abs(data.avg{1}))),...
+            max(max(abs(data.avg{1})))];
+        cfg.parameter       = 'avg';
+        cfg.comment         = 'xlim';
+        cfg.commentpos      = 'title';
+        cfg.layout          = layout;
+        cfg.colormap        = 'parula';
+%         cfg.maskparameter   = 'mask';
+%         cfg.colorbar        = 'yes';
+        cfg.style           = 'straight';
+        
+
+        
         ft_topoplotER(cfg, data);
     end
-    
+    colorbar
     set(gcf,'position',[1,41,1920,963])
     filename_save = strcat('C:\Users\asanch24\Documents\Github\TimeFrequency_ReactivatedMemoryProject\PublicationPlots\MNight_',bands{band});
     saveas(gcf,strcat(filename_save,'.png'))
@@ -372,7 +412,6 @@ for band = 1:numel(bands)
         
         cfg = [];
         cfg.xlim = [j(k) j(k+1)];   % time interval of the subplot
-        cfg.zlim = [-2.5e-13 2.5e-13];
         % If a channel is in a to-be-plotted cluster, then
         % the element of pos_int with an index equal to that channel
         % number will be set to 1 (otherwise 0).
@@ -384,21 +423,51 @@ for band = 1:numel(bands)
         pos_int(i1) = all(pos_OdorD_OdorM(i2, m(k):m(k+1)), 2);
         neg_int(i1) = all(neg_OdorD_OdorM(i2, m(k):m(k+1)), 2);
         
-        if find(pos_int==1)
+        if sum((pos_int==1) + (neg_int==1))>0
             cfg.highlight   = 'on';
             % Get the index of the to-be-highlighted channel
             cfg.highlightchannel = find(pos_int | neg_int);
         end
-        cfg.comment     = 'xlim';
-        cfg.commentpos  = 'title';
-        cfg.layout      = 'GSN-HydroCel-129.sfp';
         
         data = Diff_OdorDvsOdorM.(bands{band});
-        data.avg = data.trial;
+        data.avg                = data.trial;
+        data.mask               = stat_OdorD_OdorM.mask;
+        
+         cfg.zlim            = [-max(max(abs(data.avg{1}))),...
+            max(max(abs(data.avg{1})))];
+        cfg.parameter       = 'avg';
+        cfg.comment         = 'xlim';
+        cfg.commentpos      = 'title';
+        cfg.layout          = layout;
+        cfg.colormap        = 'parula';
+%         cfg.maskparameter   = 'mask';
+%         cfg.colorbar        = 'yes';
+%         cfg.style           = 'straight';
+        
         ft_topoplotER(cfg, data);
+      
     end
-    
+    colorbar
     set(gcf,'position',[1,41,1920,963])
     filename_save = strcat('C:\Users\asanch24\Documents\Github\TimeFrequency_ReactivatedMemoryProject\PublicationPlots\DvsM_',bands{band});
     saveas(gcf,strcat(filename_save,'.png'))
+end
+
+
+%%
+
+dirlist  = dir('C:\Users\asanch24\Documents\Github\TimeFrequency_ReactivatedMemoryProject\GSN-HydroCel-128.mat');
+filename = {dirlist(~[dirlist.isdir]).name}';
+
+for i=1:length(filename)
+  cfg = [];
+  cfg.layout = filename{i};
+  layout = ft_prepare_layout(cfg);
+
+  figure
+  ft_plot_layout(layout);
+  title(filename{i}, 'Interpreter', 'none');
+
+  [p, f, x] = fileparts(filename{i});
+  print([lower(f) '.png'], '-dpng');
 end
