@@ -1,7 +1,7 @@
 addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/')
 % addpath('C:\Users\asanch24\Documents\MATLAB\fieldtrip-20190828\')
 
-% ft_defaults
+ft_defaults
 addpath('/home/andrea/Documents/MatlabFunctions/fieldtrip-20200828/qsub')
 ft_warning off
 
@@ -10,7 +10,6 @@ ft_warning off
 %--------------------------------------------------------------------------
 s_tstep = 0.1; % try with 0.005
 s_fstep = 0.1; % 0.005
-cycles  = 12;
 minfreq = 0.5;
 maxfreq = 20;
 
@@ -19,9 +18,13 @@ cfg_Tf                      = [];
 cfg_Tf.method               = 'wavelet';
 cfg_Tf.output               = 'pow';
 cfg_Tf.foi                  = minfreq:s_fstep:maxfreq; 
-% cfg_Tf.width                = cycles;
-v_timeWindows               = 5:(-4.5/numel(cfg_Tf.foi)):0.5;
-cfg_Tf.t_ftimwin            = v_timeWindows;   
+
+
+cycles  = 1:numel(cfg_Tf.foi);
+sigmoidcycles = sigmoid(cycles,numel(cfg_Tf.foi)/3,0.05);
+sigmoidcycles = sigmoidcycles*8+4;
+
+cfg_Tf.width                = sigmoidcycles; 
 cfg_Tf.toi                  = -11:s_tstep:66; 
 % toi this is extended before and after to deal with border effect of wavelet
 cfg_Tf.keeptrials           = 'yes';
@@ -54,12 +57,12 @@ for subj = 1:numel(files)
     disp(strcat('Cue'))
     
     %--------- Load Data --------------------------------------------------
-%     addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
-    addpath(genpath('C:\Users\asanch24\Documents\MATLAB\eeglab2019_1\'))
+    addpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
+    %addpath(genpath('C:\Users\asanch24\Documents\MATLAB\eeglab2019_1\'))
     EEGOdor = pop_loadset(strcat(filepath,files(subj).name));
     dataOdor = eeglab2fieldtrip(EEGOdor,'raw');
-%     rmpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
-    rmpath(genpath('C:\Users\asanch24\Documents\MATLAB\eeglab2019_1\'))
+    rmpath(genpath('/home/andrea/Documents/MatlabFunctions/eeglab2019_1/'))
+    %rmpath(genpath('C:\Users\asanch24\Documents\MATLAB\eeglab2019_1\'))
     
     
     %-----------Time-Frequency Calculation---------------------------------
