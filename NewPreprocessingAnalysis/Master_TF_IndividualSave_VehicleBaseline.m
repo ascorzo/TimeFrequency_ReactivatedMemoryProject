@@ -16,7 +16,7 @@ ft_warning off
 %--------------------------------------------------------------------------
 s_tstep = 0.1; % try with 0.005
 s_fstep = 0.1; % 0.005
-minfreq = 0.5;
+minfreq = 0.7;
 maxfreq = 20;
 
 cfg_Tf                      = [];
@@ -26,7 +26,7 @@ cfg_Tf.foi                  = minfreq:s_fstep:maxfreq;
 % cfg_Tf.width                = cycles;
 v_timeWindows               = 5:(-4.5/numel(cfg_Tf.foi)):0.5;
 cfg_Tf.t_ftimwin            = v_timeWindows;   
-cfg_Tf.toi                  = -10:s_tstep:20; 
+cfg_Tf.toi                  = -15:s_tstep:20; 
 % toi this is extended before and after to deal with border effect of wavelet
 cfg_Tf.keeptrials           = 'yes';
 
@@ -65,7 +65,7 @@ addpath('/research/rgs01/home/clusterHome/asanch24/ReactivatedConnectivity/Githu
 p_TrialPairing
 
 
-for file = 3:numel(files)
+for file = 26%:numel(files)
     
     %______________________________________________________________________
     %
@@ -77,6 +77,10 @@ for file = 3:numel(files)
     %--------- Load Data --------------------------------------------------
     
     load(strcat(filepath,files(file).name))
+    
+    if any(isnan([data_downsamp_250.trial{:}])) 
+        error(files_DNight(subj).name)
+    end
     
     %-----------Time-Frequency Calculation---------------------------------
     
@@ -136,6 +140,10 @@ for file = 3:numel(files)
         TrialTF_Odor    =(Odor_TF-meanVals)./stdVals;
         
         TF_Baseline.powspctrm(trial,:,:,:) = TrialTF_Odor;
+        
+        if any(TrialTF_Odor==0)
+            trial
+        end
     end
 
     save(strcat(savepath,files(file).name(1:6),'_TF_NewBaseline'),'TF_Baseline','-v7.3')
