@@ -24,15 +24,15 @@
 
 % 3. Parameters:
 %    - File paths
-filePath_CONTINUOUS = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
-                        'preProcessing\NREM'];
-filePath_TRIALS     = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
-                        'preProcessing\TRIALS'];
-eventfilePath       = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
-                        'preProcessing\EEGLABFilt_Mastoids_Off_On_', ...
-                        '200Hz_Oct_NEW\12-Jun-2021_Cue\'];
-eventFile           = '12-Jun-2021_17-08-46_AllData.mat';
-% eventFile           = '13-Jun-2021_15-33-48_AllData.mat';
+filePath_CONTINUOUS = ['D:\germanStudyData\datasetsANDREA\', ...
+                        'DetectionNative\All\WHOLE'];
+filePath_TRIALS     = ['D:\germanStudyData\datasetsANDREA\', ...
+                        'DetectionNative\All'];
+eventfilePath       = ['D:\germanStudyData\datasetsANDREA\', ...
+                        'DetectionNative\Cue\18-Mar-2022_Jens_Cue\'];
+eventFile           = '18-Mar-2022_19-16-46_AllData.mat';
+%    - All events file from Andrea
+alleventFile        = 'D:\Gits\rc_preproc\EventsDescription.mat';
 %    - Channels to include
 chanOfInterest      = 'all';
 %    - Conditions to include
@@ -121,6 +121,9 @@ else
     PM.Channels = chanOfInterest;
 end
 
+% Import trigger structures of subjects
+PM.triggers     = load(alleventFile);
+
 % This will point to continuous datasets as well as epoched ones.
 % This way, we can just search for event numbers in the EEG structure in an
 % easy way:
@@ -130,7 +133,7 @@ end
 %    dataset.
 % 3. Look at latency of event number in the continuous dataset and adapt so
 %    time stamp accordingly.
-fileNames_CONTINUOUS = strcat(fileNames, '_NREM');
+fileNames_CONTINUOUS = strcat(fileNames, '_WHOLE');
 fileNames_TRIALS     = strcat(fileNames, '_TRIALS');
 
 
@@ -161,18 +164,18 @@ for i_subj = 1:numel(fileNames)
     % 2. Trial datasets will serve as indicator of event in EEG structure
     % based on trials containing slow oscillation
     if ~exist('data_loaded', 'var') || data_loaded == 0
-        dataType    = '.set';
+        dataType    = '.mat';
         [EEGWhole] = f_load_data(...
             strcat(char(fileNames_CONTINUOUS(i_subj)), dataType), ...
             filePath_CONTINUOUS, dataType);
         
-        dataType    = '.set';
+        dataType    = '.mat';
         [EEGTrialCue] = f_load_data(...
             strcat(char(fileNames_TRIALS(i_subj)), ...
             '_', PM.stimulation_seq, '_Odor', ...
             dataType), filePath_TRIALS, dataType);
         
-        dataType    = '.set';
+        dataType    = '.mat';
         [EEGTrialVehicle] = f_load_data(...
             strcat(char(fileNames_TRIALS(i_subj)), ...
             '_', PM.stimulation_seq, '_Sham',...
@@ -190,52 +193,50 @@ for i_subj = 1:numel(fileNames)
         
         
         % Select data according to current channel
-        idx_chan2rejWhole   = ...
-            find(~strcmp({EEGWhole.chanlocs.labels}, channel));
-        
-        idx_chan2rejCue     = ...
-            find(~strcmp({EEGTrialCue.chanlocs.labels}, channel));
-        idx_chan2rejVehicle = ...
-            find(~strcmp({EEGTrialVehicle.chanlocs.labels}, channel));
+        idx_chanWhole   = find(strcmp(EEGWhole.hdr.label, channel));
+        idx_chanCue     = find(strcmp(EEGTrialCue.hdr.label, channel));
+        idx_chanVehicle = find(strcmp(EEGTrialVehicle.hdr.label, channel));
         
         
-        if any(~ismember(idx_chan2rejWhole, idx_chan2rejCue)) || ...
-                any(~ismember(idx_chan2rejWhole, idx_chan2rejVehicle))
+        if idx_chanWhole ~= idx_chanCue || ...
+                idx_chanWhole ~= idx_chanVehicle
             % Checkpoint
             error('Incompatible datasets')
         end
         
-        [EEGWholeNative]    = ...
-            pop_select( EEGWhole, 'nochannel', idx_chan2rejWhole);
-        [EEGTrialCueIN]     = ...
-            pop_select( EEGTrialCue, 'nochannel', idx_chan2rejCue);
-        [EEGTrialVehicleIN] = ...
-            pop_select( EEGTrialVehicle, 'nochannel', idx_chan2rejVehicle);
+        EEGWholeNative.data    = EEGWhole.data(idx_chanCue, :);
+        EEGWholeNative.samples = 1:EEGWhole.hdr.nSamples;
+        EEGWholeNative.fs      = EEGWhole.hdr.Fs;
+        EEGWholeNative.time    = EEGWholeNative.samples / ...
+            EEGWhole.hdr.Fs * 1000;
+        EEGTrialCueIN.data     = EEGTrialCue.data(idx_chanCue, :, :);
+        EEGTrialVehicleIN.data = ...
+            EEGTrialVehicle.data(idx_chanVehicle, :, :);
         
         
         
         %% Search for valid trials inside continuous time series
         %  ----------------------------------------------------------------
         
-        % The field 'mffkey_gidx' is constant and did not change after 
-        % trial rejection. This allows for searching of valid trials inside
-        % continuous dataset
-        % Triggers will be trial midpoints Off [-15s 0s] and On [0s 15s]
-        [~, ~, Trig_OI_Cue]     = intersect(...
-            {EEGTrialCueIN.event.mffkey_gidx}, ...
-            {EEGWholeNative.event.mffkey_gidx});
+        SubjectCode             = char(extractBefore(fileNames(i_subj), ...
+            '_sleep'));
+        IdxSubj                 = strcmp(PM.triggers.AllEvents(1, :), ...
+            SubjectCode);
+        EEGWholeNative.event    = PM.triggers.AllEvents{2, IdxSubj};
         
-        [~, ~, Trig_OI_Vehicle] = intersect(...
-            {EEGTrialVehicleIN.event.mffkey_gidx}, ...
-            {EEGWholeNative.event.mffkey_gidx});
+        ValidTrials             = ([EEGWholeNative.event.Rejected] == 0);
+        EEGWholeNative.event    = EEGWholeNative.event(ValidTrials);
+           
+        IdxOdorTrials           = find(strcmp(...
+            {EEGWholeNative.event.stimulation}, ...
+            'ODOR'));
+        IdxVehicleTrials        = find(strcmp(...
+            {EEGWholeNative.event.stimulation}, ...
+            'VEHICLE'));
         
-        Trig_OI_Cue     = sort(Trig_OI_Cue);
-        Trig_OI_Vehicle = sort(Trig_OI_Vehicle);
-        
-        
-        % Find latency of period onsets in the original file (samples)
-        Latencies.OdorOn   = [EEGWholeNative.event(Trig_OI_Cue).latency];
-        Latencies.ShamOn   = [EEGWholeNative.event(Trig_OI_Vehicle).latency];
+        % "Sample" is actually time just as in EEG.event.latency
+        Latencies.OdorOn   = [EEGWholeNative.event(IdxOdorTrials).sample];
+        Latencies.ShamOn   = [EEGWholeNative.event(IdxVehicleTrials).sample];
         
         Latencies.OdorOff  = Latencies.OdorOn - ...
             Info.TrialParameters.s_TimeBeforeZero * ...
@@ -470,13 +471,12 @@ for i_subj = 1:numel(fileNames)
             %% Add event latencies of Slow osc. to EEG.event structure
             %  ------------------------------------------------------------
             
-            Lat_diff
+            % Lat_diff
             
             s_last_event = numel(EEGWholeIN.event);
             for SO = 1:numel(OriginalStartTime)
                 % Add triggers to the original EEG
-                EEGWholeIN.event(SO+s_last_event).type      = 'SO_start';
-                EEGWholeIN.event(SO+s_last_event).latency   = ...
+                EEGWholeIN.event(SO+s_last_event).sample   = ...
                     OriginalStartTime(SO);
                 EEGWholeIN.event(SO+s_last_event).duration  = 0;
                 EEGWholeIN.event(SO+s_last_event).label     = 'SO_start';
@@ -485,8 +485,7 @@ for i_subj = 1:numel(fileNames)
             s_last_event = numel(EEGWholeIN.event);
             for SO = 1:numel(OriginalCentTime)
                 % Add triggers to the original EEG
-                EEGWholeIN.event(SO+s_last_event).type      = 'SO_Cent';
-                EEGWholeIN.event(SO+s_last_event).latency   = ...
+                EEGWholeIN.event(SO+s_last_event).sample   = ...
                     OriginalCentTime(SO);
                 EEGWholeIN.event(SO+s_last_event).duration  = 0;
                 EEGWholeIN.event(SO+s_last_event).label     = 'SO_Cent';
@@ -495,8 +494,7 @@ for i_subj = 1:numel(fileNames)
             s_last_event = numel(EEGWholeIN.event);
             for SO = 1:numel(OriginalendTime)
                 % Add triggers to the original EEG
-                EEGWholeIN.event(SO+s_last_event).type      = 'SO_End';
-                EEGWholeIN.event(SO+s_last_event).latency   = ...
+                EEGWholeIN.event(SO+s_last_event).sample   = ...
                     OriginalendTime(SO);
                 EEGWholeIN.event(SO+s_last_event).duration  = 0;
                 EEGWholeIN.event(SO+s_last_event).label     = 'SO_End';
@@ -510,28 +508,38 @@ for i_subj = 1:numel(fileNames)
             clearvars EEGWholeOUT outFT
             
             if ~isempty(OriginalCentTime)
-                % Epoch the data around center point of slow osc.
-                EEGWholeOUT = pop_epoch(EEGWholeIN, {'SO_Cent'}, ...
-                    [-PM.s_timeWindow/2 PM.s_timeWindow/2]);
                 
-                % Reject huge trailing data that will not be used
-                if isfield(EEGWholeOUT, 'rejecteddata')
-                    EEGWholeOUT = rmfield(EEGWholeOUT, 'rejecteddata');
+                %% Transform data structure to Fieldtrip
+                %  --------------------------------------------------------
+                
+                outFT           = [];
+                % Channel labels
+                outFT.label     = {channel};
+                % Sampling rate
+                outFT.fsample   = EEGWholeIN.fs;
+                % Trialinfo (This is crucial for fieldtrip to function
+                % later in subsequent scripts)
+                outFT.trialinfo = [];
+                % Data matrix
+                outFT.trial     = cell(1, numel(OriginalCentTime));
+                outFT.time      = cell(1, numel(OriginalCentTime));
+                for iWin = 1:numel(OriginalCentTime)
+                    time        = OriginalCentTime(iWin);
+                    timediffs   = abs(EEGWholeIN.time - time);
+                    sample      = find(timediffs == min(timediffs));
+                    window      = sample-PM.s_timeWindow * ...
+                        EEGWholeIN.fs/2+1 : ...
+                        sample+PM.s_timeWindow*EEGWholeIN.fs/2;
+                    
+                    outFT.trial{iWin} = EEGWholeIN.data(window);
+                    samples     = 1:numel(window);
+                    samples     = samples - PM.s_timeWindow*EEGWholeIN.fs/2 -1;
+                    outFT.time{iWin} = samples / EEGWholeIN.fs; % In seconds
                 end
-                if isfield(EEGWholeOUT, 'rejectedchanlocs')
-                    EEGWholeOUT = rmfield(EEGWholeOUT, 'rejectedchanlocs');
-                end
                 
-                
-                
-                %% Transform EEG structure to Fieldtrip
-                %  ------------------------------------------------------------
-                
-                outFT = eeglab2fieldtrip(EEGWholeOUT, 'raw');
                 SO_timeSeries.(channel).(char(condition)) = outFT;
             else
                 SO_timeSeries.(channel).(char(condition)) = struct();
-                EEGWholeOUT.lst_changes = [];
             end
             
             
@@ -549,12 +557,11 @@ for i_subj = 1:numel(fileNames)
     %  --------------------------------------------------------------------
     PM.Name         = char(fileNames(i_subj));
     PM.Info         = Info;
-    PM.ListChanges  = EEGWholeOUT.lst_changes;
         
     save(strcat(saveFolder, char(fileNames(i_subj)), '.mat'), ...
-        'PM', 'SO_timeSeries', 'SS_latencies', '-v7.3')
+        'PM', 'SO_timeSeries', 'SS_latencies', '-v7', '-nocompression')
     
-    
+    clearvars SS_latencies SO_timeSeries
     data_loaded = 0; % Load next subject
     
 end

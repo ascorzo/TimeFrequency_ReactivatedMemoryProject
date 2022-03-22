@@ -56,19 +56,13 @@ PM.cfg_Bas.baseline      = PM.cfg_seldat.latency;
 % effects.
 PM.cfg_Bas.baselinetype  = 'zscore';
 %       - File paths
-filepath = ['D:\germanStudyData\datasetsSETS\Ori_CueNight\', ...
-           'preProcessing\EEGLABFilt_Mastoids_Off_On_200Hz_Oct_NEW\', ...
-           '12-Jun-2021_Cue\SO_timeSeries\'];
-% filepath = ['/mnt/disk1/sleep/Datasets/CueD_SO_TimeSeires/'];
+filepath = ['D:\germanStudyData\datasetsANDREA\DetectionNative\Cue\', ...
+    '18-Mar-2022_Jens_Cue\SO_timeSeries\'];
 savepath = strcat(filepath, 'TF_matrices');
 peakpath = ['D:\Gits\SO_Spindle_Detection_Coupling\', ...
            'SubjectSpecific\Max_spindlebands_byEye.mat'];
-% peakpath = ['/home/sleep/Documents/DAVID/Gits/', ...
-%             'SO_Spindle_Detection_Coupling/', ...
-%             'SubjectSpecific/Max_spindlebands_byEye.mat'];
 %       - paths to toolboxes
 fieldtrippath       = 'D:\MATLAB\fieldtrip-20200831';
-% fieldtrippath       = '/home/sleep/Documents/MATLAB/fieldtrip-20200831';
 %       - path to f_chan_clusters function: All this function does is
 %         create cell arrays of electrode labels belonging to a group. The
 %         repository containing the function can be found at
@@ -286,7 +280,7 @@ for i_subj = 1:numel(files)
         %   freq            = 1 x frequency vector output
         %   time            = 1 x time vector
         %   dimord          = 'rpt_chan_freq_time'
-        %   elec
+        %   elec            IGNORED AS LOADED IN SUBSEQUENT SCRIPT
         %       chanpos     = coordinates of channel [channels by x, y, z]
         %       chantype    = repmat({'eeg'}, numel(Cluster), 1)
         %       chanunit    = repmat({'V'}, numel(Cluster), 1)
@@ -310,14 +304,14 @@ for i_subj = 1:numel(files)
                                         numel(Cluster), ...
                                         numel(TF_condition_restr.freq), ...
                                         numel(TF_condition_restr.time));
-        TF_condition_restr.elec = [];
+%         TF_condition_restr.elec = [];
         for i_chan = 1:numel(Cluster)
             TF_condition_restr.powspctrm(...
                 1:numTrials(i_chan), i_chan, :, :) = ...
                 TF_condition.(char(Cluster(i_chan))).powspctrm;
             
-            TF_condition_restr.elec = [TF_condition_restr.elec; ...
-                TF_condition.(char(Cluster(i_chan))).elec];
+%             TF_condition_restr.elec = [TF_condition_restr.elec; ...
+%                 TF_condition.(char(Cluster(i_chan))).elec];
         end
 
         % -----------------------------------------------------------------

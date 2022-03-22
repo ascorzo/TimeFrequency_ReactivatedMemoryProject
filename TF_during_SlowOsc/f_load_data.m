@@ -22,6 +22,11 @@ elseif strcmp(dataType,'.cdt')
         loadcurry([filePath, filesep, fileName], ...
         'CurryLocations', 'False');
     
+elseif strcmp(dataType,'.mat')
+    
+    [structEEG] = ...
+        load([filePath, filesep, fileName]);
+    
 end
 
 end
