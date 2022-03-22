@@ -37,17 +37,17 @@ PM.FrCenter             = 'mean'; % Whether to center around
                                             % subject's "individual" or 
                                             % "mean" peak of all subjects
 %       - Time frequency parameters
-PM.s_tstep              = 0.05; % 0.05
+PM.s_tstep              = 0.05; % FASTER!
 % Probably a good idea to have highest time resolution possible since the
 % shift in prefered angles of spindles during SO is rather small.
-PM.s_fstep              = 0.05; % 0.05
+PM.s_fstep              = 0.05; % 0.005
 PM.cycles               = 12;
 PM.cfg_Tf.method        = 'wavelet';
 PM.cfg_Tf.output        = 'pow';
 PM.cfg_Tf.width         = PM.cycles;
 PM.cfg_Tf.keeptrials    = 'yes';
 %       - Data window selection
-PM.cfg_seldat.latency   = [-2 2]; % [-2 2], [-2.25 1.75]
+PM.cfg_seldat.latency   = [-2.25 1.75]; % [-2 2], [-2.25 1.75]
 %       - Baseline parameters
 PM.cfg_Bas.baseline      = PM.cfg_seldat.latency;
 % Purposely choosing the whole window as baseline as we must assume that

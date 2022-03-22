@@ -45,7 +45,7 @@ PM.SOlocations      = [2, 4];
 %      hilbert transform or time stamps of the delta band time series
 %      ({'timeseries', 3} or {'angles', -90} for example)
 % PM.SOcenter        = {'angles', 0}; % (0 is pos. peak, -90 = inflection)
-PM.SOcenter        = {'timeseries', 3};
+PM.SOcenter        = {'timeseries', 7};
 % 1) = To which time bin corresponds that particular event
 % 2) = startTime
 % 3) = midTime (SO: down-up zero crossing)
